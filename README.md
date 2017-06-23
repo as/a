@@ -1,6 +1,8 @@
 # a
 A was a text editor
 
+![paint](a.png)
+
 This repository will change frequently
 
 # usage
