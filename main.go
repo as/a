@@ -57,7 +57,7 @@ func Tagtext(s string, w Plane) {
 // Put
 func main() {
 	driver.Main(func(src screen.Screen) {
-		wind, _ := src.NewWindow(&screen.NewWindowOptions{winSize.X, winSize.Y})
+		wind, _ := src.NewWindow(&screen.NewWindowOptions{winSize.X, winSize.Y, "A"})
 		wind.Send(paint.Event{})
 		focused := false
 		focused = focused
