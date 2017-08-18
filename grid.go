@@ -2,8 +2,7 @@ package main
 
 import (
 	"image"
-
-	"github.com/as/frame"
+	"github.com/as/frame/font"
 	"github.com/as/frame/tag"
 	"golang.org/x/exp/shiny/screen"
 )
@@ -12,7 +11,7 @@ type Grid struct {
 	*Col
 }
 
-func NewGrid(src screen.Screen, wind screen.Window, ft frame.Font, sp, size image.Point, files ...string) *Grid {
+func NewGrid(src screen.Screen, wind screen.Window, ft *font.Font, sp, size image.Point, files ...string) *Grid {
 	N := len(files)
 	tdy := ft.Dy() * 2
 	T := tag.NewTag(src, wind, ft, image.Pt(sp.X, sp.Y), image.Pt(size.X, tdy), pad, cols)
@@ -49,7 +48,7 @@ func (g *Grid) attach(w Plane, id int) {
 	}
 	g.List = append(g.List[:id], append([]Plane{w}, g.List[id:]...)...)
 	r := g.List[id-1].Loc()
-	if id-1 == 0{
+	if id-1 == 0 {
 		r = image.Rect(g.sp.X, g.sp.Y+g.tdy, g.sp.X, g.sp.Y+g.size.Y)
 	}
 	w.Move(image.Pt(r.Max.X, g.sp.Y+g.tdy))

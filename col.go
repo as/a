@@ -1,15 +1,15 @@
 package main
 
 import (
-	"image"
 	"fmt"
-	"github.com/as/frame"
+	"github.com/as/frame/font"
 	"github.com/as/frame/tag"
 	"golang.org/x/exp/shiny/screen"
+	"image"
 )
 
 type Col struct {
-	ft   frame.Font
+	ft   *font.Font
 	sp   image.Point
 	size image.Point
 	src  screen.Screen
@@ -19,7 +19,7 @@ type Col struct {
 	List []Plane
 }
 
-func NewCol(src screen.Screen, wind screen.Window, ft frame.Font, sp, size image.Point, files ...string) *Col {
+func NewCol(src screen.Screen, wind screen.Window, ft *font.Font, sp, size image.Point, files ...string) *Col {
 	N := len(files)
 	tdy := ft.Dy() * 2
 	T := tag.NewTag(src, wind, ft, image.Pt(sp.X, sp.Y), image.Pt(size.X, tdy), pad, cols)
@@ -40,16 +40,16 @@ func NewCol(src screen.Screen, wind screen.Window, ft frame.Font, sp, size image
 	return col
 }
 
-func NewCol2(g *Grid, filenames ...string) (w Plane){
+func NewCol2(g *Grid, filenames ...string) (w Plane) {
 	x0 := g.List[0].Loc().Min.X
 	y0 := g.List[0].Loc().Dy()
-	x1 := g.sp.X+g.size.X
-	y1 := g.sp.X+g.size.Y-y0
-	if len(g.List) > 1{
+	x1 := g.sp.X + g.size.X
+	y1 := g.sp.X + g.size.Y - y0
+	if len(g.List) > 1 {
 		last := g.List[len(g.List)-1]
 		last.Resize(image.Pt(last.Loc().Dx()/2, last.Loc().Dy()))
 		x0 = last.Loc().Max.X
-		x1 = x0+last.Loc().Dx()/2
+		x1 = x0 + last.Loc().Dx()/2
 	}
 	sp := image.Pt(x0, y0)
 	size := image.Pt(x1-x0, y1-y0)
@@ -85,7 +85,6 @@ func Del(co *Col, id int) {
 	co.fill()
 }
 
-
 func (co *Col) Move(sp image.Point) {
 	co.sp = sp
 	dy := 0
@@ -109,7 +108,7 @@ func (co *Col) Resize(size image.Point) {
 	N := len(co.List) - 1
 	dy := image.Pt(size.X, size.Y/N)
 	for _, t := range co.List[1:] {
-//		t.Move(sp)
+		//		t.Move(sp)
 		t.Resize(dy)
 		sp.Y += dy.Y
 	}
@@ -155,7 +154,7 @@ func (co *Col) attach(w Plane, id int) {
 func (co *Col) fill() {
 	ty := co.List[0].Loc().Dy()
 	co.List[0].Resize(image.Pt(co.size.X, ty))
-//		Tagtext(fmt.Sprintf("id=tagtag r=%s", co.List[0].Loc()), co.List[0])
+	//		Tagtext(fmt.Sprintf("id=tagtag r=%s", co.List[0].Loc()), co.List[0])
 
 	x := co.size.X
 	y1 := co.Loc().Max.Y
@@ -199,7 +198,7 @@ func (co *Col) IDPoint(pt image.Point) (id int) {
 	for id = 0; id < len(co.List); id++ {
 		if pt.In(co.List[id].Loc()) {
 			break
-		} 
+		}
 	}
 	return id
 }

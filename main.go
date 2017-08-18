@@ -8,11 +8,11 @@ import (
 	"github.com/as/cursor"
 	window "github.com/as/ms/win"
 
-	"github.com/as/frame"
+	"github.com/as/frame"	
+	"github.com/as/frame/font"	
 	"github.com/as/frame/tag"
 	"golang.org/x/exp/shiny/driver"
 	"golang.org/x/exp/shiny/screen"
-	"golang.org/x/image/font/gofont/gomono"
 	"golang.org/x/mobile/event/key"
 	"golang.org/x/mobile/event/lifecycle"
 	"golang.org/x/mobile/event/mouse"
@@ -22,10 +22,6 @@ import (
 
 func moveMouse(pt image.Point) {
 	cursor.MoveTo(window.ClientAbs().Min.Add(pt))
-}
-
-func mkfont(size int) frame.Font {
-	return frame.NewTTF(gomono.TTF, size)
 }
 
 // Put
@@ -61,7 +57,7 @@ func main() {
 		wind.Send(paint.Event{})
 		focused := false
 		focused = focused
-		ft := mkfont(fsize)
+		ft := font.NewGoMono(fsize)
 		var list = []string{}
 		if len(os.Args) > 1 {
 			list = append(list, os.Args[1:]...)
@@ -99,7 +95,7 @@ func main() {
 			switch e := act.NextEvent().(type) {
 			case tag.GetEvent:
 				t := New(actCol, e.Path)
-				if e.Addr != ""{
+				if e.Addr != "" {
 					actTag = t.(*tag.Tag)
 					act = actTag.W
 					actTag.Handle(actTag.W, tag.Cmdparse(e.Addr))
@@ -175,7 +171,7 @@ func main() {
 						moveMouse(New(actCol, "mink").Loc().Min)
 						act.SendFirst(paint.Event{})
 						continue
-					} else if s == "Newcol"{
+					} else if s == "Newcol" {
 						moveMouse(NewCol2(g, "mink").Loc().Min)
 						act.SendFirst(paint.Event{})
 					} else if s == "Del" {
