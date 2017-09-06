@@ -59,6 +59,12 @@ Edit ,x,the standard editor is any editor,x,any editor,c,ed,
 - ACME SAC doesn't run on my computer
 - The solution is to create a text editor from scratch then
 
+# future
+- Live multi-client editing
+- Go specific ast/compiler stuff
+- Better CMD exec
+- File system interface to shiny events
+
 # see also
 History of good text editors
 
