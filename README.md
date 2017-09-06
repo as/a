@@ -73,3 +73,5 @@ History of good text editors
 - Plan 9 
 - Inferno
 - Acme SAC
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/as/a)](https://goreportcard.com/badge/github.com/as/a)
