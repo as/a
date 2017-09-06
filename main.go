@@ -115,6 +115,9 @@ func main() {
 	list := argparse()
 	driver.Main(func(src screen.Screen) {
 		wind, _ := src.NewWindow(&screen.NewWindowOptions{winSize.X, winSize.Y, "A"})
+		
+		//
+		// Linux will segfault here if X is not present
 		wind.Send(paint.Event{})
 		ft := font.NewGoMono(fsize)
 
@@ -459,6 +462,9 @@ func main() {
 				g.Resize(winSize)
 				ck()
 			case paint.Event:
+				if !focused {
+					g.Resize(winSize)
+				}
 				g.Upload(wind)
 				wind.Publish()
 			case lifecycle.Event:
@@ -468,6 +474,7 @@ func main() {
 				// NT doesn't repaint the window if another window covers it
 				if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOff {
 					focused = false
+					wind.Send(paint.Event{})
 				} else if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOn {
 					focused = true
 				}
