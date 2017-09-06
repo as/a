@@ -114,18 +114,6 @@ func (co *Col) Move(sp image.Point) {
 func (co *Col) Resize(size image.Point) {
 	co.size = size
 	co.fill()
-	return
-
-	size.Y = co.size.Y - co.tdy
-	sp := co.sp
-	sp.Y += co.tdy
-	N := len(co.List) - 1
-	dy := image.Pt(size.X, size.Y/N)
-	for _, t := range co.List[1:] {
-		//		t.Move(sp)
-		t.Resize(dy)
-		sp.Y += dy.Y
-	}
 }
 
 func (co *Col) FindName(name string) *tag.Tag {

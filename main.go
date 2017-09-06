@@ -114,7 +114,11 @@ func main() {
 	}
 	list := argparse()
 	driver.Main(func(src screen.Screen) {
-		wind, _ := src.NewWindow(&screen.NewWindowOptions{winSize.X, winSize.Y, "A"})
+		wind, _ := src.NewWindow(
+			&screen.NewWindowOptions{
+				Width: winSize.X, Height: winSize.Y, Title: "A",
+			},
+		)
 		
 		//
 		// Linux will segfault here if X is not present
@@ -351,7 +355,7 @@ func main() {
 						if tophit() {
 							detachcol()
 						} else {
-							detachwin() //markwin()
+							detachwin() 
 						}
 						context = sizer
 					} else {
@@ -362,8 +366,6 @@ func main() {
 					context = scrollbar
 					act.Clicksb(p(e.Event), int(e.Button))
 				} else {
-					//TODO: start here
-					markwin = markwin
 					actTag.Handle(act, e)
 					context = window
 				}
