@@ -119,7 +119,7 @@ func main() {
 				Width: winSize.X, Height: winSize.Y, Title: "A",
 			},
 		)
-		
+
 		//
 		// Linux will segfault here if X is not present
 		wind.Send(paint.Event{})
@@ -355,7 +355,7 @@ func main() {
 						if tophit() {
 							detachcol()
 						} else {
-							detachwin() 
+							detachwin()
 						}
 						context = sizer
 					} else {

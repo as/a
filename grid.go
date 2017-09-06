@@ -34,14 +34,14 @@ func NewGrid(src screen.Screen, wind screen.Window, ft *font.Font, sp, size imag
 func (g *Grid) Move(sp image.Point) {
 	panic("never call this")
 	/*
-	g.sp = sp
-	x := 0
-	g.List[0].Move(sp)
-	sp.Y += g.List[0].Loc().Dy()
-	for _, co := range g.List[1:] {
-		co.Move(sp.Add(image.Pt(x, 0)))
-		x += co.Loc().Dx()
-	}
+		g.sp = sp
+		x := 0
+		g.List[0].Move(sp)
+		sp.Y += g.List[0].Loc().Dy()
+		for _, co := range g.List[1:] {
+			co.Move(sp.Add(image.Pt(x, 0)))
+			x += co.Loc().Dx()
+		}
 	*/
 }
 
