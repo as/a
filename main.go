@@ -397,7 +397,8 @@ func main() {
 				}
 				ck()
 			case mus.CommitEvent:
-				//context = 0
+				context = 0
+				ck()
 			case mus.SnarfEvent, mus.InsertEvent:
 				actTag.Handle(act, e)
 				ck()
