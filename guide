@@ -1,0 +1,9 @@
+# Execute any of these commands
+# sweep over them with the middle mouse button  
+go build
+go vet
+go fmt
+
+# Right click on any of these
+README.md:/sam/
+a.exe:/This.program/
