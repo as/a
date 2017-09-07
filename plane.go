@@ -1,22 +1,23 @@
 package main
 
 import (
-	"fmt"
 	"image"
 
 	"github.com/as/frame/tag"
+	"github.com/as/frame/win"
 )
 
 var (
 	actCol *Col
 	actTag *tag.Tag
-	act    *tag.Invertable
+	act    *win.Win
 )
 
 type Plane interface {
 	Loc() image.Rectangle
 	Move(image.Point)
 	Resize(image.Point)
+	Refresh()
 }
 
 func eq(a, b Plane) bool {
@@ -32,6 +33,9 @@ func sizeof(r image.Rectangle) image.Point {
 
 func active2(pt image.Point, list ...Plane) (x Plane) {
 	for i, w := range list {
+		if w == nil {
+			continue
+		}
 		r := w.Loc()
 		if pt.In(r) {
 			return list[i]
@@ -49,6 +53,9 @@ func active(pt image.Point, act Plane, list ...Plane) (x Plane) {
 		list = append([]Plane{act}, list...)
 	}
 	for i, w := range list {
+		if w == nil {
+			continue
+		}
 		r := w.Loc()
 		if pt.In(r) {
 			return list[i]
@@ -68,25 +75,27 @@ func activate(pt image.Point, w Plane) {
 		case *tag.Tag:
 			actCol = w.Col
 			actTag = x
-			act = x.Wtag
+			act = x.Win
 		case *Col:
 			activate(pt, x)
 		default:
-			panic(fmt.Sprintf("activate: unknown plane: %T", x))
+			//panic(fmt.Sprintf("activate: unknown plane: %T", x))
 		}
 	case *Col:
 		actCol = w
 		x := active2(pt, w.List...)
 		if eq(x, w.List[0]) {
 			actTag = x.(*tag.Tag)
-			act = x.(*tag.Tag).Wtag
+			act = x.(*tag.Tag).Win
 		} else {
 			activate(pt, x)
 		}
 	case *tag.Tag:
 		actTag = w
-		activate(pt, active2(pt, w.W, w.Wtag))
-	case *tag.Invertable:
+		if w.Body != nil {
+			activate(pt, active2(pt, w.Body, w.Win))
+		}
+	case *win.Win:
 		act = w
 	}
 }

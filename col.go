@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/as/frame"
 	"github.com/as/frame/font"
 	"github.com/as/frame/tag"
 	"golang.org/x/exp/shiny/screen"
@@ -21,23 +22,35 @@ type Col struct {
 
 func NewCol(src screen.Screen, wind screen.Window, ft *font.Font, sp, size image.Point, files ...string) *Col {
 	N := len(files)
-	tdy := ft.Dy() * 2
-	T := tag.NewTag(src, wind, ft, image.Pt(sp.X, sp.Y), image.Pt(size.X, tdy), pad, cols)
+	tdy := ft.Dy() + ft.Dy()/2
+	tagpad := image.Pt(pad.X, 3)
+	T := tag.NewTag(src, wind, ft, image.Pt(sp.X, sp.Y), image.Pt(size.X, tdy), tagpad, frame.ATag1)
 	//T.Open("tag")
-	T.Wtag.InsertString("New Delcol Sort", 0)
-	T.Wtag.Scroll = nil
+	T.Win.InsertString("New Delcol Sort", 0)
 	col := &Col{sp: sp, src: src, size: size, wind: wind, ft: ft, Tag: T, tdy: tdy, List: make([]Plane, len(files))}
 	size.Y -= tdy
 	sp.Y += tdy
 	dy := image.Pt(size.X, size.Y/N)
 	for i, v := range files {
-		t := tag.NewTag(src, wind, ft, sp, dy, pad, cols)
-		t.Open(v)
+		t := tag.NewTag(src, wind, ft, sp, dy, pad, frame.ATag1)
+		t.Get(v)
 		col.List[i] = t
 		sp.Y += dy.Y
 	}
 	col.List = append([]Plane{T}, col.List...)
 	return col
+}
+
+func (col *Col) PrintList() {
+	for i, v := range col.List {
+		fmt.Printf("%d: %#v\n", i, v)
+	}
+}
+
+func (col *Col) Refresh() {
+	for _, v := range col.List {
+		v.Refresh()
+	}
 }
 
 func NewCol2(g *Grid, filenames ...string) (w Plane) {
@@ -63,9 +76,10 @@ func NewCol2(g *Grid, filenames ...string) (w Plane) {
 func New(co *Col, filename string) (w Plane) {
 	last := co.List[len(co.List)-1]
 	last.Loc()
-	tw := co.Tag.Wtag
+	tw := co.Tag.Win
+	co.PrintList()
 	t := tag.NewTag(co.src, co.wind, tw.Font, co.sp, image.Pt(co.size.X, co.tdy*2), pad, tw.Color)
-	t.Open(filename)
+	t.Get(filename)
 	lsize := sizeof(last.Loc())
 	lsize.Y -= lsize.Y / 3
 	last.Resize(lsize)
@@ -114,13 +128,33 @@ func (co *Col) Resize(size image.Point) {
 	}
 }
 
+func (co *Col) FindName(name string) *tag.Tag {
+	for _, v := range co.List[1:] {
+		switch v := v.(type) {
+		case *Col:
+			t := v.FindName(name)
+			if t != nil {
+				return t
+			}
+		case *tag.Tag:
+			if v.FileName() == name {
+				return v
+			}
+		}
+	}
+	return nil
+}
+
 func (co *Col) Upload(wind screen.Window) {
 	type Uploader interface {
 		Upload(screen.Window)
+		//		Dirty() bool
 	}
 	for _, t := range co.List {
 		if t, ok := t.(Uploader); ok {
+			//if co.Dirty(){
 			t.Upload(wind)
+			//}
 		}
 	}
 }
@@ -143,15 +177,20 @@ func (co *Col) detach(id int) Plane {
 
 // attach inserts w in position id, shifting the original forwards
 func (co *Col) attach(w Plane, id int) {
-	if id < 1 {
+	if w == nil || w == co.List[0] || id < 1 {
 		return
 	}
 	co.List = append(co.List[:id], append([]Plane{w}, co.List[id:]...)...)
 	r := co.List[id-1].Loc()
-	w.Move(image.Pt(r.Min.X, r.Max.Y))
+	if len(co.List) > 2 {
+		w.Move(image.Pt(r.Min.X, r.Max.Y))
+	}
 }
 
 func (co *Col) fill() {
+	if co == nil || co.List[0] == nil {
+		return
+	}
 	ty := co.List[0].Loc().Dy()
 	co.List[0].Resize(image.Pt(co.size.X, ty))
 	//		Tagtext(fmt.Sprintf("id=tagtag r=%s", co.List[0].Loc()), co.List[0])
@@ -177,20 +216,24 @@ func (co *Col) MoveWin(id int, y int) {
 
 func (co *Col) Attach(src Plane, y int) {
 	did := co.IDPoint(image.Pt(co.sp.X, y))
-	if did != 0 && did < len(co.List) {
-		d := co.List[did]
-		y := y - d.Loc().Min.Y
-		x := sizeof(d.Loc()).X
-		d.Resize(image.Pt(x, y))
+	if did == 0 || did >= len(co.List) {
+		return
 	}
+	d := co.List[did]
+	y -= d.Loc().Min.Y
+	x := sizeof(d.Loc()).X
+	d.Resize(image.Pt(x, y))
 	co.attach(src, did+1)
 	co.fill()
 }
 
-func (co *Col) Handle(act *tag.Invertable, e interface{}) {
+func (co *Col) Handle(e interface{}) {
 	for i := range co.List {
-		t := co.List[i].(*tag.Tag)
-		t.Handle(t.W, e)
+		t := co.List[i]
+		switch t := t.(type) {
+		case (*tag.Tag):
+			t.Handle(t.Body, e)
+		}
 	}
 }
 

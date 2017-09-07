@@ -1,10 +1,11 @@
 package main
 
 import (
-	"image"
+	"github.com/as/frame"
 	"github.com/as/frame/font"
 	"github.com/as/frame/tag"
 	"golang.org/x/exp/shiny/screen"
+	"image"
 )
 
 type Grid struct {
@@ -13,10 +14,10 @@ type Grid struct {
 
 func NewGrid(src screen.Screen, wind screen.Window, ft *font.Font, sp, size image.Point, files ...string) *Grid {
 	N := len(files)
-	tdy := ft.Dy() * 2
-	T := tag.NewTag(src, wind, ft, image.Pt(sp.X, sp.Y), image.Pt(size.X, tdy), pad, cols)
-	T.Wtag.InsertString("Newcol Killall Exit", 0)
-	T.Wtag.Scroll = nil
+	tdy := tag.TagSize(ft)
+	tagpad := tag.TagPad(pad)
+	T := tag.NewTag(src, wind, ft, image.Pt(sp.X, sp.Y), image.Pt(size.X, tdy), tagpad, frame.ATag0)
+	T.Win.InsertString("Newcol Killall Exit", 0)
 	g := &Grid{&Col{sp: sp, src: src, size: size, wind: wind, ft: ft, Tag: T, tdy: tdy, List: make([]Plane, len(files))}}
 	size.Y -= tdy
 	sp.Y += tdy
@@ -26,6 +27,7 @@ func NewGrid(src screen.Screen, wind screen.Window, ft *font.Font, sp, size imag
 		sp.X += d.X
 	}
 	g.List = append([]Plane{T}, g.List...)
+	g.Refresh()
 	return g
 }
 
@@ -46,7 +48,7 @@ func (g *Grid) attach(w Plane, id int) {
 	if id < 1 {
 		return
 	}
-	g.List = append(g.List[:id], append([]Plane{w}, g.List[id:]...)...)
+	g.List = append(g.List[:id], append([]Plane{w}, g.List[min(id, len(g.List)):]...)...)
 	r := g.List[id-1].Loc()
 	if id-1 == 0 {
 		r = image.Rect(g.sp.X, g.sp.Y+g.tdy, g.sp.X, g.sp.Y+g.size.Y)
@@ -71,7 +73,6 @@ func (g *Grid) fill() {
 	g.List[0].Resize(image.Pt(g.size.X, tdy))
 	y := g.size.Y - tdy
 	x1 := g.Loc().Max.X
-	//	Tagtext(fmt.Sprintf("id=maintag r=%s", g.List[0].Loc()), g.List[0])
 	for n := len(g.List) - 1; n > 0; n-- {
 		x0 := g.List[n].Loc().Min.X
 		g.List[n].Resize(image.Pt(x1-x0, y))
@@ -82,4 +83,11 @@ func (g *Grid) fill() {
 func (g *Grid) Resize(size image.Point) {
 	g.size = size
 	g.fill()
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
