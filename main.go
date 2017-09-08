@@ -370,17 +370,6 @@ func main() {
 					context = window
 				}
 				ck()
-			case mus.ClickEvent:
-				println("ClickEvent")
-				switch context {
-				case scrollbar:
-					act.Clicksb(p(e.Event), 0)
-				case sizer:
-				case window:
-					actTag.Handle(act, e)
-				}
-				context = 0
-				ck()
 			case mus.ScrollEvent:
 				if e.Button == -1 {
 					e.Dy = -e.Dy
