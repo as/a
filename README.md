@@ -55,11 +55,17 @@ Edit ,x,the standard editor is any editor,x,any editor,c,ed,
 ^E  Move cursor to end of the line.
 ```
 
+# extras
+- Looking (right click) in the main tag finds the result in all open windows
+![paint](jump.png)    
+
 # purpose
 - ACME SAC doesn't run on my computer
 - The solution is to create a text editor from scratch then
 
 # future
+- Fixing the bugs
+- Cleaning the code up
 - Live multi-client editing
 - Go specific ast/compiler stuff
 - Better CMD exec

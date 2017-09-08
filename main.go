@@ -33,8 +33,10 @@ import (
 	"github.com/as/frame"
 	"github.com/as/frame/font"
 	"github.com/as/frame/tag"
+	"github.com/as/frame/win"
 	window "github.com/as/ms/win"
 	"github.com/as/text"
+	
 )
 
 var xx Cursor
@@ -238,12 +240,15 @@ func main() {
 			if text.Region5(q0, q1, sc.Origin(), sc.Origin()+nchars) != 0 {
 				sc.SetOrigin(q0, true)
 				sc.Scroll(-3)
-				ck()
 			}
 			if cursor {
 				jmp := proj.PointOf(q0 - sc.Origin())
 				moveMouse(sc.(text.Plane).Bounds().Min.Add(jmp))
 			}
+			ck()
+		}
+		ismeta := func(ed Plane) bool{
+			return ed == g.List[0].(*tag.Tag).Body
 		}
 		alook := func(e event.Look) {
 			// First we find out if its coming from a tag or
@@ -263,6 +268,21 @@ func main() {
 			}
 
 			t2 := g.FindName(name)
+			if len(e.To) > 0{
+					ed := e.To[0].(*win.Win)
+					if ismeta(ed){ 
+						for _, c := range g.List[1:] {
+							c := c.(*Col)
+							for _, w := range c.List[1:] {
+								w := w.(*tag.Tag)
+								q0, q1 := find.FindNext(w.Body, e.P)
+								w.Body.Select(q0, q1)
+								ajump(w.Body, false)
+							}
+						}
+						return
+					}
+			}
 			if name == "" && addr != "" {
 				// Just an address with no name:
 				// jump to it in the current file
@@ -435,6 +455,12 @@ func main() {
 					moveMouse(NewCol2(g, "").Loc().Min)
 				case "Del":
 					Del(actCol, actCol.ID(actTag))
+				case "Sort":
+					aerr("Sort: TODO")
+				case "Delcol":
+					aerr("Delcol: TODO")
+				case "Exit":
+					aerr("Exit: TODO")
 				default:
 					if len(e.To) == 0 {
 						aerr("cmd has no destination: %q", s)
@@ -445,7 +471,12 @@ func main() {
 							prog.Run(e.To[0])
 						}
 					} else {
-						cmd(e.To[0], s)
+						ed := e.To[0].(*win.Win)
+						if ismeta(ed){
+							ed = New(g.List[len(g.List)-1].(*Col), fmt.Sprintf("%s+Errors", s)).(*tag.Tag).Body
+							moveMouse(ed.Loc().Min)
+						}
+						cmd(ed, s)
 					}
 				}
 				ck()
