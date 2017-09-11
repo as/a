@@ -44,7 +44,7 @@ var eprint = fmt.Println
 
 // Put
 var (
-	winSize = image.Pt(1900, 1000)
+	winSize = image.Pt(1024, 768)
 	pad     = image.Pt(15, 15)
 	fsize   = 11
 )
