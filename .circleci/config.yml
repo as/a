@@ -1,0 +1,26 @@
+version: 2
+jobs:
+  build:
+    docker:
+      # CircleCI Go images available at: https://hub.docker.com/r/circleci/golang/
+      - image: circleci/golang:1.8
+
+    working_directory: /go/src/github.com/as/a
+
+    environment:
+      TEST_RESULTS: /tmp/results
+
+    steps:
+      - checkout
+      - run: mkdir -p $TEST_RESULTS
+      test: 
+		pre:
+			- go test -v .../
+			pwd: /go/src/github.com/as/frame
+			
+      - store_artifacts:
+          path: /tmp/results
+          destination: raw-test-output
+
+      - store_test_results:
+          path: /tmp/results
