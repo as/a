@@ -4,6 +4,7 @@
 
 A is my text editor. 
 - Written in Go (no dependencies)
+- Native Multi-Platform Graphics (as/frame)
 - Closely resembles the Acme and Sam text editors.
 - Optimized for editing huge binary files. 
   `The underlying frame implementation (see as/frame) does not eschew null bytes. UTF-8 is not implemented at this time.`
