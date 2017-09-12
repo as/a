@@ -402,6 +402,15 @@ func main() {
 					act.Clicksb(p(e.Event), 0)
 				case sizer:
 				case window:
+					// A very effective optimization eliminates several function
+					// calls completely if the cursor isn't moving and the use is still
+					// in the window's bounds. 
+					if !e.Motion() && act != nil{
+							r := act.Frame.Bounds()
+							if p(e.Event).In(r){
+								continue
+							}
+					}
 					actTag.Handle(act, e)
 				}
 				ck()
@@ -449,6 +458,7 @@ func main() {
 				case "Put", "Get":
 					actTag.Handle(act, s)
 					aerr(s)
+					ck()
 				case "New":
 					moveMouse(New(actCol, "").Loc().Min)
 				case "Newcol":
@@ -497,7 +507,7 @@ func main() {
 				// NT doesn't repaint the window if another window covers it
 				if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOff {
 					focused = false
-					wind.Send(paint.Event{})
+					wind.SendFirst(paint.Event{})
 				} else if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOn {
 					focused = true
 				}
