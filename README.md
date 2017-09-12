@@ -1,6 +1,10 @@
 # A
+[![Go Report Card](https://goreportcard.com/badge/github.com/as/a)](https://goreportcard.com/badge/github.com/as/a)
+[![CircleCI](https://circleci.com/gh/as/a/tree/master.svg?style=svg)](https://circleci.com/gh/as/a/tree/master)
+
 A is my text editor. 
 - Written in Go (no dependencies)
+- Native Multi-Platform Graphics (as/frame)
 - Closely resembles the Acme and Sam text editors.
 - Optimized for editing huge binary files. 
   `The underlying frame implementation (see as/frame) does not eschew null bytes. UTF-8 is not implemented at this time.`
@@ -15,6 +19,11 @@ A is my text editor.
 
 This repository will change frequently, things will break unexpectedly. See issues.
 
+# install
+Because the other packages in my namepace are frequently updated , I recommended using go get -u
+
+`go get -u -t github.com/as/a`
+ 
 # usage
 a [file ...]
 
@@ -79,5 +88,3 @@ History of good text editors
 - Plan 9 
 - Inferno
 - Acme SAC
-
-[![Go Report Card](https://goreportcard.com/badge/github.com/as/a)](https://goreportcard.com/badge/github.com/as/a)
