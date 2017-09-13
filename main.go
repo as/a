@@ -171,7 +171,7 @@ func main() {
 		}
 		sizerOf := func(p Plane) image.Rectangle {
 			r := p.Loc()
-			r.Max = r.Min.Add(image.Pt(11, 11))
+			r.Max = r.Min.Add(image.Pt(10, 20))
 			return r
 		}
 		sizerHit := func(p Plane, pt image.Point) bool {
