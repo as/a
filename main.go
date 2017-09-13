@@ -47,6 +47,8 @@ var (
 	winSize = image.Pt(1024, 768)
 	pad     = image.Pt(15, 15)
 	fsize   = 11
+	tagHeight = 25
+	scrollX = 10
 )
 
 func abs(a int) int {
@@ -171,7 +173,7 @@ func main() {
 		}
 		sizerOf := func(p Plane) image.Rectangle {
 			r := p.Loc()
-			r.Max = r.Min.Add(image.Pt(10, 20))
+			r.Max = r.Min.Add(image.Pt(scrollX, tagHeight))
 			return r
 		}
 		sizerHit := func(p Plane, pt image.Point) bool {
@@ -197,15 +199,16 @@ func main() {
 		growshrink := func(e mouse.Event) {
 			dy := r.Min.Y
 			id := actCol.ID(actTag)
-			if e.Button == 3 && id > 1 {
-				a := actCol.List[id-1].Loc()
-				by := actCol.List[id].Loc().Min.Y
-				dy = by - (a.Max.Y - a.Min.Y) + fsize*2
-				dy += fsize * 2
-			} else {
+			switch e.Button{
+			case 3:
+				actCol.RollUp(id, dy)
+				//actCol.MoveWin(id, dy)
+			case 2:
 				dy -= fsize * 2
+				actCol.MoveWin(id, dy)
+			case 1:
+				actCol.RollDown(id+1, tagHeight)
 			}
-			actCol.MoveWin(id, dy)
 			moveMouse(actTag.Loc().Min)
 		}
 		tophit := func() bool {
@@ -382,7 +385,7 @@ func main() {
 						growshrink(e.Event)
 					}
 
-				} else if x := int(e.X); x >= 0 && x < 15 {
+				} else if x := int(e.X); x >= 0 && x < 10 {
 					context = scrollbar
 					act.Clicksb(p(e.Event), int(e.Button))
 				} else {

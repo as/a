@@ -99,14 +99,43 @@ func Del(co *Col, id int) {
 	co.fill()
 }
 
+func (co *Col) RollUp(id int, dy int) {
+	if id <= 0 || id >= len(co.List) {
+		return
+	}
+	for x := 2; x <= id; x++ {
+		a := co.List[x-1].Loc()
+		dy = a.Min.Y + tagHeight
+		co.MoveWin(x, dy)
+	}
+	co.MoveWin(id, dy)
+}
+
+func (co *Col) RollDown(id int, dy int) {
+/*
+	if id >= len(co.List) {
+		return
+	}
+	x:=id
+	a := co.List[x].Loc()
+	for x+1 < len(co.List){
+		b := co.List[x+1].Loc()
+		if extra := a.Min.Y+tagHeight+dy-b.Min.Y; extra > 0{
+			co.MoveWin(x, a.Min.Y+extra)
+		}
+	}
+	if a.Min.Y+dy > co.Loc().Max.Y{
+		dy = co.Loc().Max.Y - tagHeight
+	}
+	co.MoveWin(id, a.Min.Y+dy)
+	*/
+}
+
 func (co *Col) Move(sp image.Point) {
-	co.sp = sp
-	dy := 0
+	co.sp.X = sp.X
 	for _, t := range co.List {
-		sp0 := image.Pt(sp.X, sp.Y+dy)
-		fmt.Printf("movewin -> %s\n", sp0)
-		t.Move(sp0)
-		dy = t.Loc().Dy()
+		sp := image.Pt(sp.X, t.Loc().Min.Y)
+		t.Move(sp)
 	}
 	co.fill()
 }
