@@ -34,6 +34,7 @@ func NewCol(src screen.Screen, wind screen.Window, ft *font.Font, sp, size image
 	for i, v := range files {
 		t := tag.NewTag(src, wind, ft, sp, dy, pad, frame.ATag1)
 		t.Get(v)
+		t.Insert([]byte(" [Edit  ,x]"), t.Len())
 		col.List[i] = t
 		sp.Y += dy.Y
 	}
@@ -80,6 +81,7 @@ func New(co *Col, filename string) (w Plane) {
 	co.PrintList()
 	t := tag.NewTag(co.src, co.wind, tw.Font, co.sp, image.Pt(co.size.X, co.tdy*2), pad, tw.Color)
 	t.Get(filename)
+	t.Insert([]byte(" [Edit  ,x]"), t.Len())
 	lsize := sizeof(last.Loc())
 	lsize.Y -= lsize.Y / 3
 	last.Resize(lsize)
