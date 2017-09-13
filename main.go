@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime/pprof"
 	"strings"
 	"sync"
 	"time"
@@ -84,8 +83,6 @@ type CmdEvent struct {
 	act  Plane
 }
 
-var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
-
 func p(e mouse.Event) image.Point {
 	return image.Pt(int(e.X), int(e.Y))
 }
@@ -108,14 +105,8 @@ func moveMouse(pt image.Point) {
 // Put
 func main() {
 	flag.Parse()
-	if *cpuprofile != "" {
-		f, err := os.Create(*cpuprofile)
-		if err != nil {
-			log.Fatal(err)
-		}
-		pprof.StartCPUProfile(f)
-		defer pprof.StopCPUProfile()
-	}
+	defer trypprof()()
+	
 	list := argparse()
 	driver.Main(func(src screen.Screen) {
 		wind, _ := src.NewWindow(
@@ -123,12 +114,10 @@ func main() {
 				Width: winSize.X, Height: winSize.Y, Title: "A",
 			},
 		)
-
 		//
 		// Linux will segfault here if X is not present
 		wind.Send(paint.Event{})
 		ft := font.NewGoMono(fsize)
-
 		g := NewGrid(src, wind, ft, image.ZP, image.Pt(winSize.X, winSize.Y), list...)
 		actCol = g.List[1].(*Col)
 		actTag = actCol.List[1].(*tag.Tag)
