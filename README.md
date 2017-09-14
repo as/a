@@ -8,16 +8,15 @@ A is my text editor.
 - Closely resembles the Acme and Sam text editors.
 - Optimized for editing huge binary files. 
   `The underlying frame implementation (see as/frame) does not eschew null bytes. UTF-8 is not implemented at this time.`
-- Standard UNIX keyboard shortcuts
-  `No crazy vi/emacs tricks`
-- Mouse Chords
+- Standard UNIX keyboard shortcuts `No vi/emacs tricks`
+- Mouse chording
 - Command Language
   `Edit command language is 80% implemented (slow)`
 
 
 ![paint](a.png)
 
-This repository will change frequently, things will break unexpectedly. See issues.
+This repository will change frequently, things will improve unexpectedly. See issues.
 
 # install
 Because the other packages in my namepace are frequently updated , I recommended using go get -u
