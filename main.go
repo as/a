@@ -426,6 +426,7 @@ func main() {
 				ck()
 			case key.Event:
 				actTag.Handle(act, e)
+				dirty=true
 				ck()
 			case event.Look:
 				alook(e)
@@ -467,6 +468,7 @@ func main() {
 							moveMouse(ed.Loc().Min)
 						}
 						cmd(ed, s)
+						dirty = true
 					}
 				}
 				ck()
