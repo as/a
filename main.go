@@ -56,7 +56,7 @@ func abs(a int) int {
 	return a
 }
 
-var cols = frame.A
+var cols = frame.Mono
 
 func Tagtext(s string, w Plane) {
 	switch w := w.(type) {
@@ -347,6 +347,7 @@ func main() {
 				e.Y -= float32(act.Sp.Y)
 				mousein.Sink <- e
 			case mus.MarkEvent:
+			
 				context = 0
 				pt = p(e.Event).Add(act.Loc().Min)
 				if sizerHit(actTag, pt) {
@@ -373,7 +374,7 @@ func main() {
 				if e.Button == -1 {
 					e.Dy = -e.Dy
 				}
-				actTag.Body.Scroll(e.Dy)
+				actTag.Body.Scroll(e.Dy*2)
 				ck()
 			case mus.SweepEvent:
 				switch context {
@@ -426,7 +427,7 @@ func main() {
 				ck()
 			case key.Event:
 				actTag.Handle(act, e)
-				dirty=true
+				dirty = true
 				ck()
 			case event.Look:
 				alook(e)
