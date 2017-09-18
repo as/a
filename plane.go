@@ -21,4 +21,3 @@ func eq(a, b Plane) bool {
 func sizeof(r image.Rectangle) image.Point {
 	return r.Max.Sub(r.Min)
 }
- 

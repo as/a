@@ -35,7 +35,6 @@ import (
 	"github.com/as/frame/win"
 	window "github.com/as/ms/win"
 	"github.com/as/text"
-	
 )
 
 var xx Cursor
@@ -43,11 +42,11 @@ var eprint = fmt.Println
 
 // Put
 var (
-	winSize = image.Pt(1024, 768)
-	pad     = image.Pt(15, 15)
-	fsize   = 11
+	winSize   = image.Pt(1024, 768)
+	pad       = image.Pt(15, 15)
+	fsize     = 11
 	tagHeight = 25
-	scrollX = 10
+	scrollX   = 10
 )
 
 func abs(a int) int {
@@ -106,7 +105,7 @@ func moveMouse(pt image.Point) {
 func main() {
 	flag.Parse()
 	defer trypprof()()
-	
+
 	list := argparse()
 	driver.Main(func(src screen.Screen) {
 		wind, _ := src.NewWindow(
@@ -188,7 +187,7 @@ func main() {
 		growshrink := func(e mouse.Event) {
 			dy := r.Min.Y
 			id := actCol.ID(actTag)
-			switch e.Button{
+			switch e.Button {
 			case 3:
 				actCol.RollUp(id, dy)
 				//actCol.MoveWin(id, dy)
@@ -219,27 +218,15 @@ func main() {
 			t.Body.Select(q1+n, q1+n)
 		}
 		ajump := func(ed text.Editor, cursor bool) {
-			proj, ok := ed.(text.Projector)
-			if !ok {
-				return
+			fn := moveMouse
+			if cursor == false {
+				fn = nil
 			}
-			nchars := proj.IndexOf(image.Pt(9999, 9999))
-			q0, q1 := ed.Dot()
-			sc, ok := ed.(text.Scroller)
-			if !ok {
-				return
+			if ed, ok := ed.(text.Jumper); ok {
+				ed.Jump(fn)
 			}
-			if text.Region5(q0, q1, sc.Origin(), sc.Origin()+nchars) != 0 {
-				sc.SetOrigin(q0, true)
-				sc.Scroll(-3)
-			}
-			if cursor {
-				jmp := proj.PointOf(q0 - sc.Origin())
-				moveMouse(sc.(text.Plane).Bounds().Min.Add(jmp))
-			}
-			ck()
 		}
-		ismeta := func(ed Plane) bool{
+		ismeta := func(ed Plane) bool {
 			return ed == g.List[0].(*tag.Tag).Body
 		}
 		alook := func(e event.Look) {
@@ -260,20 +247,20 @@ func main() {
 			}
 
 			t2 := g.FindName(name)
-			if len(e.To) > 0{
-					ed := e.To[0].(*win.Win)
-					if ismeta(ed){ 
-						for _, c := range g.List[1:] {
-							c := c.(*Col)
-							for _, w := range c.List[1:] {
-								w := w.(*tag.Tag)
-								q0, q1 := find.FindNext(w.Body, e.P)
-								w.Body.Select(q0, q1)
-								ajump(w.Body, false)
-							}
+			if len(e.To) > 0 {
+				ed := e.To[0].(*win.Win)
+				if ismeta(ed) {
+					for _, c := range g.List[1:] {
+						c := c.(*Col)
+						for _, w := range c.List[1:] {
+							w := w.(*tag.Tag)
+							q0, q1 := find.FindNext(w.Body, e.P)
+							w.Body.Select(q0, q1)
+							ajump(w.Body, false)
 						}
-						return
 					}
+					return
+				}
 			}
 			if name == "" && addr != "" {
 				// Just an address with no name:
@@ -396,12 +383,12 @@ func main() {
 				case window:
 					// A very effective optimization eliminates several function
 					// calls completely if the cursor isn't moving and the use is still
-					// in the window's bounds. 
-					if !e.Motion() && act != nil{
-							r := act.Frame.Bounds()
-							if p(e.Event).In(r){
-								continue
-							}
+					// in the window's bounds.
+					if !e.Motion() && act != nil {
+						r := act.Frame.Bounds()
+						if p(e.Event).In(r) {
+							continue
+						}
 					}
 					actTag.Handle(act, e)
 				}
@@ -471,10 +458,11 @@ func main() {
 						if len(s) > 5 {
 							prog := edit.MustCompile(s[5:])
 							prog.Run(e.To[0])
+							ajump(e.To[0], false)
 						}
 					} else {
 						ed := e.To[0].(*win.Win)
-						if ismeta(ed){
+						if ismeta(ed) {
 							ed = New(g.List[len(g.List)-1].(*Col), fmt.Sprintf("%s+Errors", s)).(*tag.Tag).Body
 							moveMouse(ed.Loc().Min)
 						}
@@ -499,7 +487,7 @@ func main() {
 				// NT doesn't repaint the window if another window covers it
 				if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOff {
 					focused = false
-					wind.SendFirst(paint.Event{})
+					wind.Send(paint.Event{})
 				} else if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOn {
 					focused = true
 				}

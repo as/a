@@ -11,12 +11,12 @@ var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
 func trypprof() func() {
 	if *cpuprofile == "" {
-		return func(){}
+		return func() {}
 	}
 	f, err := os.Create(*cpuprofile)
 	if err != nil {
 		log.Fatal(err)
 	}
-		pprof.StartCPUProfile(f)
-		return pprof.StopCPUProfile
+	pprof.StartCPUProfile(f)
+	return pprof.StopCPUProfile
 }

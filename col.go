@@ -114,22 +114,22 @@ func (co *Col) RollUp(id int, dy int) {
 }
 
 func (co *Col) RollDown(id int, dy int) {
-/*
-	if id >= len(co.List) {
-		return
-	}
-	x:=id
-	a := co.List[x].Loc()
-	for x+1 < len(co.List){
-		b := co.List[x+1].Loc()
-		if extra := a.Min.Y+tagHeight+dy-b.Min.Y; extra > 0{
-			co.MoveWin(x, a.Min.Y+extra)
+	/*
+		if id >= len(co.List) {
+			return
 		}
-	}
-	if a.Min.Y+dy > co.Loc().Max.Y{
-		dy = co.Loc().Max.Y - tagHeight
-	}
-	co.MoveWin(id, a.Min.Y+dy)
+		x:=id
+		a := co.List[x].Loc()
+		for x+1 < len(co.List){
+			b := co.List[x+1].Loc()
+			if extra := a.Min.Y+tagHeight+dy-b.Min.Y; extra > 0{
+				co.MoveWin(x, a.Min.Y+extra)
+			}
+		}
+		if a.Min.Y+dy > co.Loc().Max.Y{
+			dy = co.Loc().Max.Y - tagHeight
+		}
+		co.MoveWin(id, a.Min.Y+dy)
 	*/
 }
 
