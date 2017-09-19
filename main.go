@@ -451,8 +451,8 @@ func main() {
 						}
 					} else {
 						e.Path = e.Path.Look(s)
-						to := afinderr(path.DirOf(e.Path.Name()))
-						cmd(to.Body, path.DirOf(e.Path.Abs()), e.Path.Name())
+						to := afinderr(path.DirOf(e.Path.Abs()))
+						cmd(to.Body, path.DirOf(e.Path.Abs()), s)
 						dirty = true
 					}
 				}
