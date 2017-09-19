@@ -7,6 +7,7 @@ import (
 	"github.com/as/frame/tag"
 	"golang.org/x/exp/shiny/screen"
 	"image"
+	"github.com/as/path"
 )
 
 type Col struct {
@@ -25,7 +26,7 @@ func NewCol(src screen.Screen, wind screen.Window, ft *font.Font, sp, size image
 	tdy := ft.Dy() + ft.Dy()/2
 	tagpad := image.Pt(pad.X, 3)
 	T := tag.NewTag(src, wind, ft, image.Pt(sp.X, sp.Y), image.Pt(size.X, tdy), tagpad, frame.ATag1)
-	//T.Open("tag")
+	//T.Open(path.NewPath(""))
 	T.Win.InsertString("New Delcol Sort", 0)
 	col := &Col{sp: sp, src: src, size: size, wind: wind, ft: ft, Tag: T, tdy: tdy, List: make([]Plane, len(files))}
 	size.Y -= tdy
@@ -74,13 +75,13 @@ func NewCol2(g *Grid, filenames ...string) (w Plane) {
 	return col
 }
 
-func New(co *Col, filename string) (w Plane) {
+func New(co *Col, path path.Path) (w Plane) {
 	last := co.List[len(co.List)-1]
 	last.Loc()
 	tw := co.Tag.Win
 	co.PrintList()
 	t := tag.NewTag(co.src, co.wind, tw.Font, co.sp, image.Pt(co.size.X, co.tdy*2), pad, tw.Color)
-	t.Get(filename)
+	t.Open(path)
 	t.Insert([]byte(" [Edit  ,x]"), t.Len())
 	lsize := sizeof(last.Loc())
 	lsize.Y -= lsize.Y / 3
@@ -95,8 +96,15 @@ func Del(co *Col, id int) {
 		Release()
 	}
 	w := co.detach(id)
+	y := w.Loc().Min.Y
+	x := co.Loc().Min.X
 	if t, ok := w.(Releaser); ok {
 		t.Release()
+	}
+	for ; id < len(co.List); id++{
+		y2 := co.List[id].Loc().Min.Y
+		co.List[id].Move(image.Pt(x, y))
+		y = y2
 	}
 	co.fill()
 }

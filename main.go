@@ -10,7 +10,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -35,6 +34,7 @@ import (
 	"github.com/as/frame/win"
 	window "github.com/as/ms/win"
 	"github.com/as/text"
+	"github.com/as/path"
 )
 
 var xx Cursor
@@ -203,15 +203,20 @@ func main() {
 			return pt.Y > g.sp.Y+g.tdy && pt.Y < g.sp.Y+g.tdy*2
 		}
 		timefmt := "2006.01.02 15.04.05"
-		aerr := func(fm string, i ...interface{}) {
-			t := g.FindName("+Errors")
+		afinderr := func(name string) (*tag.Tag){
+			name += "+Errors"
+			t := g.FindName(name)
 			if t == nil {
-				t = New(actCol, "+Errors").(*tag.Tag)
+				t = New(actCol, path.NewPath(name)).(*tag.Tag)
 				if t == nil {
-					panic("cant create aerr window")
+					panic("cant create tag")
 				}
 				moveMouse(t.Loc().Min)
 			}
+			return t
+		}
+		aerr := func(fm string, i ...interface{}) {
+			t := afinderr("")
 			q1 := t.Body.Len()
 			t.Body.Select(q1, q1)
 			n := int64(t.Body.Insert([]byte(time.Now().Format(timefmt)+": "+fmt.Sprintf(fm, i...)+"\n"), q1))
@@ -233,19 +238,13 @@ func main() {
 			// First we find out if its coming from a tag or
 			// a window body. Then we find out if its an address
 			// and lastly we look
-			var t *tag.Tag
-			fromdir := ""
 			istag := false
 			_, istag = e.From.(*tag.Tag)
 			str := string(e.P)
 			name, addr := action.SplitPath(str)
-			if !filepath.IsAbs(name) {
-				fromdir = e.FromFile
-				if !action.IsDir(fromdir) {
-					fromdir = action.Dirof(t.FileName())
-				}
-			}
-
+			path := e.Path.Look(name)
+			name = path.Name()
+			log.Printf("idiot log path is %s and %s and %#v\n\n\n", name, addr, path)
 			t2 := g.FindName(name)
 			if len(e.To) > 0 {
 				ed := e.To[0].(*win.Win)
@@ -278,12 +277,12 @@ func main() {
 				} else {
 					moveMouse(t2.Bounds().Min)
 				}
-			} else if name := filepath.Join(fromdir, name); action.IsFile(name) || action.IsDir(name) {
+			} else if path.Exists()  {
 				// If the path is relative, it's combined with the tag's cwd
 				// jump to the window by the same name if it's already open
-				t2 := g.FindName(name)
+				t2 := g.FindName(path.Name())
 				if t2 == nil {
-					t2 = New(actCol, name).(*tag.Tag)
+					t2 = New(actCol, path).(*tag.Tag)
 					moveMouse(t2.Loc().Min)
 				}
 				t2.Body.Select(0, 0)
@@ -441,7 +440,7 @@ func main() {
 					aerr(s)
 					ck()
 				case "New":
-					moveMouse(New(actCol, "").Loc().Min)
+					moveMouse(New(actCol, path.NewPath("")).Loc().Min)
 				case "Newcol":
 					moveMouse(NewCol2(g, "").Loc().Min)
 				case "Del":
@@ -463,12 +462,9 @@ func main() {
 							ajump(e.To[0], false)
 						}
 					} else {
-						ed := e.To[0].(*win.Win)
-						if ismeta(ed) {
-							ed = New(g.List[len(g.List)-1].(*Col), fmt.Sprintf("%s+Errors", s)).(*tag.Tag).Body
-							moveMouse(ed.Loc().Min)
-						}
-						cmd(ed, s)
+						e.Path = e.Path.Look(s)
+						to := afinderr(path.DirOf(e.Path.Name()))
+						cmd(to.Body, path.DirOf(e.Path.Abs()), e.Path.Name())
 						dirty = true
 					}
 				}
@@ -502,7 +498,7 @@ func main() {
 
 }
 
-func cmd(f text.Editor, argv string) {
+func cmd(f text.Editor, dir string, argv string) {
 	x := strings.Fields(argv)
 	if len(x) == 0 {
 		eprint("|: nothing on rhs")
@@ -513,8 +509,9 @@ func cmd(f text.Editor, argv string) {
 	if len(x) > 1 {
 		a = x[1:]
 	}
-
+	
 	cmd := exec.Command(n, a...)
+	cmd.Dir = dir
 	q0, q1 := f.Dot()
 	f.Delete(q0, q1)
 	q1 = q0
