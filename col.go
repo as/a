@@ -5,9 +5,9 @@ import (
 	"github.com/as/frame"
 	"github.com/as/frame/font"
 	"github.com/as/frame/tag"
+	"github.com/as/path"
 	"golang.org/x/exp/shiny/screen"
 	"image"
-	"github.com/as/path"
 )
 
 type Col struct {
@@ -101,7 +101,7 @@ func Del(co *Col, id int) {
 	if t, ok := w.(Releaser); ok {
 		t.Release()
 	}
-	for ; id < len(co.List); id++{
+	for ; id < len(co.List); id++ {
 		y2 := co.List[id].Loc().Min.Y
 		co.List[id].Move(image.Pt(x, y))
 		y = y2
