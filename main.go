@@ -122,17 +122,6 @@ func main() {
 		actTag = actCol.List[1].(*tag.Tag)
 		act = actTag.Body
 
-		go func() {
-			sc := bufio.NewScanner(bufio.NewReader(os.Stdin))
-			for sc.Scan() {
-				if x := sc.Text(); x == "u" || x == "r" {
-					act.SendFirst(x)
-					continue
-				}
-				act.SendFirst(edit.MustCompile(sc.Text()))
-			}
-		}()
-
 		var pt image.Point
 		r := act.Bounds()
 		mousein := mus.NewMouse(time.Second/3, wind)
