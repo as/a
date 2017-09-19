@@ -61,6 +61,8 @@ Edit ,x,the standard editor is any editor,x,any editor,c,ed,
 ^H  Delete character before the cursor.
 ^A  Move cursor to start of the line.
 ^E  Move cursor to end of the line.
+^+  Increase font size
+^-  Decrease font size
 ```
 
 # extras
