@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"flag"
 	"fmt"
@@ -33,8 +32,8 @@ import (
 	"github.com/as/frame/tag"
 	"github.com/as/frame/win"
 	window "github.com/as/ms/win"
-	"github.com/as/text"
 	"github.com/as/path"
+	"github.com/as/text"
 )
 
 var xx Cursor
@@ -192,7 +191,7 @@ func main() {
 			return pt.Y > g.sp.Y+g.tdy && pt.Y < g.sp.Y+g.tdy*2
 		}
 		timefmt := "2006.01.02 15.04.05"
-		afinderr := func(name string) (*tag.Tag){
+		afinderr := func(name string) *tag.Tag {
 			name += "+Errors"
 			t := g.FindName(name)
 			if t == nil {
@@ -266,7 +265,7 @@ func main() {
 				} else {
 					moveMouse(t2.Bounds().Min)
 				}
-			} else if path.Exists()  {
+			} else if path.Exists() {
 				// If the path is relative, it's combined with the tag's cwd
 				// jump to the window by the same name if it's already open
 				t2 := g.FindName(path.Name())
@@ -335,7 +334,7 @@ func main() {
 				e.Y -= float32(act.Sp.Y)
 				mousein.Sink <- e
 			case mus.MarkEvent:
-			
+
 				context = 0
 				pt = p(e.Event).Add(act.Loc().Min)
 				if sizerHit(actTag, pt) {
@@ -362,7 +361,7 @@ func main() {
 				if e.Button == -1 {
 					e.Dy = -e.Dy
 				}
-				actTag.Body.Scroll(e.Dy*2)
+				actTag.Body.Scroll(e.Dy * 2)
 				ck()
 			case mus.SweepEvent:
 				switch context {
@@ -498,7 +497,7 @@ func cmd(f text.Editor, dir string, argv string) {
 	if len(x) > 1 {
 		a = x[1:]
 	}
-	
+
 	cmd := exec.Command(n, a...)
 	cmd.Dir = dir
 	q0, q1 := f.Dot()
