@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/as/frame"
 	"github.com/as/frame/font"
-	"github.com/as/ui/tag"
-	"github.com/as/ui"
+	"github.com/as/frame/tag"
+	"golang.org/x/exp/shiny/screen"
 	"image"
 )
 
@@ -12,18 +12,18 @@ type Grid struct {
 	*Col
 }
 
-func NewGrid(dev *ui.Dev, sp, size image.Point, ft *font.Font, files ...string) *Grid {
+func NewGrid(src screen.Screen, wind screen.Window, ft *font.Font, sp, size image.Point, files ...string) *Grid {
 	N := len(files)
 	tdy := tag.TagSize(ft)
 	tagpad := tag.TagPad(pad)
-	T := tag.New(dev, sp, image.Pt(size.X, tdy), tagpad, ft, frame.ATag0)
+	T := tag.New(src, wind, sp, image.Pt(size.X, tdy), tagpad, ft, frame.ATag0)
 	T.Win.InsertString("Newcol Killall Exit", 0)
-	g := &Grid{&Col{dev: dev, sp: sp, size: size, ft: ft, Tag: T, tdy: tdy, List: make([]Plane, len(files))}}
+	g := &Grid{&Col{sp: sp, src: src, size: size, wind: wind, ft: ft, Tag: T, tdy: tdy, List: make([]Plane, len(files))}}
 	size.Y -= tdy
 	sp.Y += tdy
 	d := image.Pt(size.X/N, size.Y)
 	for i, v := range files {
-		g.List[i] = NewCol(dev, ft, sp, size, v)
+		g.List[i] = NewCol(src, wind, ft, sp, size, v)
 		sp.X += d.X
 	}
 	g.List = append([]Plane{T}, g.List...)
