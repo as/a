@@ -25,7 +25,7 @@ func NewCol(src screen.Screen, wind screen.Window, ft *font.Font, sp, size image
 	N := len(files)
 	tdy := ft.Dy() + ft.Dy()/2
 	tagpad := image.Pt(pad.X, 3)
-	T := tag.NewTag(src, wind, ft, image.Pt(sp.X, sp.Y), image.Pt(size.X, tdy), tagpad, frame.ATag1)
+	T := tag.New(src, wind, sp, image.Pt(size.X, tdy), tagpad, ft, frame.ATag1)
 	//T.Open(path.NewPath(""))
 	T.Win.InsertString("New Delcol Sort", 0)
 	col := &Col{sp: sp, src: src, size: size, wind: wind, ft: ft, Tag: T, tdy: tdy, List: make([]Plane, len(files))}
@@ -33,7 +33,7 @@ func NewCol(src screen.Screen, wind screen.Window, ft *font.Font, sp, size image
 	sp.Y += tdy
 	dy := image.Pt(size.X, size.Y/N)
 	for i, v := range files {
-		t := tag.NewTag(src, wind, ft, sp, dy, pad, frame.ATag1)
+		t := tag.New(src, wind, sp, dy, pad, ft, frame.ATag1)
 		t.Get(v)
 		t.Insert([]byte(" [Edit  ,x]"), t.Len())
 		col.List[i] = t
@@ -78,7 +78,7 @@ func New(co *Col, basedir, name string) (w Plane) {
 	last := co.List[len(co.List)-1]
 	last.Loc()
 	tw := co.Tag.Win
-	t := tag.NewTag(co.src, co.wind, tw.Font, co.sp, image.Pt(co.size.X, co.tdy*2), pad, tw.Color)
+	t := tag.New(co.src, co.wind, co.sp, image.Pt(co.size.X, co.tdy*2), pad, tw.Font, tw.Color)
 	t.Open(basedir, name)
 	t.Insert([]byte(" [Edit  ,x]"), t.Len())
 	lsize := sizeof(last.Loc())

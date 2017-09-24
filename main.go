@@ -241,7 +241,7 @@ func main() {
 			context   = 0
 		)
 
-		aerr("ver=0.3.1")
+		aerr("ver=0.3.2")
 		aerr("pid=%d", os.Getpid())
 		aerr("args=%q", os.Args)
 

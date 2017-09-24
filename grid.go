@@ -16,7 +16,7 @@ func NewGrid(src screen.Screen, wind screen.Window, ft *font.Font, sp, size imag
 	N := len(files)
 	tdy := tag.TagSize(ft)
 	tagpad := tag.TagPad(pad)
-	T := tag.NewTag(src, wind, ft, image.Pt(sp.X, sp.Y), image.Pt(size.X, tdy), tagpad, frame.ATag0)
+	T := tag.New(src, wind, sp, image.Pt(size.X, tdy), tagpad, ft, frame.ATag0)
 	T.Win.InsertString("Newcol Killall Exit", 0)
 	g := &Grid{&Col{sp: sp, src: src, size: size, wind: wind, ft: ft, Tag: T, tdy: tdy, List: make([]Plane, len(files))}}
 	size.Y -= tdy
