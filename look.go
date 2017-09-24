@@ -1,20 +1,20 @@
 package main
 
 import (
-	"image"
-	"path/filepath"
 	"github.com/as/edit"
 	"github.com/as/event"
-	"github.com/as/ui/tag"
-	"github.com/as/ui/win"
 	"github.com/as/path"
 	"github.com/as/text"
 	"github.com/as/text/action"
 	"github.com/as/text/find"
+	"github.com/as/ui/tag"
+	"github.com/as/ui/win"
+	"image"
+	"path/filepath"
 )
 
-func AbsOf(basedir, path string) string{
-	if filepath.IsAbs(path){
+func AbsOf(basedir, path string) string {
+	if filepath.IsAbs(path) {
 		return path
 	}
 	return filepath.Join(basedir, path)
@@ -33,8 +33,6 @@ func AbsOf(basedir, path string) string{
 // Address lookups follow for each of the three above
 //
 // 4). An address in the destination
-
-
 
 func (g *Grid) Look(e event.Look) {
 	name, addr := action.SplitPath(string(e.P))
@@ -65,46 +63,46 @@ func (g *Grid) Look(e event.Look) {
 	visible := ""
 	switch {
 	case filepath.IsAbs(name):
-		if !path.Exists(name){
+		if !path.Exists(name) {
 			break
 		}
 		abspath = filepath.Clean(name)
 		visible = abspath
 	case filepath.IsAbs(e.Name):
-		if !path.Exists(e.Name){
+		if !path.Exists(e.Name) {
 			break
 		}
 		abspath = filepath.Join(path.DirOf(e.Name), name)
 		visible = abspath
 	case filepath.IsAbs(e.Basedir):
-		if !path.Exists(e.Basedir){
+		if !path.Exists(e.Basedir) {
 			break
 		}
 		abspath = path.DirOf(e.Basedir)
 		visible = filepath.Join(path.DirOf(e.Name), name)
 	default:
 	}
-	
+
 	var t *tag.Tag
-	isdir=isdir
-	if abspath == visible && path.Exists(visible){
+	isdir = isdir
+	if abspath == visible && path.Exists(visible) {
 		isdir = path.IsDir(abspath)
 		t = New(actCol, path.DirOf(abspath), visible).(*tag.Tag)
-	} else if realpath := filepath.Join(abspath, visible); path.Exists(realpath){
+	} else if realpath := filepath.Join(abspath, visible); path.Exists(realpath) {
 		isdir = path.IsDir(realpath)
 		t = New(actCol, path.DirOf(abspath), visible).(*tag.Tag)
 	}
 	if t != nil {
 		if addr != "" {
-				//TODO(as): danger, edit needs a way to ensure it will only jump to an address
-				edit.MustCompile(addr).Run(t.Body)
-				ajump(t.Body, moveMouse)
+			//TODO(as): danger, edit needs a way to ensure it will only jump to an address
+			edit.MustCompile(addr).Run(t.Body)
+			ajump(t.Body, moveMouse)
 		} else {
 			ajump(t, moveMouse)
 		}
 		return
 	}
-	
+
 	// String literal
 	for _, ed := range e.To {
 		q0, q1 := find.FindNext(ed, e.P)

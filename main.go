@@ -22,15 +22,15 @@ import (
 	"golang.org/x/mobile/event/paint"
 	"golang.org/x/mobile/event/size"
 
-	"github.com/as/path"
 	"github.com/as/cursor"
 	"github.com/as/edit"
 	"github.com/as/frame"
 	"github.com/as/frame/font"
+	window "github.com/as/ms/win"
+	"github.com/as/path"
+	"github.com/as/text"
 	"github.com/as/ui"
 	"github.com/as/ui/tag"
-	window "github.com/as/ms/win"
-	"github.com/as/text"
 )
 
 var xx Cursor
@@ -102,327 +102,327 @@ func main() {
 	flag.Parse()
 	defer trypprof()()
 	list := argparse()
-	dev, err := ui.Init(&screen.NewWindowOptions{ Width:  winSize.X, Height: winSize.Y, Title:  "A"})
-	if err != nil{
+	dev, err := ui.Init(&screen.NewWindowOptions{Width: winSize.X, Height: winSize.Y, Title: "A"})
+	if err != nil {
 		log.Fatalln(err)
 	}
-		wind := dev.Window()
-			
-		// Linux will segfault here if X is not present
-		wind.Send(paint.Event{})
-		ft := font.NewGoMono(fsize)
-		g := NewGrid(dev,image.ZP, winSize, ft, list...)
+	wind := dev.Window()
 
-		// This in particular needs to go
-		actCol = g.List[1].(*Col)
-		actTag = actCol.List[1].(*tag.Tag)
-		act = actTag.Body
+	// Linux will segfault here if X is not present
+	wind.Send(paint.Event{})
+	ft := font.NewGoMono(fsize)
+	g := NewGrid(dev, image.ZP, winSize, ft, list...)
 
-		var pt image.Point
-		r := act.Bounds()
-		mousein := mus.NewMouse(time.Second/3, wind)
-		mousein.Machine.SetRect(image.Rect(r.Min.X, r.Min.Y+pad.Y, r.Max.X, r.Max.Y-pad.Y))
-		var dirty bool
-		ck := func() {
-			if dirty || (act != nil && act.Dirty()) {
-				wind.Send(paint.Event{})
-			}
-		}
+	// This in particular needs to go
+	actCol = g.List[1].(*Col)
+	actTag = actCol.List[1].(*tag.Tag)
+	act = actTag.Body
 
-		//
-		// Temporary just until col and tag can be seperated into their own packages. The
-		// majority of these closures will disappear as the program becomes more stable
-		sweepend := func() {
-			if xx.sweepCol {
-				xx.sweepCol = false
-				g.fill()
-				g.Attach(xx.srcCol, pt.X)
-				moveMouse(xx.srcCol.Loc().Min)
-			} else {
-				xx.sweep = false
-				xx.srcCol.fill()
-				if xx.src == nil {
-					return
-				}
-				actCol.Attach(xx.src, pt.Y)
-				moveMouse(xx.src.Loc().Min)
-			}
+	var pt image.Point
+	r := act.Bounds()
+	mousein := mus.NewMouse(time.Second/3, wind)
+	mousein.Machine.SetRect(image.Rect(r.Min.X, r.Min.Y+pad.Y, r.Max.X, r.Max.Y-pad.Y))
+	var dirty bool
+	ck := func() {
+		if dirty || (act != nil && act.Dirty()) {
+			wind.Send(paint.Event{})
 		}
-		// Returns the bounding box of the invisible sizer you can use
-		// to draw windows and columns around.
-		sizerOf := func(p Plane) image.Rectangle {
-			r := p.Loc()
-			r.Max = r.Min.Add(image.Pt(scrollX, tagHeight))
-			return r
-		}
-		sizerHit := func(p Plane, pt image.Point) bool {
-			in := pt.In(sizerOf(p))
-			return in
-		}
-		markwin := func() {
-			xx.srcCol = actCol
-			xx.src = actTag
-		}
-		detachcol := func() {
-			xx.srcCol = actCol
-			xx.sweepCol = true
-			xx.src = nil
-			g.detach(g.ID(xx.srcCol))
+	}
+
+	//
+	// Temporary just until col and tag can be seperated into their own packages. The
+	// majority of these closures will disappear as the program becomes more stable
+	sweepend := func() {
+		if xx.sweepCol {
+			xx.sweepCol = false
 			g.fill()
-		}
-		detachwin := func() {
-			markwin()
-			xx.srcCol.detach(xx.srcCol.ID(xx.src))
-		}
-		growshrink := func(e mouse.Event) {
-			dy := r.Min.Y
-			id := actCol.ID(actTag)
-			switch e.Button {
-			case 3:
-				actCol.RollUp(id, dy)
-				//actCol.MoveWin(id, dy)
-			case 2:
-				dy -= fsize * 2
-				actCol.MoveWin(id, dy)
-			case 1:
-				actCol.RollDown(id+1, tagHeight)
+			g.Attach(xx.srcCol, pt.X)
+			moveMouse(xx.srcCol.Loc().Min)
+		} else {
+			xx.sweep = false
+			xx.srcCol.fill()
+			if xx.src == nil {
+				return
 			}
-			moveMouse(actTag.Loc().Min)
+			actCol.Attach(xx.src, pt.Y)
+			moveMouse(xx.src.Loc().Min)
 		}
-		tophit := func() bool {
-			return pt.Y > g.sp.Y+g.tdy && pt.Y < g.sp.Y+g.tdy*2
+	}
+	// Returns the bounding box of the invisible sizer you can use
+	// to draw windows and columns around.
+	sizerOf := func(p Plane) image.Rectangle {
+		r := p.Loc()
+		r.Max = r.Min.Add(image.Pt(scrollX, tagHeight))
+		return r
+	}
+	sizerHit := func(p Plane, pt image.Point) bool {
+		in := pt.In(sizerOf(p))
+		return in
+	}
+	markwin := func() {
+		xx.srcCol = actCol
+		xx.src = actTag
+	}
+	detachcol := func() {
+		xx.srcCol = actCol
+		xx.sweepCol = true
+		xx.src = nil
+		g.detach(g.ID(xx.srcCol))
+		g.fill()
+	}
+	detachwin := func() {
+		markwin()
+		xx.srcCol.detach(xx.srcCol.ID(xx.src))
+	}
+	growshrink := func(e mouse.Event) {
+		dy := r.Min.Y
+		id := actCol.ID(actTag)
+		switch e.Button {
+		case 3:
+			actCol.RollUp(id, dy)
+			//actCol.MoveWin(id, dy)
+		case 2:
+			dy -= fsize * 2
+			actCol.MoveWin(id, dy)
+		case 1:
+			actCol.RollDown(id+1, tagHeight)
 		}
-		timefmt := "2006.01.02 15.04.05"
-		afinderr := func(name string) *tag.Tag {
-			if !strings.HasSuffix(name, "+Errors") {
-				name += "+Errors"
-			}
-			t := g.FindName(name)
+		moveMouse(actTag.Loc().Min)
+	}
+	tophit := func() bool {
+		return pt.Y > g.sp.Y+g.tdy && pt.Y < g.sp.Y+g.tdy*2
+	}
+	timefmt := "2006.01.02 15.04.05"
+	afinderr := func(name string) *tag.Tag {
+		if !strings.HasSuffix(name, "+Errors") {
+			name += "+Errors"
+		}
+		t := g.FindName(name)
+		if t == nil {
+			t = New(actCol, "", name).(*tag.Tag)
 			if t == nil {
-				t = New(actCol, "", name).(*tag.Tag)
-				if t == nil {
-					panic("cant create tag")
+				panic("cant create tag")
+			}
+			moveMouse(t.Loc().Min)
+		}
+		return t
+	}
+	aerr := func(fm string, i ...interface{}) {
+		t := afinderr("")
+		q1 := t.Body.Len()
+		t.Body.Select(q1, q1)
+		n := int64(t.Body.Insert([]byte(time.Now().Format(timefmt)+": "+fmt.Sprintf(fm, i...)+"\n"), q1))
+		t.Body.Select(q1+n, q1+n)
+	}
+	ajump := func(ed text.Editor, cursor bool) {
+		fn := moveMouse
+		if cursor == false {
+			fn = nil
+		}
+		if ed, ok := ed.(text.Jumper); ok {
+			ed.Jump(fn)
+		}
+	}
+	ismeta := func(ed Plane) bool {
+		return ed == g.List[0].(*tag.Tag).Body
+	}
+	ismeta = ismeta
+	alook := func(e event.Look) {
+		g.Look(e)
+	}
+	var (
+		scrollbar = 1
+		sizer     = 2
+		window    = 4
+		context   = 0
+	)
+
+	aerr("ver=0.3.3")
+	aerr("pid=%d", os.Getpid())
+	aerr("args=%q", os.Args)
+
+	for {
+		e := wind.NextEvent()
+		switch e := e.(type) {
+		case mus.Drain:
+		DrainLoop:
+			for {
+				switch wind.NextEvent().(type) {
+				case mus.DrainStop:
+					break DrainLoop
 				}
+			}
+		case tag.GetEvent:
+			t := New(actCol, e.Basedir, e.Name)
+			if e.Addr != "" {
+				actTag = t.(*tag.Tag)
+				act = actTag.Body
+				actTag.Handle(actTag.Body, edit.MustCompile(e.Addr))
+				p0, _ := act.Frame.Dot()
+				moveMouse(act.Loc().Min.Add(act.PointOf(p0)))
+			} else {
 				moveMouse(t.Loc().Min)
 			}
-			return t
-		}
-		aerr := func(fm string, i ...interface{}) {
-			t := afinderr("")
-			q1 := t.Body.Len()
-			t.Body.Select(q1, q1)
-			n := int64(t.Body.Insert([]byte(time.Now().Format(timefmt)+": "+fmt.Sprintf(fm, i...)+"\n"), q1))
-			t.Body.Select(q1+n, q1+n)
-		}
-		ajump := func(ed text.Editor, cursor bool) {
-			fn := moveMouse
-			if cursor == false {
-				fn = nil
+		case mouse.Event:
+			pt = p(e).Add(act.Loc().Min)
+			if context == 0 {
+				activate(p(e), g)
 			}
-			if ed, ok := ed.(text.Jumper); ok {
-				ed.Jump(fn)
+			e.X -= float32(act.Sp.X)
+			e.Y -= float32(act.Sp.Y)
+			mousein.Sink <- e
+		case mus.MarkEvent:
+
+			context = 0
+			pt = p(e.Event).Add(act.Loc().Min)
+			if sizerHit(actTag, pt) {
+				if e.Button == 2 {
+					if tophit() {
+						detachcol()
+					} else {
+						detachwin()
+					}
+					context = sizer
+				} else {
+					growshrink(e.Event)
+				}
+
+			} else if x := int(e.X); x >= 0 && x < 10 {
+				context = scrollbar
+				act.Clicksb(p(e.Event), int(e.Button))
+			} else {
+				actTag.Handle(act, e)
+				context = window
 			}
-		}
-		ismeta := func(ed Plane) bool {
-			return ed == g.List[0].(*tag.Tag).Body
-		}
-		ismeta=ismeta
-		alook := func(e event.Look) {
-			g.Look(e)
-		}
-		var (
-			scrollbar = 1
-			sizer     = 2
-			window    = 4
-			context   = 0
-		)
-
-		aerr("ver=0.3.3")
-		aerr("pid=%d", os.Getpid())
-		aerr("args=%q", os.Args)
-
-		for {
-			e := wind.NextEvent()
-			switch e := e.(type) {
-			case mus.Drain:
-			DrainLoop:
-				for {
-					switch wind.NextEvent().(type) {
-					case mus.DrainStop:
-						break DrainLoop
+			ck()
+		case mus.ScrollEvent:
+			if e.Button == -1 {
+				e.Dy = -e.Dy
+			}
+			actTag.Body.Scroll(e.Dy * 2)
+			ck()
+		case mus.SweepEvent:
+			switch context {
+			case scrollbar:
+				act.Clicksb(p(e.Event), 0)
+			case sizer:
+			case window:
+				// A very effective optimization eliminates several function
+				// calls completely if the cursor isn't moving and the use is still
+				// in the window's bounds.
+				if !e.Motion() && act != nil {
+					r := act.Frame.Bounds()
+					if p(e.Event).In(r) {
+						continue
 					}
 				}
-			case tag.GetEvent:
-				t := New(actCol, e.Basedir, e.Name)
-				if e.Addr != "" {
-					actTag = t.(*tag.Tag)
-					act = actTag.Body
-					actTag.Handle(actTag.Body, edit.MustCompile(e.Addr))
-					p0, _ := act.Frame.Dot()
-					moveMouse(act.Loc().Min.Add(act.PointOf(p0)))
-				} else {
-					moveMouse(t.Loc().Min)
-				}
-			case mouse.Event:
-				pt = p(e).Add(act.Loc().Min)
-				if context == 0 {
-					activate(p(e), g)
-				}
-				e.X -= float32(act.Sp.X)
-				e.Y -= float32(act.Sp.Y)
-				mousein.Sink <- e
-			case mus.MarkEvent:
-
-				context = 0
-				pt = p(e.Event).Add(act.Loc().Min)
-				if sizerHit(actTag, pt) {
-					if e.Button == 2 {
-						if tophit() {
-							detachcol()
-						} else {
-							detachwin()
-						}
-						context = sizer
-					} else {
-						growshrink(e.Event)
-					}
-
-				} else if x := int(e.X); x >= 0 && x < 10 {
-					context = scrollbar
-					act.Clicksb(p(e.Event), int(e.Button))
-				} else {
-					actTag.Handle(act, e)
-					context = window
-				}
-				ck()
-			case mus.ScrollEvent:
-				if e.Button == -1 {
-					e.Dy = -e.Dy
-				}
-				actTag.Body.Scroll(e.Dy * 2)
-				ck()
-			case mus.SweepEvent:
-				switch context {
-				case scrollbar:
-					act.Clicksb(p(e.Event), 0)
-				case sizer:
-				case window:
-					// A very effective optimization eliminates several function
-					// calls completely if the cursor isn't moving and the use is still
-					// in the window's bounds.
-					if !e.Motion() && act != nil {
-						r := act.Frame.Bounds()
-						if p(e.Event).In(r) {
-							continue
-						}
-					}
-					actTag.Handle(act, e)
-				}
-				ck()
-			case mus.CommitEvent:
-				context = 0
-				ck()
-			case mus.SnarfEvent, mus.InsertEvent:
 				actTag.Handle(act, e)
-				ck()
-			case mus.SelectEvent:
-				switch context {
-				case scrollbar:
-					act.Clicksb(p(e.Event), 0)
-					wind.SendFirst(mus.Drain{})
-					wind.Send(mus.DrainStop{})
-				case sizer:
-					e.X += float32(act.Sp.X)
-					e.Y += float32(act.Sp.Y)
-					pt.X = int(e.X)
-					pt.Y = int(e.Y)
-					activate(p(e.Event), g)
-					sweepend()
-				case window:
-					actTag.Handle(act, e)
-					//q0, q1 := act.Dot()
-					if e.Button == 2 {
-						//	s := string(act.Bytes()[q0:q1])
-						//	actTag.Handle(act, s)
-						//	wind.Send(s)
-					}
-				}
-				context = 0
-				ck()
-			case key.Event:
+			}
+			ck()
+		case mus.CommitEvent:
+			context = 0
+			ck()
+		case mus.SnarfEvent, mus.InsertEvent:
+			actTag.Handle(act, e)
+			ck()
+		case mus.SelectEvent:
+			switch context {
+			case scrollbar:
+				act.Clicksb(p(e.Event), 0)
+				wind.SendFirst(mus.Drain{})
+				wind.Send(mus.DrainStop{})
+			case sizer:
+				e.X += float32(act.Sp.X)
+				e.Y += float32(act.Sp.Y)
+				pt.X = int(e.X)
+				pt.Y = int(e.Y)
+				activate(p(e.Event), g)
+				sweepend()
+			case window:
 				actTag.Handle(act, e)
-				dirty = true
-				ck()
-			case event.Look:
-				alook(e)
-				ck()
-			case event.Cmd:
-				s := string(e.P)
-				switch s {
-				case "Put", "Get":
-					actTag.Handle(act, s)
-					aerr(s)
-					ck()
-				case "New":
-					moveMouse(New(actCol, "", "").Loc().Min)
-				case "Newcol":
-					moveMouse(NewCol2(g, "").Loc().Min)
-				case "Del":
-					Del(actCol, actCol.ID(actTag))
-				case "Sort":
-					aerr("Sort: TODO")
-				case "Delcol":
-					aerr("Delcol: TODO")
-				case "Exit":
-					aerr("Exit: TODO")
-				default:
-					if len(e.To) == 0 {
-						aerr("cmd has no destination: %q", s)
-					}
-					if strings.HasPrefix(s, "Edit ") {
-						if len(s) > 5 {
-							prog := edit.MustCompile(s[5:])
-							prog.Run(e.To[0])
-							ajump(e.To[0], false)
-						}
-					} else {
-						x := strings.Fields(s)
-						if len(x) < 1 {
-							aerr("empty command")
-							continue
-						}
-						abs := AbsOf(e.Basedir, e.Name)
-						to := afinderr(abs + "-" + x[0])
-						cmd(to.Body, path.DirOf(abs), s)
-						dirty = true
-					}
+				//q0, q1 := act.Dot()
+				if e.Button == 2 {
+					//	s := string(act.Bytes()[q0:q1])
+					//	actTag.Handle(act, s)
+					//	wind.Send(s)
 				}
+			}
+			context = 0
+			ck()
+		case key.Event:
+			actTag.Handle(act, e)
+			dirty = true
+			ck()
+		case event.Look:
+			alook(e)
+			ck()
+		case event.Cmd:
+			s := string(e.P)
+			switch s {
+			case "Put", "Get":
+				actTag.Handle(act, s)
+				aerr(s)
 				ck()
-			case size.Event:
-				winSize = image.Pt(e.WidthPx, e.HeightPx)
+			case "New":
+				moveMouse(New(actCol, "", "").Loc().Min)
+			case "Newcol":
+				moveMouse(NewCol2(g, "").Loc().Min)
+			case "Del":
+				Del(actCol, actCol.ID(actTag))
+			case "Sort":
+				aerr("Sort: TODO")
+			case "Delcol":
+				aerr("Delcol: TODO")
+			case "Exit":
+				aerr("Exit: TODO")
+			default:
+				if len(e.To) == 0 {
+					aerr("cmd has no destination: %q", s)
+				}
+				if strings.HasPrefix(s, "Edit ") {
+					if len(s) > 5 {
+						prog := edit.MustCompile(s[5:])
+						prog.Run(e.To[0])
+						ajump(e.To[0], false)
+					}
+				} else {
+					x := strings.Fields(s)
+					if len(x) < 1 {
+						aerr("empty command")
+						continue
+					}
+					abs := AbsOf(e.Basedir, e.Name)
+					to := afinderr(abs + "-" + x[0])
+					cmd(to.Body, path.DirOf(abs), s)
+					dirty = true
+				}
+			}
+			ck()
+		case size.Event:
+			winSize = image.Pt(e.WidthPx, e.HeightPx)
+			g.Resize(winSize)
+			ck()
+		case paint.Event:
+			if !focused {
 				g.Resize(winSize)
-				ck()
-			case paint.Event:
-				if !focused {
-					g.Resize(winSize)
-				}
-				g.Upload(wind)
-				wind.Publish()
-			case lifecycle.Event:
-				if e.To == lifecycle.StageDead {
-					return
-				}
-				// NT doesn't repaint the window if another window covers it
-				if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOff {
-					focused = false
-					wind.Send(paint.Event{})
-				} else if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOn {
-					focused = true
-				}
-			case interface{}:
-				log.Printf("missing event: %#v\n", e)
 			}
+			g.Upload(wind)
+			wind.Publish()
+		case lifecycle.Event:
+			if e.To == lifecycle.StageDead {
+				return
+			}
+			// NT doesn't repaint the window if another window covers it
+			if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOff {
+				focused = false
+				wind.Send(paint.Event{})
+			} else if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOn {
+				focused = true
+			}
+		case interface{}:
+			log.Printf("missing event: %#v\n", e)
 		}
+	}
 
 }
 

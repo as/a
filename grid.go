@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/as/frame"
 	"github.com/as/frame/font"
-	"github.com/as/ui/tag"
 	"github.com/as/ui"
+	"github.com/as/ui/tag"
 	"image"
 )
 
