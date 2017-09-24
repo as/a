@@ -28,7 +28,8 @@ import (
 	"github.com/as/edit"
 	"github.com/as/frame"
 	"github.com/as/frame/font"
-	"github.com/as/frame/tag"
+	"github.com/as/ui"
+	"github.com/as/ui/tag"
 	window "github.com/as/ms/win"
 	"github.com/as/text"
 )
@@ -101,21 +102,17 @@ func moveMouse(pt image.Point) {
 func main() {
 	flag.Parse()
 	defer trypprof()()
-
 	list := argparse()
-	driver.Main(func(src screen.Screen) {
-		wind, _ := src.NewWindow(
-			&screen.NewWindowOptions{
-				Width:  winSize.X,
-				Height: winSize.Y,
-				Title:  "A",
-			},
-		)
-		//
+	dev, err := ui.Init(&screen.NewWindowOptions{ Width:  winSize.X, Height: winSize.Y, Title:  "A"})
+	if err != nil{
+		log.Fatalln(err)
+	}
+		wind, _ := dev.Window()
+			
 		// Linux will segfault here if X is not present
 		wind.Send(paint.Event{})
 		ft := font.NewGoMono(fsize)
-		g := NewGrid(src, wind, ft, image.ZP, image.Pt(winSize.X, winSize.Y), list...)
+		g := NewGrid(dev,image.ZP, winSize, ft, list...)
 
 		// This in particular needs to go
 		actCol = g.List[1].(*Col)
@@ -241,7 +238,7 @@ func main() {
 			context   = 0
 		)
 
-		aerr("ver=0.3.2")
+		aerr("ver=0.3.3")
 		aerr("pid=%d", os.Getpid())
 		aerr("args=%q", os.Args)
 
@@ -259,7 +256,7 @@ func main() {
 			case tag.GetEvent:
 				t := New(actCol, e.Basedir, e.Name)
 				if e.Addr != "" {
-					actTag = t.(*tag.Tag)
+					actTag = t.(*ui.Tag)
 					act = actTag.Body
 					actTag.Handle(actTag.Body, edit.MustCompile(e.Addr))
 					p0, _ := act.Frame.Dot()
@@ -427,7 +424,6 @@ func main() {
 				log.Printf("missing event: %#v\n", e)
 			}
 		}
-	})
 
 }
 

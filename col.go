@@ -6,34 +6,34 @@ import (
 
 	"github.com/as/frame"
 	"github.com/as/frame/font"
-	"github.com/as/frame/tag"
+	"github.com/as/ui"
+	"github.com/as/ui/tag"
 	"golang.org/x/exp/shiny/screen"
 )
 
 type Col struct {
+	dev  *ui.Dev
 	ft   *font.Font
 	sp   image.Point
 	size image.Point
-	src  screen.Screen
-	wind screen.Window
 	Tag  *tag.Tag
 	tdy  int
 	List []Plane
 }
 
-func NewCol(src screen.Screen, wind screen.Window, ft *font.Font, sp, size image.Point, files ...string) *Col {
+func NewCol(dev *ui.Dev, ft *font.Font, sp, size image.Point, files ...string) *Col {
 	N := len(files)
 	tdy := ft.Dy() + ft.Dy()/2
 	tagpad := image.Pt(pad.X, 3)
-	T := tag.New(src, wind, sp, image.Pt(size.X, tdy), tagpad, ft, frame.ATag1)
+	T := tag.New(dev, sp, image.Pt(size.X, tdy), tagpad, ft, frame.ATag1)
 	//T.Open(path.NewPath(""))
 	T.Win.InsertString("New Delcol Sort", 0)
-	col := &Col{sp: sp, src: src, size: size, wind: wind, ft: ft, Tag: T, tdy: tdy, List: make([]Plane, len(files))}
+	col := &Col{dev: dev, sp: sp, size: size, ft: ft, Tag: T, tdy: tdy, List: make([]Plane, len(files))}
 	size.Y -= tdy
 	sp.Y += tdy
 	dy := image.Pt(size.X, size.Y/N)
 	for i, v := range files {
-		t := tag.New(src, wind, sp, dy, pad, ft, frame.ATag1)
+		t := tag.New(dev, sp, dy, pad, ft, frame.ATag1)
 		t.Get(v)
 		t.Insert([]byte(" [Edit  ,x]"), t.Len())
 		col.List[i] = t
@@ -68,7 +68,7 @@ func NewCol2(g *Grid, filenames ...string) (w Plane) {
 	}
 	sp := image.Pt(x0, y0)
 	size := image.Pt(x1-x0, y1-y0)
-	col := NewCol(g.src, g.wind, g.ft, sp, size, filenames...)
+	col := NewCol(g.dev, g.ft, sp, size, filenames...)
 	g.attach(col, len(g.List))
 	g.fill()
 	return col
@@ -78,7 +78,7 @@ func New(co *Col, basedir, name string) (w Plane) {
 	last := co.List[len(co.List)-1]
 	last.Loc()
 	tw := co.Tag.Win
-	t := tag.New(co.src, co.wind, co.sp, image.Pt(co.size.X, co.tdy*2), pad, tw.Font, tw.Color)
+	t := tag.New(co.dev, co.sp, image.Pt(co.size.X, co.tdy*2), pad, tw.Font, tw.Color)
 	t.Open(basedir, name)
 	t.Insert([]byte(" [Edit  ,x]"), t.Len())
 	lsize := sizeof(last.Loc())

@@ -3,8 +3,8 @@ package main
 import (
 	"image"
 
-	"github.com/as/frame/tag"
-	"github.com/as/frame/win"
+	"github.com/as/ui/tag"
+	"github.com/as/ui/win"
 )
 
 var (
