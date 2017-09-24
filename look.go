@@ -1,6 +1,13 @@
 package main
 
 import (
+	"fmt"
+	"image"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"github.com/as/edit"
 	"github.com/as/event"
 	"github.com/as/path"
@@ -9,8 +16,6 @@ import (
 	"github.com/as/text/find"
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
-	"image"
-	"path/filepath"
 )
 
 func AbsOf(basedir, path string) string {
@@ -36,13 +41,12 @@ func AbsOf(basedir, path string) string {
 
 func (g *Grid) Look(e event.Look) {
 	name, addr := action.SplitPath(string(e.P))
-	if len(e.To) > 0 && g.meta(e.To[0]) {
-
+	if g.meta(e.To[0]) {
+		return
 	}
 	if name == "" && addr == "" {
 		return
 	}
-
 	// Existing window label?
 	if label := g.Lookup(name); label != nil {
 		fn := moveMouse
@@ -50,17 +54,22 @@ func (g *Grid) Look(e event.Look) {
 			fn = nil
 		}
 		if addr != "" {
-			if label, ok := label.(*tag.Tag); ok {
+				println(addr)
 				//TODO(as): danger, edit needs a way to ensure it will only jump to an address
-				edit.MustCompile(addr).Run(label.Body)
-				ajump(label.Body, fn)
-			}
+				prog, err := edit.Compile(addr)
+				if err != nil{
+					g.aerr(err.Error())
+					return
+				}
+				prog.Run(e.To[0])
+				ajump(e.To[0], fn)
 		}
 		return
 	}
 	isdir := false
 	abspath := ""
 	visible := ""
+	exists := false
 	switch {
 	case filepath.IsAbs(name):
 		if !path.Exists(name) {
@@ -83,9 +92,26 @@ func (g *Grid) Look(e event.Look) {
 	default:
 	}
 
+	stat := func(name string) os.FileInfo {
+		fi, _ := os.Stat(name)
+		return fi
+	}
+	VisitAll(g, func(p Named) {
+		if abspath == p.FileName() {
+			exists = true
+		} else if os.SameFile(stat(abspath), stat(p.FileName())) {
+			exists = true
+		}
+	})
+
 	var t *tag.Tag
 	isdir = isdir
-	if abspath == visible && path.Exists(visible) {
+	if exists {
+		q := g.Lookup(abspath)
+		if q, ok := q.(*tag.Tag); ok {
+			t = q
+		}
+	} else if abspath == visible && path.Exists(visible) {
 		isdir = path.IsDir(abspath)
 		t = New(actCol, path.DirOf(abspath), visible).(*tag.Tag)
 	} else if realpath := filepath.Join(abspath, visible); path.Exists(realpath) {
@@ -102,17 +128,48 @@ func (g *Grid) Look(e event.Look) {
 		}
 		return
 	}
+	
+	//TODO(as): fix this so it doesn't compare hard coded coordinates
+	if e.To[0].(*win.Win) == nil || e.To[0].(Plane).Loc().Max.Y < 48 {
+		VisitAll(g, func(p Named) {
+			if p== nil{
+				return
+			}
+			lookliteral(p.(*tag.Tag).Body, e.P)
+		})
+	} else {
+		lookliteral(e.To[0], e.P)
+	}
 
+}
+func (g *Grid) afinderr(wd string, name string) *tag.Tag {
+	if !strings.HasSuffix(name, "+Errors") {
+		name += "+Errors"
+	}
+	t := g.FindName(name)
+	if t == nil {
+		t = New(actCol, "", name).(*tag.Tag)
+		if t == nil {
+			panic("cant create tag")
+		}
+		moveMouse(t.Loc().Min)
+	}
+	return t
+}
+func (g *Grid) aerr(fm string, i ...interface{}) {
+	t := g.afinderr(".", "")
+	q1 := t.Body.Len()
+	t.Body.Select(q1, q1)
+	n := int64(t.Body.Insert([]byte(time.Now().Format(timefmt)+": "+fmt.Sprintf(fm, i...)+"\n"), q1))
+	t.Body.Select(q1, q1+n)
+	t.Body.SetOrigin(q1, true)
+}
+func lookliteral(ed text.Editor, p []byte) {
 	// String literal
-	for _, ed := range e.To {
-		q0, q1 := find.FindNext(ed, e.P)
+		q0, q1 := find.FindNext(ed, p)
 		ed.Select(q0, q1)
 		fn := cursorNop
-		if e.From == ed {
-			fn = moveMouse
-		}
 		ajump(ed, fn)
-	}
 }
 
 func (g *Grid) meta(p interface{}) bool {
@@ -122,7 +179,7 @@ func (g *Grid) meta(p interface{}) bool {
 	return false
 }
 
-func VisitAll(root Plane, fn func(p Plane)) {
+func VisitAll(root Plane, fn func(p Named)) {
 	switch root := root.(type) {
 	case *Grid:
 		for _, k := range root.List[1:] {
@@ -133,11 +190,8 @@ func VisitAll(root Plane, fn func(p Plane)) {
 			VisitAll(k, fn)
 		}
 	case Named:
-		if root.(*tag.Tag) != nil {
-			VisitAll(root, fn)
-		}
-	case Plane:
 		fn(root)
+	case Plane:
 	case interface{}:
 		panic("bad visitor")
 	}

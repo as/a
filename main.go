@@ -36,6 +36,7 @@ import (
 var xx Cursor
 var eprint = fmt.Println
 
+var	timefmt = "2006.01.02 15.04.05"
 // Put
 var (
 	winSize   = image.Pt(1024, 768)
@@ -192,28 +193,7 @@ func main() {
 	tophit := func() bool {
 		return pt.Y > g.sp.Y+g.tdy && pt.Y < g.sp.Y+g.tdy*2
 	}
-	timefmt := "2006.01.02 15.04.05"
-	afinderr := func(name string) *tag.Tag {
-		if !strings.HasSuffix(name, "+Errors") {
-			name += "+Errors"
-		}
-		t := g.FindName(name)
-		if t == nil {
-			t = New(actCol, "", name).(*tag.Tag)
-			if t == nil {
-				panic("cant create tag")
-			}
-			moveMouse(t.Loc().Min)
-		}
-		return t
-	}
-	aerr := func(fm string, i ...interface{}) {
-		t := afinderr("")
-		q1 := t.Body.Len()
-		t.Body.Select(q1, q1)
-		n := int64(t.Body.Insert([]byte(time.Now().Format(timefmt)+": "+fmt.Sprintf(fm, i...)+"\n"), q1))
-		t.Body.Select(q1+n, q1+n)
-	}
+
 	ajump := func(ed text.Editor, cursor bool) {
 		fn := moveMouse
 		if cursor == false {
@@ -230,6 +210,7 @@ func main() {
 	alook := func(e event.Look) {
 		g.Look(e)
 	}
+	aerr := g.aerr
 	var (
 		scrollbar = 1
 		sizer     = 2
@@ -392,7 +373,7 @@ func main() {
 						continue
 					}
 					abs := AbsOf(e.Basedir, e.Name)
-					to := afinderr(abs + "-" + x[0])
+					to := g.afinderr(path.DirOf(abs), path.DirOf(abs) + "/-" + x[0])
 					cmd(to.Body, path.DirOf(abs), s)
 					dirty = true
 				}
