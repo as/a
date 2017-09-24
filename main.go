@@ -15,7 +15,6 @@ import (
 
 	"github.com/as/event"
 	mus "github.com/as/text/mouse"
-	"golang.org/x/exp/shiny/driver"
 	"golang.org/x/exp/shiny/screen"
 	"golang.org/x/mobile/event/key"
 	"golang.org/x/mobile/event/lifecycle"
@@ -107,7 +106,7 @@ func main() {
 	if err != nil{
 		log.Fatalln(err)
 	}
-		wind, _ := dev.Window()
+		wind := dev.Window()
 			
 		// Linux will segfault here if X is not present
 		wind.Send(paint.Event{})
@@ -256,7 +255,7 @@ func main() {
 			case tag.GetEvent:
 				t := New(actCol, e.Basedir, e.Name)
 				if e.Addr != "" {
-					actTag = t.(*ui.Tag)
+					actTag = t.(*tag.Tag)
 					act = actTag.Body
 					actTag.Handle(actTag.Body, edit.MustCompile(e.Addr))
 					p0, _ := act.Frame.Dot()
