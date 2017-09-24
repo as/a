@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+	"image"
+
 	"github.com/as/frame"
 	"github.com/as/frame/font"
 	"github.com/as/frame/tag"
-	"github.com/as/path"
 	"golang.org/x/exp/shiny/screen"
-	"image"
 )
 
 type Col struct {
@@ -68,20 +68,18 @@ func NewCol2(g *Grid, filenames ...string) (w Plane) {
 	}
 	sp := image.Pt(x0, y0)
 	size := image.Pt(x1-x0, y1-y0)
-	fmt.Printf("newcol sp=%s size=%s\n", sp, size)
 	col := NewCol(g.src, g.wind, g.ft, sp, size, filenames...)
 	g.attach(col, len(g.List))
 	g.fill()
 	return col
 }
 
-func New(co *Col, path path.Path) (w Plane) {
+func New(co *Col, basedir, name string) (w Plane) {
 	last := co.List[len(co.List)-1]
 	last.Loc()
 	tw := co.Tag.Win
-	co.PrintList()
 	t := tag.NewTag(co.src, co.wind, tw.Font, co.sp, image.Pt(co.size.X, co.tdy*2), pad, tw.Color)
-	t.Open(path)
+	t.Open(basedir, name)
 	t.Insert([]byte(" [Edit  ,x]"), t.Len())
 	lsize := sizeof(last.Loc())
 	lsize.Y -= lsize.Y / 3

@@ -14,8 +14,6 @@ import (
 	"time"
 
 	"github.com/as/event"
-	"github.com/as/text/action"
-	"github.com/as/text/find"
 	mus "github.com/as/text/mouse"
 	"golang.org/x/exp/shiny/driver"
 	"golang.org/x/exp/shiny/screen"
@@ -25,14 +23,13 @@ import (
 	"golang.org/x/mobile/event/paint"
 	"golang.org/x/mobile/event/size"
 
+	"github.com/as/path"
 	"github.com/as/cursor"
 	"github.com/as/edit"
 	"github.com/as/frame"
 	"github.com/as/frame/font"
 	"github.com/as/frame/tag"
-	"github.com/as/frame/win"
 	window "github.com/as/ms/win"
-	"github.com/as/path"
 	"github.com/as/text"
 )
 
@@ -164,7 +161,6 @@ func main() {
 		}
 		sizerHit := func(p Plane, pt image.Point) bool {
 			in := pt.In(sizerOf(p))
-			fmt.Printf("win=%s sizer=%s pt=%s in=%v", p.Loc(), sizerOf(p), pt, in)
 			return in
 		}
 		markwin := func() {
@@ -207,7 +203,7 @@ func main() {
 			}
 			t := g.FindName(name)
 			if t == nil {
-				t = New(actCol, path.NewPath(name)).(*tag.Tag)
+				t = New(actCol, "", name).(*tag.Tag)
 				if t == nil {
 					panic("cant create tag")
 				}
@@ -234,78 +230,9 @@ func main() {
 		ismeta := func(ed Plane) bool {
 			return ed == g.List[0].(*tag.Tag).Body
 		}
+		ismeta=ismeta
 		alook := func(e event.Look) {
-			// First we find out if its coming from a tag or
-			// a window body. Then we find out if its an address
-			// and lastly we look
-			istag := false
-			_, istag = e.From.(*tag.Tag)
-			str := string(e.P)
-			name, addr := action.SplitPath(str)
-			path := e.Path.Look(name)
-			name = path.Name()
-			t2 := g.FindName(name)
-
-			// The plan is to replace this code with a O(1)
-			// concurrent window registry.
-			if len(e.To) > 0 {
-				ed := e.To[0].(*win.Win)
-				if ismeta(ed) {
-					for _, c := range g.List[1:] {
-						c := c.(*Col)
-						for _, w := range c.List[1:] {
-							w := w.(*tag.Tag)
-							q0, q1 := find.FindNext(w.Body, e.P)
-							w.Body.Select(q0, q1)
-							ajump(w.Body, false)
-						}
-					}
-					return
-				}
-			}
-			if name == "" && addr != "" {
-				// Just an address with no name:
-				// jump to it in the current file
-				prog := edit.MustCompile(addr)
-				for _, ed := range e.To {
-					prog.Run(ed)
-					ajump(ed, !istag)
-				}
-			} else if name != "" && t2 != nil {
-				if addr != "" {
-					prog := edit.MustCompile(addr)
-					prog.Run(t2.Body)
-					ajump(t2.Body, true)
-				} else {
-					moveMouse(t2.Bounds().Min)
-				}
-			} else if path.Exists() {
-				// If the path is relative, it's combined with the tag's cwd
-				// jump to the window by the same name if it's already open
-				t2 := g.FindName(path.Name())
-				if t2 == nil {
-					t2 = New(actCol, path).(*tag.Tag)
-					moveMouse(t2.Loc().Min)
-				}
-				t2.Body.Select(0, 0)
-				if addr != "" {
-					prog := edit.MustCompile(addr)
-					prog.Run(t2.Body)
-					ajump(t2.Body, true)
-				} else {
-					moveMouse(t2.Bounds().Min)
-				}
-				println("open file")
-			} else {
-				// Find the literal string in the caller
-				// this is useful because Go's regexp doesn't support
-				// non-utf8 runes in the regexp compiler
-				for _, ed := range e.To {
-					q0, q1 := find.FindNext(ed, e.P)
-					ed.Select(q0, q1)
-					ajump(ed, !istag)
-				}
-			}
+			g.Look(e)
 		}
 		var (
 			scrollbar = 1
@@ -330,7 +257,7 @@ func main() {
 					}
 				}
 			case tag.GetEvent:
-				t := New(actCol, e.Path)
+				t := New(actCol, e.Basedir, e.Name)
 				if e.Addr != "" {
 					actTag = t.(*tag.Tag)
 					act = actTag.Body
@@ -403,7 +330,6 @@ func main() {
 				actTag.Handle(act, e)
 				ck()
 			case mus.SelectEvent:
-				println("SelectEvent")
 				switch context {
 				case scrollbar:
 					act.Clicksb(p(e.Event), 0)
@@ -436,14 +362,13 @@ func main() {
 				ck()
 			case event.Cmd:
 				s := string(e.P)
-				log.Printf("string: %q\n", s)
 				switch s {
 				case "Put", "Get":
 					actTag.Handle(act, s)
 					aerr(s)
 					ck()
 				case "New":
-					moveMouse(New(actCol, path.NewPath("")).Loc().Min)
+					moveMouse(New(actCol, "", "").Loc().Min)
 				case "Newcol":
 					moveMouse(NewCol2(g, "").Loc().Min)
 				case "Del":
@@ -470,14 +395,9 @@ func main() {
 							aerr("empty command")
 							continue
 						}
-						to := afinderr(path.DirOf(e.Path.Name()) + "-" + x[0])
-						cmd(to.Body, path.DirOf(e.Path.Abs()), s)
-						aerr("argv[0]: %q", x[0])
-						aerr("e.Path: %#v", e.Path)
-						aerr("e.Path.Name: %s", e.Path.Name())
-						aerr("e.Path.Abs: %s", e.Path.Abs())
-						aerr("dirof e.Path.Name: %s", path.DirOf(e.Path.Name()))
-						aerr("dirof e.Path.Abs: %s", path.DirOf(e.Path.Abs()))
+						abs := AbsOf(e.Basedir, e.Name)
+						to := afinderr(abs + "-" + x[0])
+						cmd(to.Body, path.DirOf(abs), s)
 						dirty = true
 					}
 				}
