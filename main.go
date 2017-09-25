@@ -343,7 +343,6 @@ func main() {
 			switch s {
 			case "Put", "Get":
 				actTag.Handle(act, s)
-				aerr(s)
 				ck()
 			case "New":
 				moveMouse(New(actCol, "", "").Loc().Min)
@@ -401,6 +400,8 @@ func main() {
 			} else if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOn {
 				focused = true
 			}
+		case error:
+			aerr(e.Error())
 		case interface{}:
 			log.Printf("missing event: %#v\n", e)
 		}
