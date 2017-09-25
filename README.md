@@ -7,7 +7,9 @@ A is my text editor.
 - Native Multi-Platform Graphics (as/frame)
 - Closely resembles the Acme and Sam text editors.
 - Optimized for editing huge binary files. 
-  `The underlying frame implementation (see as/frame) does not eschew null bytes. UTF-8 is not implemented at this time.`
+  - The underlying frame implementation (see as/frame) does not eschew null bytes.
+  - Experimental UTF-8 support 
+![paint](utf8.png)
 - Standard UNIX keyboard shortcuts `No vi/emacs tricks`
 - Mouse chording
 - Command Language
