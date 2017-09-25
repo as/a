@@ -33,6 +33,7 @@ import (
 	"github.com/as/ui/tag"
 )
 
+var Version = "0.3.4"
 var xx Cursor
 var eprint = fmt.Println
 
@@ -218,7 +219,7 @@ func main() {
 		context   = 0
 	)
 
-	aerr("ver=0.3.3")
+	aerr("ver=%s", Version)
 	aerr("pid=%d", os.Getpid())
 	aerr("args=%q", os.Args)
 
