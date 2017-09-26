@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"path/filepath"
 
 	"github.com/as/event"
 	mus "github.com/as/text/mouse"
@@ -30,15 +31,17 @@ import (
 	"github.com/as/path"
 	"github.com/as/text"
 	"github.com/as/ui"
+	"github.com/as/ui/win"
 	"github.com/as/ui/tag"
 )
 
-var Version = "0.3.4"
-var xx Cursor
-var eprint = fmt.Println
+var (
+	Version = "0.3.5"
+	xx      Cursor
+	eprint  = fmt.Println
+	timefmt = "2006.01.02 15.04.05"
+)
 
-var	timefmt = "2006.01.02 15.04.05"
-// Put
 var (
 	winSize   = image.Pt(1024, 768)
 	pad       = image.Pt(15, 15)
@@ -99,10 +102,15 @@ func moveMouse(pt image.Point) {
 	cursor.MoveTo(window.ClientAbs().Min.Add(pt))
 }
 
+var utf8 = flag.Bool("u", false, "enable utf8 experiment")
+
 // Put
 func main() {
 	flag.Parse()
 	defer trypprof()()
+	if *utf8 {
+		frame.ForceUTF8Experiment = true
+	}
 	list := argparse()
 	dev, err := ui.Init(&screen.NewWindowOptions{Width: winSize.X, Height: winSize.Y, Title: "A"})
 	if err != nil {
@@ -364,6 +372,7 @@ func main() {
 					if len(s) > 5 {
 						prog := edit.MustCompile(s[5:])
 						prog.Run(e.To[0])
+						e.To[0].(*win.Win).Refresh()
 						ajump(e.To[0], false)
 					}
 				} else {
@@ -373,7 +382,8 @@ func main() {
 						continue
 					}
 					abs := AbsOf(e.Basedir, e.Name)
-					to := g.afinderr(path.DirOf(abs), path.DirOf(abs) + "/-" + x[0])
+					tagname := fmt.Sprintf("%s%c-%s", path.DirOf(abs), filepath.Separator, x[0])
+					to := g.afinderr(path.DirOf(abs), tagname)
 					cmd(to.Body, path.DirOf(abs), s)
 					dirty = true
 				}
