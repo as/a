@@ -79,6 +79,13 @@ func (g *Grid) Look(e event.Look) {
 		visible = abspath
 	case filepath.IsAbs(e.Name):
 		if !path.Exists(e.Name) {
+			// The tag might point to a non-existent file but its parent directory
+			// might be valid. In this case we should look inside the directory
+			// even though the file doesn't exist. This makes +Error windows work
+			// as intended
+			e.Name = filepath.Dir(e.Name)
+		}
+		if !path.Exists(e.Name) {
 			break
 		}
 		abspath = filepath.Join(path.DirOf(e.Name), name)
