@@ -135,10 +135,10 @@ func (g *Grid) Look(e event.Look) {
 			if p== nil{
 				return
 			}
-			lookliteral(p.(*tag.Tag).Body, e.P)
+			lookliteral(p.(*tag.Tag).Body, e.P, cursorNop)
 		})
 	} else {
-		lookliteral(e.To[0], e.P)
+		lookliteral(e.To[0], e.P, moveMouse)
 	}
 
 }
@@ -164,12 +164,11 @@ func (g *Grid) aerr(fm string, i ...interface{}) {
 	t.Body.Select(q1, q1+n)
 	t.Body.SetOrigin(q1, true)
 }
-func lookliteral(ed text.Editor, p []byte) {
+func lookliteral(ed text.Editor, p []byte, mouseFunc func(image.Point)) {
 	// String literal
 		q0, q1 := find.FindNext(ed, p)
 		ed.Select(q0, q1)
-		fn := cursorNop
-		ajump(ed, fn)
+		ajump(ed, mouseFunc)
 }
 
 func (g *Grid) meta(p interface{}) bool {
