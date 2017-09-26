@@ -169,7 +169,7 @@ func (g *Grid) aerr(fm string, i ...interface{}) {
 	t.Body.Select(q1, q1)
 	n := int64(t.Body.Insert([]byte(time.Now().Format(timefmt)+": "+fmt.Sprintf(fm, i...)+"\n"), q1))
 	t.Body.Select(q1, q1+n)
-	t.Body.SetOrigin(q1, true)
+	t.Body.Jump(cursorNop)
 }
 func lookliteral(ed text.Editor, p []byte, mouseFunc func(image.Point)) {
 	// String literal
