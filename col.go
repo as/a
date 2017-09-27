@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"image"
+	"io"
 
 	"github.com/as/frame"
 	"github.com/as/frame/font"
@@ -96,15 +97,26 @@ func Del(co *Col, id int) {
 	w := co.detach(id)
 	y := w.Loc().Min.Y
 	x := co.Loc().Min.X
-	if t, ok := w.(Releaser); ok {
-		t.Release()
-	}
+	w.(io.Closer).Close()
 	for ; id < len(co.List); id++ {
 		y2 := co.List[id].Loc().Min.Y
 		co.List[id].Move(image.Pt(x, y))
 		y = y2
 	}
 	co.fill()
+}
+
+func (co *Col) Close() error {
+	for _, t := range co.List {
+		if t == nil {
+			continue
+		}
+		if t, ok := t.(io.Closer); ok {
+			t.Close()
+		}
+	}
+	co.List = nil
+	return nil
 }
 
 func (co *Col) RollUp(id int, dy int) {
@@ -165,6 +177,7 @@ func (co *Col) FindName(name string) *tag.Tag {
 			if v.FileName() == name {
 				return v
 			}
+
 		}
 	}
 	return nil
