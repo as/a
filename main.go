@@ -9,10 +9,10 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
-	"path/filepath"
 
 	"github.com/as/event"
 	mus "github.com/as/text/mouse"
@@ -31,12 +31,12 @@ import (
 	"github.com/as/path"
 	"github.com/as/text"
 	"github.com/as/ui"
-	"github.com/as/ui/win"
 	"github.com/as/ui/tag"
+	"github.com/as/ui/win"
 )
 
 var (
-	Version = "0.3.5"
+	Version = "0.3.6"
 	xx      Cursor
 	eprint  = fmt.Println
 	timefmt = "2006.01.02 15.04.05"
@@ -102,15 +102,18 @@ func moveMouse(pt image.Point) {
 	cursor.MoveTo(window.ClientAbs().Min.Add(pt))
 }
 
-var utf8 = flag.Bool("u", false, "enable utf8 experiment")
+var (
+	utf8    = flag.Bool("u", false, "enable utf8 experiment")
+	elastic = flag.Bool("elastic", false, "enable elastic tabstops experiment (very slow, do not use)")
+)
 
 // Put
 func main() {
 	flag.Parse()
 	defer trypprof()()
-	if *utf8 {
-		frame.ForceUTF8Experiment = true
-	}
+	frame.ForceUTF8Experiment = *utf8
+	frame.ForceElasticTabstopExperiment = *elastic
+
 	list := argparse()
 	dev, err := ui.Init(&screen.NewWindowOptions{Width: winSize.X, Height: winSize.Y, Title: "A"})
 	if err != nil {
@@ -368,20 +371,28 @@ func main() {
 				if len(e.To) == 0 {
 					aerr("cmd has no destination: %q", s)
 				}
+				abs := AbsOf(e.Basedir, e.Name)
 				if strings.HasPrefix(s, "Edit ") {
-					if len(s) > 5 {
-						prog := edit.MustCompile(s[5:])
-						prog.Run(e.To[0])
-						e.To[0].(*win.Win).Refresh()
-						ajump(e.To[0], false)
+					s = s[5:]
+					// The event sink shouldn't be specified during
+					// compile time, but its the easiest way to
+					// see it works correctly with the editor
+					prog, err := edit.Compile(s, &edit.Options{Sender: wind, Origin: abs})
+					if err != nil {
+						aerr(err.Error())
+						continue
 					}
+					prog.Run(e.To[0])
+					w := e.To[0].(*win.Win)
+					w.Resize(w.Size())
+					//e.To[0].(*win.Win).Refresh()
+					ajump(e.To[0], false)
 				} else {
 					x := strings.Fields(s)
 					if len(x) < 1 {
 						aerr("empty command")
 						continue
 					}
-					abs := AbsOf(e.Basedir, e.Name)
 					tagname := fmt.Sprintf("%s%c-%s", path.DirOf(abs), filepath.Separator, x[0])
 					to := g.afinderr(path.DirOf(abs), tagname)
 					cmd(to.Body, path.DirOf(abs), s)
@@ -389,6 +400,8 @@ func main() {
 				}
 			}
 			ck()
+		case edit.Print:
+			g.aout(string(e))
 		case size.Event:
 			winSize = image.Pt(e.WidthPx, e.HeightPx)
 			g.Resize(winSize)

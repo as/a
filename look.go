@@ -54,15 +54,15 @@ func (g *Grid) Look(e event.Look) {
 			fn = nil
 		}
 		if addr != "" {
-				println(addr)
-				//TODO(as): danger, edit needs a way to ensure it will only jump to an address
-				prog, err := edit.Compile(addr)
-				if err != nil{
-					g.aerr(err.Error())
-					return
-				}
-				prog.Run(e.To[0])
-				ajump(e.To[0], fn)
+			println(addr)
+			//TODO(as): danger, edit needs a way to ensure it will only jump to an address
+			prog, err := edit.Compile(addr)
+			if err != nil {
+				g.aerr(err.Error())
+				return
+			}
+			prog.Run(e.To[0])
+			ajump(e.To[0], fn)
 		}
 		return
 	}
@@ -135,11 +135,11 @@ func (g *Grid) Look(e event.Look) {
 		}
 		return
 	}
-	
+
 	//TODO(as): fix this so it doesn't compare hard coded coordinates
 	if e.To[0].(*win.Win) == nil || e.To[0].(Plane).Loc().Max.Y < 48 {
 		VisitAll(g, func(p Named) {
-			if p== nil{
+			if p == nil {
 				return
 			}
 			lookliteral(p.(*tag.Tag).Body, e.P, cursorNop)
@@ -171,11 +171,19 @@ func (g *Grid) aerr(fm string, i ...interface{}) {
 	t.Body.Select(q1, q1+n)
 	t.Body.Jump(cursorNop)
 }
+func (g *Grid) aout(fm string, i ...interface{}) {
+	t := g.afinderr(".", "")
+	q1 := t.Body.Len()
+	t.Body.Select(q1, q1)
+	n := int64(t.Body.Insert([]byte(fmt.Sprintf(fm, i...)+"\n"), q1))
+	t.Body.Select(q1, q1+n)
+	t.Body.Jump(cursorNop)
+}
 func lookliteral(ed text.Editor, p []byte, mouseFunc func(image.Point)) {
 	// String literal
-		q0, q1 := find.FindNext(ed, p)
-		ed.Select(q0, q1)
-		ajump(ed, mouseFunc)
+	q0, q1 := find.FindNext(ed, p)
+	ed.Select(q0, q1)
+	ajump(ed, mouseFunc)
 }
 
 func (g *Grid) meta(p interface{}) bool {
