@@ -31,6 +31,13 @@ Because the other packages in my namepace are frequently updated , I recommended
 # usage
 a [file ...]
 
+# differences and issues
+- Compare to the true Acme
+https://github.com/as/a/wiki/Alterations
+
+- issues
+https://github.com/as/a/issues
+
 # hints
 To reshape the windows and columns, click on the invisible 10x10px sizer that I haven't rendered yet with the middle mouse button. Hold the button down and move the window to the location. Release the button.
 
