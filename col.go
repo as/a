@@ -98,13 +98,14 @@ func (g *Grid) Install(t *tag.Tag, srcprog string) {
 		Text: frame.A.Text,
 	}
 
+	prog, err := edit.Compile(srcprog)
+	if err != nil {
+		g.aerr(err.Error())
+		return
+	}
+
 	if t.Body != nil {
 		t.Body.FuncInstall(func(w *win.Win) {
-			prog, err := edit.Compile(srcprog)
-			if err != nil {
-				g.aerr(err.Error())
-				return
-			}
 			fr := w.Frame
 			buf := text.BufferFrom(w.Bytes()[w.Origin() : w.Origin()+fr.Len()])
 			ed, _ := text.Open(buf)

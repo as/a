@@ -47,14 +47,24 @@ func (g *Grid) Look(e event.Look) {
 	if name == "" && addr == "" {
 		return
 	}
+	if name == ""{
+		prog, err := edit.Compile(addr)
+		if err != nil{
+				g.aerr(err.Error())
+				return
+		}
+		t := e.To[0]
+		prog.Run(t)
+		ajump(t, cursorNop)
+		return
+	}
 
 	// Existing window label?
 	if label := g.Lookup(name); label != nil {
 		fn := moveMouse
 		if name == "" {
-			fn = nil
+			fn = cursorNop
 		}
-		if addr != "" {
 			//TODO(as): danger, edit needs a way to ensure it will only jump to an address
 			// we can expose an address parsing function from edit
 			prog, err := edit.Compile(addr)
@@ -62,15 +72,10 @@ func (g *Grid) Look(e event.Look) {
 				g.aerr(err.Error())
 				return
 			}
-
 			if t := label.(*tag.Tag); t.Body != nil {
 				prog.Run(t.Body)
 				ajump(t.Body, fn)
-			} else {
-				prog.Run(t)
-				ajump(t, fn)
-			}
-		}
+			} 
 		return
 	}
 
@@ -294,7 +299,9 @@ func ptInAny(pt image.Point, list ...Plane) (x Plane) {
 func ajump(p interface{}, cursor func(image.Point)) {
 	switch p := p.(type) {
 	case *tag.Tag:
+		if p != nil{
 		cursor(p.Loc().Min)
+		}
 	case text.Jumper:
 		p.Jump(cursor)
 	case Plane:
