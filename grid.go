@@ -1,10 +1,13 @@
 package main
 
 import (
+	"github.com/as/edit"
 	"github.com/as/frame"
 	"github.com/as/frame/font"
+	"github.com/as/text"
 	"github.com/as/ui"
 	"github.com/as/ui/tag"
+	"github.com/as/ui/win"
 	"image"
 )
 
@@ -31,18 +34,65 @@ func NewGrid(dev *ui.Dev, sp, size image.Point, ft *font.Font, files ...string) 
 	return g
 }
 
+func (g *Grid) Attach(src Plane, x int) {
+	did := g.IDPoint(image.Pt(x, g.sp.Y+g.tdy))
+	if did != 0 && did < len(g.List) {
+		d := g.List[did]
+		x := x - d.Loc().Min.X
+		y := sizeof(d.Loc()).Y
+		d.Resize(image.Pt(x, y))
+	}
+	g.attach(src, did+1)
+	g.fill()
+}
+
 func (g *Grid) Move(sp image.Point) {
 	panic("never call this")
-	/*
-		g.sp = sp
-		x := 0
-		g.List[0].Move(sp)
-		sp.Y += g.List[0].Loc().Dy()
-		for _, co := range g.List[1:] {
-			co.Move(sp.Add(image.Pt(x, 0)))
-			x += co.Loc().Dx()
-		}
-	*/
+}
+
+// Install places the given edit script in between
+// calls to the target windows SetOrigin method. This
+// is an experiment to test out highlighting with
+// structural regular expressions.
+//
+// The current implementation will change and it
+// has unfavorable performance characteristics (i.e., compiling
+// the script every time), however, this isn't usually noticable
+// unless the command is long
+//
+// Conventionally, the command should be in the form
+//	,x,string,h
+// Any other use is undefined and untested for now
+func (g *Grid) Install(t *tag.Tag, srcprog string) {
+
+	var green = frame.Palette{
+		Back: frame.Green,
+		Text: frame.A.Text,
+	}
+
+	prog, err := edit.Compile(srcprog)
+	if err != nil {
+		g.aerr(err.Error())
+		return
+	}
+
+	if t.Body != nil {
+		t.Body.FuncInstall(func(w *win.Win) {
+			fr := w.Frame
+			buf := text.BufferFrom(w.Bytes()[w.Origin() : w.Origin()+fr.Len()])
+			ed, _ := text.Open(buf)
+			prog.Run(ed)
+			for _, dot := range prog.Emit.Dot {
+				w.Frame.Recolor(fr.PointOf(dot.Q0), dot.Q0, dot.Q1, green)
+			}
+			//prog.Emit = &edit.Emitted{}
+		})
+	}
+}
+
+func (g *Grid) Resize(size image.Point) {
+	g.size = size
+	g.fill()
 }
 
 // attach inserts w in position id, shifting the original right
@@ -58,18 +108,6 @@ func (g *Grid) attach(w Plane, id int) {
 	w.Move(image.Pt(r.Max.X, g.sp.Y+g.tdy))
 }
 
-func (g *Grid) Attach(src Plane, x int) {
-	did := g.IDPoint(image.Pt(x, g.sp.Y+g.tdy))
-	if did != 0 && did < len(g.List) {
-		d := g.List[did]
-		x := x - d.Loc().Min.X
-		y := sizeof(d.Loc()).Y
-		d.Resize(image.Pt(x, y))
-	}
-	g.attach(src, did+1)
-	g.fill()
-}
-
 func (g *Grid) fill() {
 	tdy := g.tdy
 	g.List[0].Resize(image.Pt(g.size.X, tdy))
@@ -80,11 +118,6 @@ func (g *Grid) fill() {
 		g.List[n].Resize(image.Pt(x1-x0, y))
 		x1 = x0
 	}
-}
-
-func (g *Grid) Resize(size image.Point) {
-	g.size = size
-	g.fill()
 }
 
 func min(a, b int) int {
