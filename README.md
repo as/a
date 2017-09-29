@@ -9,12 +9,12 @@ A is my text editor.
 - Optimized for editing huge binary files. 
   - The underlying frame implementation (see as/frame) does not eschew null bytes.
   - Experimental UTF-8 support 
-![paint](utf8.png)
 - Standard UNIX keyboard shortcuts `No vi/emacs tricks`
 - Mouse chording
 - Command Language
   `Edit command language is 80% implemented (slow)`
-
+- Structure highlighting
+![paint](install.png)
 
 ![paint](a.png)
 
