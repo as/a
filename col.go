@@ -5,10 +5,13 @@ import (
 	"image"
 	"io"
 
+	"github.com/as/edit"
 	"github.com/as/frame"
 	"github.com/as/frame/font"
+	"github.com/as/text"
 	"github.com/as/ui"
 	"github.com/as/ui/tag"
+	"github.com/as/ui/win"
 	"golang.org/x/exp/shiny/screen"
 )
 
@@ -73,6 +76,45 @@ func NewCol2(g *Grid, filenames ...string) (w Plane) {
 	g.attach(col, len(g.List))
 	g.fill()
 	return col
+}
+
+// Install places the given edit script in between
+// calls to the target windows SetOrigin method. This
+// is an experiment to test out highlighting with
+// structural regular expressions.
+//
+// The current implementation will change and it
+// has unfavorable performance characteristics (i.e., compiling
+// the script every time), however, this isn't usually noticable
+// unless the command is long
+//
+// Conventionally, the command should be in the form
+//    ,x,string,h
+// Any other use is undefined and untested for now
+func (g *Grid) Install(t *tag.Tag, srcprog string) {
+
+	var green = frame.Palette{
+		Back: frame.Green,
+		Text: frame.A.Text,
+	}
+
+	if t.Body != nil {
+		t.Body.FuncInstall(func(w *win.Win) {
+			prog, err := edit.Compile(srcprog)
+			if err != nil {
+				g.aerr(err.Error())
+				return
+			}
+			fr := w.Frame
+			buf := text.BufferFrom(w.Bytes()[w.Origin() : w.Origin()+fr.Len()])
+			ed, _ := text.Open(buf)
+			prog.Run(ed)
+			for _, dot := range prog.Emit.Dot {
+				w.Frame.Recolor(fr.PointOf(dot.Q0), dot.Q0, dot.Q1, green)
+			}
+			//prog.Emit = &edit.Emitted{}
+		})
+	}
 }
 
 func New(co *Col, basedir, name string) (w Plane) {

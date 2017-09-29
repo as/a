@@ -387,6 +387,9 @@ func main() {
 					w.Resize(w.Size())
 					//e.To[0].(*win.Win).Refresh()
 					ajump(e.To[0], false)
+				} else if strings.HasPrefix(s, "Install ") {
+					s = s[8:]
+					g.Install(actTag, s)
 				} else {
 					x := strings.Fields(s)
 					if len(x) < 1 {
@@ -400,6 +403,8 @@ func main() {
 				}
 			}
 			ck()
+		case edit.File:
+			g.acolor(e)
 		case edit.Print:
 			g.aout(string(e))
 		case size.Event:

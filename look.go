@@ -47,6 +47,7 @@ func (g *Grid) Look(e event.Look) {
 	if name == "" && addr == "" {
 		return
 	}
+
 	// Existing window label?
 	if label := g.Lookup(name); label != nil {
 		fn := moveMouse
@@ -54,18 +55,25 @@ func (g *Grid) Look(e event.Look) {
 			fn = nil
 		}
 		if addr != "" {
-			println(addr)
 			//TODO(as): danger, edit needs a way to ensure it will only jump to an address
+			// we can expose an address parsing function from edit
 			prog, err := edit.Compile(addr)
 			if err != nil {
 				g.aerr(err.Error())
 				return
 			}
-			prog.Run(e.To[0])
-			ajump(e.To[0], fn)
+
+			if t := label.(*tag.Tag); t.Body != nil {
+				prog.Run(t.Body)
+				ajump(t.Body, fn)
+			} else {
+				prog.Run(t)
+				ajump(t, fn)
+			}
 		}
 		return
 	}
+
 	isdir := false
 	abspath := ""
 	visible := ""
