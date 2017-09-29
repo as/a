@@ -7,3 +7,10 @@ go fmt
 # Right click on any of these
 README.md:/sam/
 a.exe:/This.program/
+
+# Run this in the tag of a go file and scroll down
+Install ,x,(func|type|import|package|var|switch|select|struct|chan|for|while|case|break|continue|return|else|if),h
+
+# Highlight UTF-16
+a.exe:#3233761,#3233760
+Install ,x,([A-Za-z]\x00)+,h

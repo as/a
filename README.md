@@ -14,6 +14,7 @@ A is my text editor.
 - Command Language
   `Edit command language is 80% implemented (slow)`
 - Structure highlighting
+
 ![paint](install.png)
 
 ![paint](a.png)
