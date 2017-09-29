@@ -3,6 +3,9 @@
 [![CircleCI](https://circleci.com/gh/as/a/tree/master.svg?style=svg)](https://circleci.com/gh/as/a/tree/master)
 
 A is my text editor. 
+
+![paint](a.png)
+
 - Written in Go (no dependencies)
 - Native Multi-Platform Graphics (as/frame)
 - Closely resembles the Acme and Sam text editors.
@@ -17,7 +20,6 @@ A is my text editor.
 
 ![paint](install.png)
 
-![paint](a.png)
 
 This repository will change frequently, things will improve unexpectedly. See issues.
 
