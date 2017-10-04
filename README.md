@@ -2,7 +2,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/as/a)](https://goreportcard.com/badge/github.com/as/a)
 [![CircleCI](https://circleci.com/gh/as/a/tree/master.svg?style=svg)](https://circleci.com/gh/as/a/tree/master)
 
-A is my text editor. 
+A is a text editor. It is inspired by the Sam and Acme text editors for the Plan 9 operating system.
 
 ![paint](a.png)
 
