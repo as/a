@@ -104,15 +104,15 @@ func moveMouse(pt image.Point) {
 
 var (
 	utf8    = flag.Bool("u", false, "enable utf8 experiment")
-	elastic = flag.Bool("elastic", false, "enable elastic tabstops experiment (very slow, do not use)")
+	elastic = flag.Bool("elastic", false, "enable elastic tabstops")
 )
 
 // Put
 func main() {
 	flag.Parse()
 	defer trypprof()()
-	frame.ForceUTF8Experiment = *utf8
-	frame.ForceElasticTabstopExperiment = *elastic
+	frame.ForceUTF8 = *utf8
+	frame.ForceElastic = *elastic
 
 	list := argparse()
 	dev, err := ui.Init(&screen.NewWindowOptions{Width: winSize.X, Height: winSize.Y, Title: "A"})
