@@ -46,8 +46,8 @@ var (
 var (
 	winSize   = image.Pt(1024, 768)
 	pad       = image.Pt(15, 15)
-	fsize     = 11
-	tagHeight = 25
+	fsize     = 12 // Put
+	tagHeight = 28
 	scrollX   = 10
 )
 
@@ -109,7 +109,7 @@ var (
 	oled    = flag.Bool("b", false, "OLED display mode (black)")
 )
 
-// TODO(as): refactor frame so this stuff doesn't have to exist
+// TODO(as): refactor frame so this stuff doesn't have to exist here
 func black() {
 	frame.A.Text = image.NewUniform(color.RGBA{192, 192, 232, 255})
 	frame.ATag1.Back, frame.ATag1.Text = frame.ATag1.Text, frame.ATag1.Back
