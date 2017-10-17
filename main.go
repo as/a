@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"image/color"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -105,7 +106,22 @@ func moveMouse(pt image.Point) {
 var (
 	utf8    = flag.Bool("u", false, "enable utf8 experiment")
 	elastic = flag.Bool("elastic", false, "enable elastic tabstops")
+	oled    = flag.Bool("b", false, "OLED display mode (black)")
 )
+
+// TODO(as): refactor frame so this stuff doesn't have to exist
+func black(){
+	frame.A.Text = image.NewUniform(color.RGBA{192,192,232,255})
+	frame.ATag1.Back,frame.ATag1.Text=frame.ATag1.Text,frame.ATag1.Back
+	frame.ATag1.Text = frame.A.Text
+	frame.ATag0.Back,frame.ATag0.Text=frame.ATag0.Text,frame.ATag0.Back
+	frame.ATag0.Text = frame.A.Text
+	frame.ATag0.Back = image.Black
+	tag.Gray = image.NewUniform(color.RGBA{192,192,232,255})
+	tag.LtGray = image.NewUniform(color.RGBA{192,192,232,255})
+	tag.X = image.NewUniform(color.RGBA{192,192,232,255})
+	frame.A.Back = image.Black
+}
 
 // Put
 func main() {
@@ -114,6 +130,10 @@ func main() {
 	frame.ForceUTF8 = *utf8
 	frame.ForceElastic = *elastic
 
+	if *oled{
+		black()
+	}
+	
 	list := argparse()
 	dev, err := ui.Init(&screen.NewWindowOptions{Width: winSize.X, Height: winSize.Y, Title: "A"})
 	if err != nil {
