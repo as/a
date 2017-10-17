@@ -19,6 +19,7 @@ A is a text editor. It is inspired by the Sam and Acme text editors for the Plan
 - Structure highlighting
 
 ![paint](install.png)
+![paint](b.png)
 
 
 This repository will change frequently, things will improve unexpectedly. See issues.
