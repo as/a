@@ -143,7 +143,7 @@ func main() {
 
 	// Linux will segfault here if X is not present
 	wind.Send(paint.Event{})
-	ft := font.NewGoMono(fsize)
+	ft := font.NewGoRegular(fsize)
 	g := NewGrid(dev, image.ZP, winSize, ft, list...)
 
 	// This in particular needs to go
