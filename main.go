@@ -5,11 +5,11 @@ import (
 	"flag"
 	"fmt"
 	"image"
+	"image/color"
 	"io"
 	"log"
 	"os"
 	"os/exec"
-	"image/color"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -110,16 +110,16 @@ var (
 )
 
 // TODO(as): refactor frame so this stuff doesn't have to exist
-func black(){
-	frame.A.Text = image.NewUniform(color.RGBA{192,192,232,255})
-	frame.ATag1.Back,frame.ATag1.Text=frame.ATag1.Text,frame.ATag1.Back
+func black() {
+	frame.A.Text = image.NewUniform(color.RGBA{192, 192, 232, 255})
+	frame.ATag1.Back, frame.ATag1.Text = frame.ATag1.Text, frame.ATag1.Back
 	frame.ATag1.Text = frame.A.Text
-	frame.ATag0.Back,frame.ATag0.Text=frame.ATag0.Text,frame.ATag0.Back
+	frame.ATag0.Back, frame.ATag0.Text = frame.ATag0.Text, frame.ATag0.Back
 	frame.ATag0.Text = frame.A.Text
 	frame.ATag0.Back = image.Black
-	tag.Gray = image.NewUniform(color.RGBA{192,192,232,255})
-	tag.LtGray = image.NewUniform(color.RGBA{192,192,232,255})
-	tag.X = image.NewUniform(color.RGBA{192,192,232,255})
+	tag.Gray = image.NewUniform(color.RGBA{192, 192, 232, 255})
+	tag.LtGray = image.NewUniform(color.RGBA{192, 192, 232, 255})
+	tag.X = image.NewUniform(color.RGBA{192, 192, 232, 255})
 	frame.A.Back = image.Black
 }
 
@@ -130,10 +130,10 @@ func main() {
 	frame.ForceUTF8 = *utf8
 	frame.ForceElastic = *elastic
 
-	if *oled{
+	if *oled {
 		black()
 	}
-	
+
 	list := argparse()
 	dev, err := ui.Init(&screen.NewWindowOptions{Width: winSize.X, Height: winSize.Y, Title: "A"})
 	if err != nil {
