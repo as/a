@@ -22,7 +22,7 @@ type Col struct {
 	List []Plane
 }
 
-func New(co *Col, basedir, name string) (w Plane) {
+func New(co *Col, basedir, name string, sizerFunc ...func(int) int) (w Plane) {
 	last := co.List[len(co.List)-1]
 	last.Loc()
 	tw := co.Tag.Win
@@ -30,7 +30,12 @@ func New(co *Col, basedir, name string) (w Plane) {
 	t.Open(basedir, name)
 	t.Insert([]byte(" [Edit  ,x]"), t.Len())
 	lsize := sizeof(last.Loc())
-	lsize.Y -= lsize.Y / 3 * 2
+
+	fn := SizeThirdOf
+	if len(sizerFunc) != 0 {
+		fn = sizerFunc[0]
+	}
+	lsize.Y = fn(lsize.Y)
 	last.Resize(lsize)
 	co.attach(t, len(co.List))
 	co.fill()

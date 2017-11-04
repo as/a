@@ -7,7 +7,7 @@ import (
 	"image"
 	"image/color"
 	"io"
-//	"io/ioutil"
+	//	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -17,10 +17,10 @@ import (
 	"time"
 
 	"github.com/as/event"
-//	"github.com/as/font/vga"
+	//	"github.com/as/font/vga"
 	mus "github.com/as/text/mouse"
 	"golang.org/x/exp/shiny/screen"
-//	"golang.org/x/image/font/plan9font"
+	//	"golang.org/x/image/font/plan9font"
 	"golang.org/x/mobile/event/key"
 	"golang.org/x/mobile/event/lifecycle"
 	"golang.org/x/mobile/event/mouse"
@@ -40,7 +40,7 @@ import (
 )
 
 var (
-	Version = "0.3.9"
+	Version = "0.4.0"
 	xx      Cursor
 	eprint  = fmt.Println
 	timefmt = "2006.01.02 15.04.05"
@@ -50,7 +50,7 @@ var (
 	winSize   = image.Pt(1024, 768)
 	fsize     = 12 // Put
 	pad       = image.Pt(15, 15)
-	tagHeight = fsize*2+fsize/2-2
+	tagHeight = fsize*2 + fsize/2 - 2
 	scrollX   = 10
 )
 
@@ -110,7 +110,7 @@ var (
 	utf8    = flag.Bool("u", false, "enable utf8 experiment")
 	elastic = flag.Bool("elastic", false, "enable elastic tabstops")
 	oled    = flag.Bool("b", false, "OLED display mode (black)")
-	ftsize   = flag.Int("ftsize", 16, "font size")
+	ftsize  = flag.Int("ftsize", 16, "font size")
 )
 
 /*
