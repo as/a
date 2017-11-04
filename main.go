@@ -7,6 +7,7 @@ import (
 	"image"
 	"image/color"
 	"io"
+//	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -16,8 +17,10 @@ import (
 	"time"
 
 	"github.com/as/event"
+//	"github.com/as/font/vga"
 	mus "github.com/as/text/mouse"
 	"golang.org/x/exp/shiny/screen"
+//	"golang.org/x/image/font/plan9font"
 	"golang.org/x/mobile/event/key"
 	"golang.org/x/mobile/event/lifecycle"
 	"golang.org/x/mobile/event/mouse"
@@ -45,9 +48,9 @@ var (
 
 var (
 	winSize   = image.Pt(1024, 768)
-	pad       = image.Pt(15, 15)
 	fsize     = 12 // Put
-	tagHeight = 28
+	pad       = image.Pt(15, 15)
+	tagHeight = fsize*5/3
 	scrollX   = 10
 )
 
@@ -107,8 +110,22 @@ var (
 	utf8    = flag.Bool("u", false, "enable utf8 experiment")
 	elastic = flag.Bool("elastic", false, "enable elastic tabstops")
 	oled    = flag.Bool("b", false, "OLED display mode (black)")
+	ftsize   = flag.Int("ftsize", 16, "font size")
 )
 
+/*
+func vgaface() font.Face {
+	data, err := ioutil.ReadFile("u_vga16.font")
+	if err != nil {
+		panic(err)
+	}
+	face, err := plan9font.ParseFont(data, ioutil.ReadFile)
+	if err != nil {
+		panic(err)
+	}
+	return face
+}
+*/
 // TODO(as): refactor frame so this stuff doesn't have to exist here
 func black() {
 	frame.A.Text = image.NewUniform(color.RGBA{192, 192, 232, 255})
@@ -143,7 +160,10 @@ func main() {
 
 	// Linux will segfault here if X is not present
 	wind.Send(paint.Event{})
-	ft := font.NewGoRegular(fsize)
+
+	ft := font.NewGoMedium(fsize)
+	//	ft = font.NewRaster(vgaface(), 16)
+//	ft = font.NewRaster(vga.NewFace(*ftsize), *ftsize)
 	g := NewGrid(dev, image.ZP, winSize, ft, list...)
 
 	// This in particular needs to go
