@@ -160,10 +160,7 @@ func main() {
 
 	// Linux will segfault here if X is not present
 	wind.Send(paint.Event{})
-
 	ft := font.NewGoMedium(fsize)
-	//	ft = font.NewRaster(vgaface(), 16)
-//	ft = font.NewRaster(vga.NewFace(*ftsize), *ftsize)
 	g := NewGrid(dev, image.ZP, winSize, ft, list...)
 
 	// This in particular needs to go
