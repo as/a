@@ -50,7 +50,7 @@ var (
 	winSize   = image.Pt(1024, 768)
 	fsize     = 12 // Put
 	pad       = image.Pt(15, 15)
-	tagHeight = fsize*5/3
+	tagHeight = fsize*2+fsize/2-2
 	scrollX   = 10
 )
 
