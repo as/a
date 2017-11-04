@@ -30,7 +30,7 @@ func New(co *Col, basedir, name string) (w Plane) {
 	t.Open(basedir, name)
 	t.Insert([]byte(" [Edit  ,x]"), t.Len())
 	lsize := sizeof(last.Loc())
-	lsize.Y -= lsize.Y / 3
+	lsize.Y -= lsize.Y / 3 * 2
 	last.Resize(lsize)
 	co.attach(t, len(co.List))
 	co.fill()
