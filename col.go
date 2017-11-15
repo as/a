@@ -203,24 +203,61 @@ func (co *Col) RollUp(id int, dy int) {
 	}
 	co.MoveWin(id, dy)
 }
+func (co *Col) badID(id int) bool {
+	return id <= 0
+}
+func (co *Col) bestGrowth(id int, dy int) int {
+	if co.badID(id) || co.badID(id-1) {
+		return dy
+	}
+	nclicks := co.List[id-1].Loc().Dy() / dy
+	if nclicks < 3 {
+		return dy
+	}
+	if nclicks < 5 {
+		return dy * 2
+	}
+	if nclicks < 8 {
+		return dy * 3
+	}
+	return dy * 4
+}
+func (co *Col) Grow(id int, dy int) {
+	a, b := id-1, id
+	if co.badID(a) || co.badID(b) {
+		return
+	}
+	ra, rb := co.List[a].Loc(), co.List[b].Loc()
+	ra.Max.Y -= dy
+	if dy := ra.Dy() - tagHeight; dy < 0 {
+		co.Grow(a, -dy)
+	}
+	fmt.Printf("min: %d, dy: %d, min-dy: %d\n", rb.Min.Y, dy, rb.Min.Y-dy)
+	co.MoveWin(b, rb.Min.Y-dy)
+}
 
 func (co *Col) RollDown(id int, dy int) {
 	/*
 		if id >= len(co.List) {
 			return
 		}
-		x:=id
-		a := co.List[x].Loc()
-		for x+1 < len(co.List){
-			b := co.List[x+1].Loc()
-			if extra := a.Min.Y+tagHeight+dy-b.Min.Y; extra > 0{
-				co.MoveWin(x, a.Min.Y+extra)
+		r := co.List[x].Loc()
+		if r.Min.Y+dy
+		a := r.Min.Y
+		b := a+co.List[x].Loc().Min.Y
+
+			x:=id
+			a := co.List[x].Loc()
+			for x+1 < len(co.List){
+				b := co.List[x+1].Loc()
+				if extra := a.Min.Y+tagHeight+dy-b.Min.Y; extra > 0{
+					co.MoveWin(x, a.Min.Y+extra)
+				}
 			}
-		}
-		if a.Min.Y+dy > co.Loc().Max.Y{
-			dy = co.Loc().Max.Y - tagHeight
-		}
-		co.MoveWin(id, a.Min.Y+dy)
+			if a.Min.Y+dy > co.Loc().Max.Y{
+				dy = co.Loc().Max.Y - tagHeight
+			}
+			co.MoveWin(id, a.Min.Y+dy)
 	*/
 }
 func (co *Col) Upload(wind screen.Window) {
@@ -239,6 +276,10 @@ func (co *Col) Upload(wind screen.Window) {
 
 func (co *Col) MoveWin(id int, y int) {
 	if id == 0 || id >= len(co.List) {
+		return
+	}
+	maxy := co.List[len(co.List)-1].Loc().Max.Y - tagHeight
+	if y >= maxy {
 		return
 	}
 	s := co.detach(id)

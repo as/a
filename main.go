@@ -235,7 +235,7 @@ func main() {
 			dy -= fsize * 2
 			actCol.MoveWin(id, dy)
 		case 1:
-			actCol.RollDown(id+1, tagHeight)
+			actCol.Grow(id, actCol.bestGrowth(id, tagHeight))
 		}
 		moveMouse(actTag.Loc().Min)
 	}
