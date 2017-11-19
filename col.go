@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"io"
+	"sync"
 
 	"github.com/as/frame"
 	"github.com/as/frame/font"
@@ -236,6 +237,18 @@ func (co *Col) Grow(id int, dy int) {
 	co.MoveWin(b, rb.Min.Y-dy)
 }
 
+/*
+func (co *Col) Show(id int, dy int){
+	if co.badID(id){
+		return
+	}
+	r := co.List[id].Loc()
+	if r.Dy() > dy{
+		return
+	}
+}
+*/
+
 func (co *Col) RollDown(id int, dy int) {
 	/*
 		if id >= len(co.List) {
@@ -323,15 +336,25 @@ func (co *Col) fill() {
 	if co == nil || co.List[0] == nil {
 		return
 	}
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
 	ty := co.List[0].Loc().Dy()
+
 	co.List[0].Resize(image.Pt(co.size.X, ty))
 	//		Tagtext(fmt.Sprintf("id=tagtag r=%s", co.List[0].Loc()), co.List[0])
 
 	x := co.size.X
 	y1 := co.Loc().Max.Y
 	for n := len(co.List) - 1; n > 0; n-- {
+		n := n
 		y0 := co.List[n].Loc().Min.Y
-		co.List[n].Resize(image.Pt(x, y1-y0))
+		wg.Add(1)
+		pt := image.Pt(x, y1-y0)
+		go func() {
+			co.List[n].Resize(pt)
+			defer wg.Done()
+		}()
 		y1 = y0
 		//		Tagtext(fmt.Sprintf("id=%d r=%s", n, co.List[n].Loc()), co.List[n])
 	}
