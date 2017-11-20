@@ -65,12 +65,15 @@ func doScrollEvent(act *win.Win, e mus.ScrollEvent) {
 	}
 	if smoothness > 0.0 {
 		smoothness -= float64(e.Dy) * 0.20
+		if e.Dy != 3 {
+			e.Dy = 3
+		}
 		smoothscroll(act, e)
 		wind.SendFirst(mus.Drain{})
 		wind.Send(mus.DrainStop{})
 		ck()
 	} else {
-		hurryup *= 1.03
+		hurryup *= 1.015
 		if e.Button == -1 {
 			e.Dy = -e.Dy
 		}
