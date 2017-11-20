@@ -52,6 +52,12 @@ var (
 	pad       = image.Pt(15, 15)
 	tagHeight = fsize*2 + fsize/2 - 2
 	scrollX   = 10
+	
+	// Records the last time a scroll event was recieved so
+	// a proper acceleration factor can be applied.
+	lastscroll time.Time
+	lastscrolldy int
+	scrollmul = 1
 )
 
 func abs(a int) int {
@@ -113,6 +119,31 @@ var (
 	ftsize  = flag.Int("ftsize", 16, "font size")
 )
 
+func smoothscroll(act *win.Win, e mus.ScrollEvent){
+				dp := act.Loc().Min
+				sr := act.Buffer().Bounds()
+				sr.Min.X += 10
+				sr.Min.Y += 15
+				dp.X += 10
+				dp.Y += 15
+				h := act.Frame.Font.Dy()
+			if e.Button == -1 {
+				for i := 0; i != -h*e.Dy; i-=e.Dy{
+					act.Window().Upload(dp, act.Buffer(), sr.Add(image.Pt(0, i)))
+					act.Window().Publish()
+					act.Flush()
+				}
+				e.Dy = -e.Dy
+			} else {
+				for i := 0; i != h*e.Dy; i+=e.Dy{
+					act.Window().Upload(dp, act.Buffer(), sr.Add(image.Pt(0, i)))
+					act.Window().Publish()
+					act.Flush()
+				}
+			}
+				actTag.Body.Scroll(e.Dy)
+				act.Refresh()
+			}
 /*
 func vgaface() font.Face {
 	data, err := ioutil.ReadFile("u_vga16.font")
@@ -326,11 +357,27 @@ func main() {
 			}
 			ck()
 		case mus.ScrollEvent:
-			if e.Button == -1 {
-				e.Dy = -e.Dy
+			tm := time.Now()
+			if e.Dy == 0{
+				lastscroll = tm
+			lastscrolldy = 0
+				continue
 			}
-			actTag.Body.Scroll(e.Dy * 2)
-			ck()
+//			if tm.Sub(lastscroll) > time.Second/7 {
+		if text.Region3(int64(lastscrolldy), int64(e.Dy-7), int64(e.Dy+7)) != 0 {
+				smoothscroll(act, e)
+				ck()
+				wind.SendFirst(mus.Drain{})
+				wind.Send(mus.DrainStop{})
+			} else {
+				if e.Button == -1 {
+					e.Dy = -e.Dy
+				}
+				actTag.Body.Scroll(e.Dy)
+				ck()
+			}
+			lastscroll = tm
+			lastscrolldy = e.Dy
 		case mus.SweepEvent:
 			switch context {
 			case scrollbar:
