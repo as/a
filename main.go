@@ -40,7 +40,7 @@ import (
 )
 
 var (
-	Version = "0.4.3"
+	Version = "0.4.4"
 	xx      Cursor
 	eprint  = fmt.Println
 	timefmt = "2006.01.02 15.04.05"
@@ -110,7 +110,7 @@ var (
 	utf8    = flag.Bool("u", false, "enable utf8 experiment")
 	elastic = flag.Bool("elastic", false, "enable elastic tabstops")
 	oled    = flag.Bool("b", false, "OLED display mode (black)")
-	ftsize  = flag.Int("ftsize", 16, "font size")
+	ftsize  = flag.Int("ftsize", 12, "font size")
 )
 
 /*
@@ -170,7 +170,7 @@ func main() {
 
 	// Linux will segfault here if X is not present
 	wind.Send(paint.Event{})
-	ft := font.NewGoMedium(fsize)
+	ft := font.NewGoMono(fsize)
 	g = NewGrid(dev, image.ZP, winSize, ft, list...)
 
 	// This in particular needs to go
