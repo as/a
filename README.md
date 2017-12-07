@@ -76,6 +76,7 @@ Edit ,x,the standard editor is any editor,x,any editor,c,ed,
 ^E  Move cursor to end of the line.
 ^+  Increase font size
 ^-  Decrease font size
+^i	Run goimports (in a tag ending in .go)
 ```
 
 # extras
