@@ -127,14 +127,6 @@ func vgaface() font.Face {
 */
 // TODO(as): refactor frame so this stuff doesn't have to exist here
 func black() {
-	//	frame.A.Text = image.NewUniform(color.RGBA{192, 192, 232, 255})
-	//	frame.ATag1.Back, frame.ATag1.Text = frame.ATag1.Text, frame.ATag1.Back
-	//	frame.ATag1.Text = frame.A.Text
-	//	frame.ATag0.Back, frame.ATag0.Text = frame.ATag0.Text, frame.ATag0.Back
-	//	frame.ATag0.Text = frame.A.Text
-	//	frame.ATag0.Back = image.Black
-	//	frame.A.Back = image.Black
-
 	frame.A.Text = frame.MTextW
 	frame.A.Back = frame.MBodyW
 
