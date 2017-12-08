@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"image"
-	"image/color"
 	"io"
 	//	"io/ioutil"
 	"log"
@@ -48,7 +47,7 @@ var (
 
 var (
 	winSize   = image.Pt(1024, 768)
-	fsize     = 12 // Put
+	fsize     = 11 // Put
 	pad       = image.Pt(15, 15)
 	tagHeight = fsize*2 + fsize/2 - 2
 	scrollX   = 10
@@ -110,7 +109,7 @@ var (
 	utf8    = flag.Bool("u", false, "enable utf8 experiment")
 	elastic = flag.Bool("elastic", false, "enable elastic tabstops")
 	oled    = flag.Bool("b", false, "OLED display mode (black)")
-	ftsize  = flag.Int("ftsize", 12, "font size")
+	ftsize  = flag.Int("ftsize", 11, "font size")
 )
 
 /*
@@ -128,16 +127,26 @@ func vgaface() font.Face {
 */
 // TODO(as): refactor frame so this stuff doesn't have to exist here
 func black() {
-	frame.A.Text = image.NewUniform(color.RGBA{192, 192, 232, 255})
-	frame.ATag1.Back, frame.ATag1.Text = frame.ATag1.Text, frame.ATag1.Back
-	frame.ATag1.Text = frame.A.Text
-	frame.ATag0.Back, frame.ATag0.Text = frame.ATag0.Text, frame.ATag0.Back
-	frame.ATag0.Text = frame.A.Text
-	frame.ATag0.Back = image.Black
-	tag.Gray = image.NewUniform(color.RGBA{192, 192, 232, 255})
-	tag.LtGray = image.NewUniform(color.RGBA{192, 192, 232, 255})
-	tag.X = image.NewUniform(color.RGBA{192, 192, 232, 255})
-	frame.A.Back = image.Black
+	//	frame.A.Text = image.NewUniform(color.RGBA{192, 192, 232, 255})
+	//	frame.ATag1.Back, frame.ATag1.Text = frame.ATag1.Text, frame.ATag1.Back
+	//	frame.ATag1.Text = frame.A.Text
+	//	frame.ATag0.Back, frame.ATag0.Text = frame.ATag0.Text, frame.ATag0.Back
+	//	frame.ATag0.Text = frame.A.Text
+	//	frame.ATag0.Back = image.Black
+	//	frame.A.Back = image.Black
+
+	frame.A.Text = frame.MTextW
+	frame.A.Back = frame.MBodyW
+
+	frame.ATag0.Text = frame.MTextW
+	frame.ATag0.Back = frame.MTagG
+
+	frame.ATag1.Text = frame.MTextW
+	frame.ATag1.Back = frame.MTagC
+
+	//	tag.Gray = image.NewUniform(color.RGBA{192, 192, 232, 255})
+	//	tag.LtGray = image.NewUniform(color.RGBA{192, 192, 232, 255})
+	//	tag.X = image.NewUniform(color.RGBA{192, 192, 232, 255})
 }
 
 var dirty bool
@@ -170,7 +179,7 @@ func main() {
 
 	// Linux will segfault here if X is not present
 	wind.Send(paint.Event{})
-	ft := font.NewGoMono(fsize)
+	ft := font.NewGoMedium(fsize)
 	g = NewGrid(dev, image.ZP, winSize, ft, list...)
 
 	// This in particular needs to go
