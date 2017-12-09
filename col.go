@@ -46,6 +46,17 @@ func New(co *Col, basedir, name string, sizerFunc ...func(int) int) (w Plane) {
 	return t
 }
 
+func Delcol(g *Grid, id int) {
+	co := g.detach(id)
+	x := co.Loc().Min.X
+	y := co.Loc().Min.Y
+	for ; id < len(g.List); id++ {
+		x2 := g.List[id].Loc().Min.X
+		g.List[id].Move(image.Pt(x, y))
+		x = x2
+	}
+	g.fill()
+}
 func Del(co *Col, id int) {
 	type Releaser interface {
 		Release()
@@ -83,6 +94,7 @@ func NewCol(dev *ui.Dev, ft *font.Font, sp, size image.Point, files ...string) *
 	col.List = append([]Plane{T}, col.List...)
 	return col
 }
+
 func NewCol2(g *Grid, filenames ...string) (w Plane) {
 	x0 := g.List[0].Loc().Min.X
 	y0 := g.List[0].Loc().Dy()

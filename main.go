@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"image"
 	"io"
-	//	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -15,11 +14,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/as/event"
 	//	"github.com/as/font/vga"
+	//	"golang.org/x/image/font/plan9font"
+	"github.com/as/event"
 	mus "github.com/as/text/mouse"
 	"golang.org/x/exp/shiny/screen"
-	//	"golang.org/x/image/font/plan9font"
 	"golang.org/x/mobile/event/key"
 	"golang.org/x/mobile/event/lifecycle"
 	"golang.org/x/mobile/event/mouse"
@@ -402,7 +401,7 @@ func main() {
 			case "Sort":
 				aerr("Sort: TODO")
 			case "Delcol":
-				aerr("Delcol: TODO")
+				Delcol(g, g.ID(actCol))
 			case "Exit":
 				aerr("Exit: TODO")
 			default:
@@ -505,11 +504,7 @@ func cmd(f text.Editor, dir string, argv string) {
 	if err != nil {
 		panic(err)
 	}
-	_, err = io.Copy(fd0, bytes.NewReader(append([]byte{}, f.Bytes()[q0:q1]...)))
-	if err != nil {
-		eprint(err)
-		return
-	}
+
 	fd0.Close()
 	var wg sync.WaitGroup
 	donec := make(chan bool)
@@ -554,23 +549,30 @@ func cmd(f text.Editor, dir string, argv string) {
 			}
 		}
 	}()
+	cmd.Start()
 	go func() {
-		cmd.Start()
+		_, err = io.Copy(fd0, bytes.NewReader(append([]byte{}, f.Bytes()[q0:q1]...)))
+		if err != nil {
+			eprint(err)
+			return
+		}
 		cmd.Wait()
 		close(donec)
 	}()
-Loop:
-	for {
-		select {
-		case p := <-outc:
-			f.Insert(p, q1)
-			q1 += int64(len(p))
-		case p := <-errc:
-			f.Insert(p, q1)
-			q1 += int64(len(p))
-		case <-donec:
-			break Loop
+	go func() {
+	Loop:
+		for {
+			select {
+			case p := <-outc:
+				f.Insert(p, q1)
+				q1 += int64(len(p))
+			case p := <-errc:
+				f.Insert(p, q1)
+				q1 += int64(len(p))
+			case <-donec:
+				break Loop
+			}
 		}
-	}
+	}()
 
 }
