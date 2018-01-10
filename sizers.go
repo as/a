@@ -1,7 +1,7 @@
 package main
 
 func SizeThirdOf(size int) int {
-	return size - (size / 3 * 2)
+	return size - (size / 5 * 2)
 }
 func SizeSmall(size int) int {
 	if size-200 < 0 {

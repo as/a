@@ -168,7 +168,8 @@ func (g *Grid) afinderr(wd string, name string) *tag.Tag {
 	}
 	t := g.FindName(name)
 	if t == nil {
-		t = New(actCol, "", name, SizeThirdOf).(*tag.Tag)
+		c := g.List[len(g.List)-1].(*Col)
+		t = New(c, "", name, SizeThirdOf).(*tag.Tag)
 		if t == nil {
 			panic("cant create tag")
 		}
