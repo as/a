@@ -1,5 +1,11 @@
 package main
 
+func trypprof() func() {
+	// try harder
+	return func() {}
+}
+
+/*
 import (
 	"flag"
 	"log"
@@ -20,3 +26,4 @@ func trypprof() func() {
 	pprof.StartCPUProfile(f)
 	return pprof.StopCPUProfile
 }
+*/
