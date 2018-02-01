@@ -38,7 +38,7 @@ import (
 )
 
 var (
-	Version = "0.4.8"
+	Version = "0.5.0"
 	xx      Cursor
 	eprint  = fmt.Println
 	timefmt = "2006.01.02 15.04.05"
@@ -99,9 +99,6 @@ func argparse() (list []string) {
 		list = append(list, ".")
 	}
 	return
-}
-func moveMouse(pt image.Point) {
-	cursor.MoveTo(window.ClientAbs().Min.Add(pt))
 }
 
 var (
