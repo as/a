@@ -25,11 +25,9 @@ import (
 	"golang.org/x/mobile/event/paint"
 	"golang.org/x/mobile/event/size"
 
-	"github.com/as/cursor"
 	"github.com/as/edit"
 	"github.com/as/frame"
 	"github.com/as/frame/font"
-	window "github.com/as/ms/win"
 	"github.com/as/path"
 	"github.com/as/text"
 	"github.com/as/ui"
