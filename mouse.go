@@ -6,8 +6,9 @@ import (
 	"image"
 
 	"github.com/as/cursor"
+	"github.com/as/ms/win"
 )
 
 func moveMouse(pt image.Point) {
-	cursor.MoveTo(window.ClientAbs().Min.Add(pt))
+	cursor.MoveTo(win.ClientAbs().Min.Add(pt))
 }
