@@ -39,10 +39,10 @@ import (
 )
 
 var (
-	Version = "0.5.0"
-	xx      Cursor
-	eprint  = fmt.Println
-	timefmt = "2006.01.02 15.04.05"	
+	Version   = "0.5.1"
+	xx        Cursor
+	eprint    = fmt.Println
+	timefmt   = "2006.01.02 15.04.05"
 	winSize   = image.Pt(1024, 768)
 	fsize     = 11 // Put
 	pad       = image.Pt(15, 15)
