@@ -17,13 +17,14 @@ import (
 	//	"github.com/as/font/vga"
 	//	"golang.org/x/image/font/plan9font"
 	"github.com/as/event"
+	"github.com/as/shiny/screen"
 	mus "github.com/as/text/mouse"
-	"golang.org/x/exp/shiny/screen"
 	"golang.org/x/mobile/event/key"
 	"golang.org/x/mobile/event/lifecycle"
 	"golang.org/x/mobile/event/mouse"
 	"golang.org/x/mobile/event/paint"
 	"golang.org/x/mobile/event/size"
+	"golang.org/x/time/rate"
 
 	"github.com/as/edit"
 	"github.com/as/frame"
@@ -33,31 +34,21 @@ import (
 	"github.com/as/ui"
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
+
+	"context"
 )
 
 var (
-	Version = "0.5.0"
-	xx      Cursor
-	eprint  = fmt.Println
-	timefmt = "2006.01.02 15.04.05"
-)
-
-var (
+	Version   = "0.5.1"
+	xx        Cursor
+	eprint    = fmt.Println
+	timefmt   = "2006.01.02 15.04.05"
 	winSize   = image.Pt(1024, 768)
 	fsize     = 11 // Put
 	pad       = image.Pt(15, 15)
 	tagHeight = fsize*2 + fsize/2 - 2
 	scrollX   = 10
 )
-
-func abs(a int) int {
-	if a < 0 {
-		return -a
-	}
-	return a
-}
-
-var cols = frame.Mono
 
 func Tagtext(s string, w Plane) {
 	switch w := w.(type) {
@@ -151,6 +142,8 @@ func main() {
 	defer trypprof()()
 	frame.ForceUTF8 = *utf8
 	frame.ForceElastic = *elastic
+
+	lim := rate.NewLimiter(rate.Every(time.Second/120), 2)
 
 	if *oled {
 		black()
@@ -263,7 +256,7 @@ func main() {
 		scrollbar = 1
 		sizer     = 2
 		window    = 4
-		context   = 0
+		cont      = 0
 	)
 
 	aerr("ver=%s", Version)
@@ -294,7 +287,7 @@ func main() {
 			}
 		case mouse.Event:
 			pt = p(e).Add(act.Loc().Min)
-			if context == 0 {
+			if cont == 0 {
 				activate(p(e), g)
 			}
 			e.X -= float32(act.Sp.X)
@@ -302,7 +295,7 @@ func main() {
 			mousein.Sink <- e
 		case mus.MarkEvent:
 
-			context = 0
+			cont = 0
 			pt = p(e.Event).Add(act.Loc().Min)
 			if sizerHit(actTag, pt) {
 				if e.Button == 2 {
@@ -311,23 +304,23 @@ func main() {
 					} else {
 						detachwin()
 					}
-					context = sizer
+					cont = sizer
 				} else {
 					growshrink(e.Event)
 				}
 
 			} else if x := int(e.X); x >= 0 && x < 10 {
-				context = scrollbar
+				cont = scrollbar
 				act.Clicksb(p(e.Event), int(e.Button))
 			} else {
 				actTag.Handle(act, e)
-				context = window
+				cont = window
 			}
 			ck()
 		case mus.ScrollEvent:
 			doScrollEvent(act, e)
 		case mus.SweepEvent:
-			switch context {
+			switch cont {
 			case scrollbar:
 				act.Clicksb(p(e.Event), 0)
 			case sizer:
@@ -345,13 +338,13 @@ func main() {
 			}
 			ck()
 		case mus.CommitEvent:
-			context = 0
+			cont = 0
 			ck()
 		case mus.SnarfEvent, mus.InsertEvent:
 			actTag.Handle(act, e)
 			ck()
 		case mus.SelectEvent:
-			switch context {
+			switch cont {
 			case scrollbar:
 				act.Clicksb(p(e.Event), 0)
 				wind.SendFirst(mus.Drain{})
@@ -372,7 +365,7 @@ func main() {
 					//	wind.Send(s)
 				}
 			}
-			context = 0
+			cont = 0
 			ck()
 		case key.Event:
 			actTag.Handle(act, e)
@@ -447,6 +440,7 @@ func main() {
 			if !focused {
 				g.Resize(winSize)
 			}
+			lim.WaitN(context.Background(), 1)
 			g.Upload(wind)
 			wind.Publish()
 		case lifecycle.Event:
