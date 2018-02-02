@@ -10,7 +10,7 @@ import (
 	"github.com/as/frame/font"
 	"github.com/as/ui"
 	"github.com/as/ui/tag"
-	"golang.org/x/exp/shiny/screen"
+	"github.com/as/shiny/screen"
 )
 
 type Col struct {
