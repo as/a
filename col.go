@@ -6,8 +6,8 @@ import (
 	"io"
 	"sync"
 
+	"github.com/as/font"
 	"github.com/as/frame"
-	"github.com/as/frame/font"
 	"github.com/as/shiny/screen"
 	"github.com/as/ui"
 	"github.com/as/ui/tag"
@@ -15,7 +15,7 @@ import (
 
 type Col struct {
 	dev  *ui.Dev
-	ft   *font.Font
+	ft   font.Face
 	sp   image.Point
 	size image.Point
 	Tag  *tag.Tag
@@ -73,7 +73,7 @@ func Del(co *Col, id int) {
 	co.fill()
 }
 
-func NewCol(dev *ui.Dev, ft *font.Font, sp, size image.Point, files ...string) *Col {
+func NewCol(dev *ui.Dev, ft font.Face, sp, size image.Point, files ...string) *Col {
 	N := len(files)
 	tdy := ft.Dy() + ft.Dy()/2
 	tagpad := image.Pt(pad.X, 3)

@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/as/edit"
+	"github.com/as/font"
 	"github.com/as/frame"
-	"github.com/as/frame/font"
 	"github.com/as/text"
 	"github.com/as/ui"
 	"github.com/as/ui/tag"
@@ -15,7 +15,7 @@ type Grid struct {
 	*Col
 }
 
-func NewGrid(dev *ui.Dev, sp, size image.Point, ft *font.Font, files ...string) *Grid {
+func NewGrid(dev *ui.Dev, sp, size image.Point, ft font.Face, files ...string) *Grid {
 	N := len(files)
 	tdy := tag.TagSize(ft)
 	tagpad := tag.TagPad(pad)

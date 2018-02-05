@@ -24,18 +24,18 @@ import (
 	"golang.org/x/mobile/event/mouse"
 	"golang.org/x/mobile/event/paint"
 	"golang.org/x/mobile/event/size"
-	"golang.org/x/time/rate"
+//	"golang.org/x/time/rate"
 
 	"github.com/as/edit"
+	"github.com/as/font" ///"git
 	"github.com/as/frame"
-	"github.com/as/frame/font"
 	"github.com/as/path"
 	"github.com/as/text"
 	"github.com/as/ui"
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
 
-	"context"
+//	"context"
 )
 
 var (
@@ -44,9 +44,8 @@ var (
 	eprint    = fmt.Println
 	timefmt   = "2006.01.02 15.04.05"
 	winSize   = image.Pt(1024, 768)
-	fsize     = 11 // Put
 	pad       = image.Pt(15, 15)
-	tagHeight = fsize*2 + fsize/2 - 2
+	tagHeight = *ftsize*2 + *ftsize/2 - 2
 	scrollX   = 10
 )
 
@@ -143,7 +142,7 @@ func main() {
 	frame.ForceUTF8 = *utf8
 	frame.ForceElastic = *elastic
 
-	lim := rate.NewLimiter(rate.Every(time.Second/120), 2)
+//	lim := rate.NewLimiter(rate.Every(time.Second/120), 10)
 
 	if *oled {
 		black()
@@ -158,7 +157,7 @@ func main() {
 
 	// Linux will segfault here if X is not present
 	wind.Send(paint.Event{})
-	ft := font.NewGoMedium(fsize)
+	ft := font.NewGoMono(*ftsize)
 	g = NewGrid(dev, image.ZP, winSize, ft, list...)
 
 	// This in particular needs to go
@@ -224,7 +223,7 @@ func main() {
 			actCol.RollUp(id, dy)
 			//actCol.MoveWin(id, dy)
 		case 2:
-			dy -= fsize * 2
+			dy -= *ftsize * 2
 			actCol.MoveWin(id, dy)
 		case 1:
 			actCol.Grow(id, actCol.bestGrowth(id, tagHeight))
@@ -440,7 +439,7 @@ func main() {
 			if !focused {
 				g.Resize(winSize)
 			}
-			lim.WaitN(context.Background(), 1)
+//			lim.WaitN(context.Background(), 1)
 			g.Upload(wind)
 			wind.Publish()
 		case lifecycle.Event:
