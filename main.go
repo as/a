@@ -24,7 +24,7 @@ import (
 	"golang.org/x/mobile/event/mouse"
 	"golang.org/x/mobile/event/paint"
 	"golang.org/x/mobile/event/size"
-//	"golang.org/x/time/rate"
+	"golang.org/x/time/rate"
 
 	"github.com/as/edit"
 	"github.com/as/font" ///"git
@@ -35,7 +35,7 @@ import (
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
 
-//	"context"
+	"context"
 )
 
 var (
@@ -142,7 +142,7 @@ func main() {
 	frame.ForceUTF8 = *utf8
 	frame.ForceElastic = *elastic
 
-//	lim := rate.NewLimiter(rate.Every(time.Second/120), 10)
+	lim := rate.NewLimiter(rate.Every(time.Second/120), 10)
 
 	if *oled {
 		black()
@@ -157,7 +157,7 @@ func main() {
 
 	// Linux will segfault here if X is not present
 	wind.Send(paint.Event{})
-	ft := font.NewGoMono(*ftsize)
+	ft := font.NewFace(*ftsize)
 	g = NewGrid(dev, image.ZP, winSize, ft, list...)
 
 	// This in particular needs to go
@@ -297,7 +297,7 @@ func main() {
 			cont = 0
 			pt = p(e.Event).Add(act.Loc().Min)
 			if sizerHit(actTag, pt) {
-				if e.Button == 2 {
+				if e.Button == 1 {
 					if tophit() {
 						detachcol()
 					} else {
@@ -439,7 +439,7 @@ func main() {
 			if !focused {
 				g.Resize(winSize)
 			}
-//			lim.WaitN(context.Background(), 1)
+			lim.WaitN(context.Background(), 1)
 			g.Upload(wind)
 			wind.Publish()
 		case lifecycle.Event:
