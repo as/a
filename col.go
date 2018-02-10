@@ -28,9 +28,9 @@ func New(co *Col, basedir, name string, sizerFunc ...func(int) int) (w Plane) {
 	last.Loc()
 	tw := co.Tag.Win
 	t := tag.New(co.dev, co.sp, image.Pt(co.size.X, co.tdy*2), pad, tw.Font, tw.Color)
-	if name != "+Errors" {
-		//g.aerr(fmt.Sprintf("open basedir=%q name=%q", basedir, name))
-	}
+	
+	
+	
 	t.Open(basedir, name)
 	t.Insert([]byte(" [Edit  ,x]"), t.Len())
 	lsize := sizeof(last.Loc())
@@ -58,9 +58,6 @@ func Delcol(g *Grid, id int) {
 	g.fill()
 }
 func Del(co *Col, id int) {
-	type Releaser interface {
-		Release()
-	}
 	w := co.detach(id)
 	y := w.Loc().Min.Y
 	x := co.Loc().Min.X

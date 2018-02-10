@@ -49,30 +49,6 @@ var (
 	scrollX   = 10
 )
 
-func Tagtext(s string, w Plane) {
-	switch w := w.(type) {
-	case *Grid:
-		Tagtext(s, w.List[0])
-	case *Col:
-		Tagtext(s, w.List[0])
-	case *tag.Tag:
-		t := w.Win
-		q0, q1 := t.Dot()
-		t.Delete(q0, q1)
-		q1 = q0
-		t.InsertString(s, q1)
-		t.Select(q1, q1+int64(len(s)))
-	case Plane:
-	}
-}
-
-type CmdEvent struct {
-	grid *Grid
-	col  *Col
-	tag  *tag.Tag
-	act  Plane
-}
-
 func p(e mouse.Event) image.Point {
 	return image.Pt(int(e.X), int(e.Y))
 }
@@ -236,17 +212,13 @@ func main() {
 
 	ajump := func(ed text.Editor, cursor bool) {
 		fn := moveMouse
-		if cursor == false {
+		if !cursor  {
 			fn = nil
 		}
 		if ed, ok := ed.(text.Jumper); ok {
 			ed.Jump(fn)
 		}
 	}
-	ismeta := func(ed Plane) bool {
-		return ed == g.List[0].(*tag.Tag).Body
-	}
-	ismeta = ismeta
 	alook := func(e event.Look) {
 		g.Look(e)
 	}
