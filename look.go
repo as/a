@@ -79,7 +79,6 @@ func (g *Grid) Look(e event.Look) {
 		return
 	}
 
-	isdir := false
 	abspath := ""
 	visible := ""
 	exists := false
@@ -125,17 +124,14 @@ func (g *Grid) Look(e event.Look) {
 	})
 
 	var t *tag.Tag
-	isdir = isdir
 	if exists {
 		q := g.Lookup(abspath)
 		if q, ok := q.(*tag.Tag); ok {
 			t = q
 		}
 	} else if abspath == visible && path.Exists(visible) {
-		isdir = path.IsDir(abspath)
 		t = New(actCol, path.DirOf(abspath), visible).(*tag.Tag)
 	} else if realpath := filepath.Join(abspath, visible); path.Exists(realpath) {
-		isdir = path.IsDir(realpath)
 		t = New(actCol, path.DirOf(abspath), visible).(*tag.Tag)
 	}
 	if t != nil {
@@ -223,7 +219,6 @@ func VisitAll(root Plane, fn func(p Named)) {
 	case interface{}:
 		panic("bad visitor")
 	}
-	return
 }
 
 func (col *Col) Kids() []Plane {

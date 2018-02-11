@@ -27,8 +27,8 @@ import (
 	"golang.org/x/time/rate"
 
 	"github.com/as/edit"
+	"github.com/as/font" ///"git
 	"github.com/as/frame"
-	"github.com/as/frame/font"
 	"github.com/as/path"
 	"github.com/as/text"
 	"github.com/as/ui"
@@ -44,35 +44,10 @@ var (
 	eprint    = fmt.Println
 	timefmt   = "2006.01.02 15.04.05"
 	winSize   = image.Pt(1024, 768)
-	fsize     = 11 // Put
 	pad       = image.Pt(15, 15)
-	tagHeight = fsize*2 + fsize/2 - 2
+	tagHeight = *ftsize*2 + *ftsize/2 - 2
 	scrollX   = 10
 )
-
-func Tagtext(s string, w Plane) {
-	switch w := w.(type) {
-	case *Grid:
-		Tagtext(s, w.List[0])
-	case *Col:
-		Tagtext(s, w.List[0])
-	case *tag.Tag:
-		t := w.Win
-		q0, q1 := t.Dot()
-		t.Delete(q0, q1)
-		q1 = q0
-		t.InsertString(s, q1)
-		t.Select(q1, q1+int64(len(s)))
-	case Plane:
-	}
-}
-
-type CmdEvent struct {
-	grid *Grid
-	col  *Col
-	tag  *tag.Tag
-	act  Plane
-}
 
 func p(e mouse.Event) image.Point {
 	return image.Pt(int(e.X), int(e.Y))
@@ -143,7 +118,7 @@ func main() {
 	frame.ForceUTF8 = *utf8
 	frame.ForceElastic = *elastic
 
-	lim := rate.NewLimiter(rate.Every(time.Second/120), 2)
+	lim := rate.NewLimiter(rate.Every(time.Second/120), 10)
 
 	if *oled {
 		black()
@@ -158,7 +133,7 @@ func main() {
 
 	// Linux will segfault here if X is not present
 	wind.Send(paint.Event{})
-	ft := font.NewGoMedium(fsize)
+	ft := font.NewFace(*ftsize)
 	g = NewGrid(dev, image.ZP, winSize, ft, list...)
 
 	// This in particular needs to go
@@ -224,7 +199,7 @@ func main() {
 			actCol.RollUp(id, dy)
 			//actCol.MoveWin(id, dy)
 		case 2:
-			dy -= fsize * 2
+			dy -= *ftsize * 2
 			actCol.MoveWin(id, dy)
 		case 1:
 			actCol.Grow(id, actCol.bestGrowth(id, tagHeight))
@@ -237,17 +212,13 @@ func main() {
 
 	ajump := func(ed text.Editor, cursor bool) {
 		fn := moveMouse
-		if cursor == false {
+		if !cursor  {
 			fn = nil
 		}
 		if ed, ok := ed.(text.Jumper); ok {
 			ed.Jump(fn)
 		}
 	}
-	ismeta := func(ed Plane) bool {
-		return ed == g.List[0].(*tag.Tag).Body
-	}
-	ismeta = ismeta
 	alook := func(e event.Look) {
 		g.Look(e)
 	}
@@ -298,7 +269,7 @@ func main() {
 			cont = 0
 			pt = p(e.Event).Add(act.Loc().Min)
 			if sizerHit(actTag, pt) {
-				if e.Button == 2 {
+				if e.Button == 1 {
 					if tophit() {
 						detachcol()
 					} else {
