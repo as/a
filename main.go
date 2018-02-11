@@ -37,7 +37,7 @@ import (
 )
 
 var (
-	Version   = "0.5.2"
+	Version   = "0.5.3"
 	xx        Cursor
 	eprint    = fmt.Println
 	timefmt   = "2006.01.02 15.04.05"
