@@ -27,10 +27,8 @@ func New(co *Col, basedir, name string, sizerFunc ...func(int) int) (w Plane) {
 	last := co.List[len(co.List)-1]
 	last.Loc()
 	tw := co.Tag.Win
-	t := tag.New(co.dev, co.sp, image.Pt(co.size.X, co.tdy*2), pad, tw.Font, tw.Color)
-	
-	
-	
+	t := tag.New(co.dev, co.sp, image.Pt(co.size.X, co.tdy*2), pad, tw.Face, tw.Color)
+
 	t.Open(basedir, name)
 	t.Insert([]byte(" [Edit  ,x]"), t.Len())
 	lsize := sizeof(last.Loc())
