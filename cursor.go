@@ -1,6 +1,5 @@
 package main
 
-
 type Cursor struct {
 	sweep    bool
 	sweepCol bool

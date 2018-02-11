@@ -14,8 +14,6 @@ import (
 	"sync"
 	"time"
 
-	//	"github.com/as/font/vga"
-	//	"golang.org/x/image/font/plan9font"
 	"github.com/as/event"
 	"github.com/as/shiny/screen"
 	mus "github.com/as/text/mouse"
@@ -36,10 +34,12 @@ import (
 	"github.com/as/ui/win"
 
 	"context"
+	//	"github.com/as/font/vga"
+	//	"golang.org/x/image/font/plan9font"
 )
 
 var (
-	Version   = "0.5.1"
+	Version   = "0.5.2"
 	xx        Cursor
 	eprint    = fmt.Println
 	timefmt   = "2006.01.02 15.04.05"
@@ -212,7 +212,7 @@ func main() {
 
 	ajump := func(ed text.Editor, cursor bool) {
 		fn := moveMouse
-		if !cursor  {
+		if !cursor {
 			fn = nil
 		}
 		if ed, ok := ed.(text.Jumper); ok {
