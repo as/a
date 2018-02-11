@@ -32,8 +32,6 @@ import (
 	"github.com/as/ui"
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
-
-	"context"
 	//	"github.com/as/font/vga"
 	//	"golang.org/x/image/font/plan9font"
 )
@@ -118,7 +116,7 @@ func main() {
 	frame.ForceUTF8 = *utf8
 	frame.ForceElastic = *elastic
 
-	lim := rate.NewLimiter(rate.Every(time.Second/120), 10)
+	lim := rate.NewLimiter(rate.Every(time.Second/120), 2)
 
 	if *oled {
 		black()
@@ -296,9 +294,6 @@ func main() {
 				act.Clicksb(p(e.Event), 0)
 			case sizer:
 			case window:
-				// A very effective optimization eliminates several function
-				// calls completely if the cursor isn't moving and the use is still
-				// in the window's bounds.
 				if !e.Motion() && act != nil {
 					r := act.Frame.Bounds()
 					if p(e.Event).In(r) {
@@ -411,7 +406,9 @@ func main() {
 			if !focused {
 				g.Resize(winSize)
 			}
-			lim.WaitN(context.Background(), 1)
+			if !lim.Allow() {
+				continue
+			}
 			g.Upload(wind)
 			wind.Publish()
 		case lifecycle.Event:

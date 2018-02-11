@@ -19,7 +19,15 @@ func NewGrid(dev *ui.Dev, sp, size image.Point, ft font.Face, files ...string) *
 	N := len(files)
 	tdy := tag.TagSize(ft)
 	tagpad := tag.TagPad(pad)
-	T := tag.New(dev, sp, image.Pt(size.X, tdy), tagpad, ft, frame.ATag0)
+	conf := &tag.Config{
+		Margin:     tagpad,
+		Facer:      font.NewFace,
+		FaceHeight: ft.Height(),
+		Color: [3]frame.Color{
+			0: frame.ATag0,
+		},
+	}
+	T := tag.New(dev, sp, image.Pt(size.X, tdy), conf)
 	T.Win.InsertString("Newcol Killall Exit", 0)
 	g := &Grid{&Col{dev: dev, sp: sp, size: size, ft: ft, Tag: T, tdy: tdy, List: make([]Plane, len(files))}}
 	size.Y -= tdy

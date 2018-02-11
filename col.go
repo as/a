@@ -26,8 +26,7 @@ type Col struct {
 func New(co *Col, basedir, name string, sizerFunc ...func(int) int) (w Plane) {
 	last := co.List[len(co.List)-1]
 	last.Loc()
-	tw := co.Tag.Win
-	t := tag.New(co.dev, co.sp, image.Pt(co.size.X, co.tdy*2), pad, tw.Face, tw.Color)
+	t := tag.New(co.dev, co.sp, image.Pt(co.size.X, co.tdy*2), nil)
 
 	t.Open(basedir, name)
 	t.Insert([]byte(" [Edit  ,x]"), t.Len())
@@ -72,7 +71,15 @@ func NewCol(dev *ui.Dev, ft font.Face, sp, size image.Point, files ...string) *C
 	N := len(files)
 	tdy := ft.Dy() + ft.Dy()/2
 	tagpad := image.Pt(pad.X, 3)
-	T := tag.New(dev, sp, image.Pt(size.X, tdy), tagpad, ft, frame.ATag1)
+	conf := &tag.Config{
+		Margin:     tagpad,
+		Facer:      font.NewFace,
+		FaceHeight: ft.Height(),
+		Color: [3]frame.Color{
+			0: frame.ATag1,
+		},
+	}
+	T := tag.New(dev, sp, image.Pt(size.X, tdy), conf)
 	//T.Open(path.NewPath(""))
 	T.Win.InsertString("New Delcol Sort", 0)
 	col := &Col{dev: dev, sp: sp, size: size, ft: ft, Tag: T, tdy: tdy, List: make([]Plane, len(files))}
@@ -80,7 +87,8 @@ func NewCol(dev *ui.Dev, ft font.Face, sp, size image.Point, files ...string) *C
 	sp.Y += tdy
 	dy := image.Pt(size.X, size.Y/N)
 	for i, v := range files {
-		t := tag.New(dev, sp, dy, pad, ft, frame.ATag1)
+		conf.Margin = pad
+		t := tag.New(dev, sp, dy, conf)
 		t.Get(v)
 		t.Insert([]byte(" [Edit  ,x]"), t.Len())
 		col.List[i] = t
