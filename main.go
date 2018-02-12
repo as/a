@@ -17,7 +17,6 @@ import (
 	"github.com/as/event"
 	"github.com/as/shiny/screen"
 	mus "github.com/as/text/mouse"
-	"golang.org/x/mobile/event/key"
 	"golang.org/x/mobile/event/lifecycle"
 	"golang.org/x/mobile/event/mouse"
 	"golang.org/x/mobile/event/paint"
@@ -232,17 +231,51 @@ func main() {
 	aerr("pid=%d", os.Getpid())
 	aerr("args=%q", os.Args)
 
+	go func(){
+		D := wind.Device()
+		for {
+			select{
+			case e := <- D.Scroll:
+				activate(p(e), g)
+				doScrollEvent(act, mus.ScrollEvent{Dy: 3, Event: e})
+			case e := <- D.Mouse:
+				activate(p(e), g)
+				pt = p(e).Add(act.Loc().Min)
+				e.X -= float32(act.Sp.X)
+				e.Y -= float32(act.Sp.Y)
+			//	if cont == 0 {
+					//activate(p(e), g)
+		//		}
+		//		fmt.Printf("mouse event %#v\n", e)
+				mousein.Sink <- e
+			}
+		}
+	}()
+	
+	go func(){
+		D := wind.Device()
+		for {
+			select{
+			case e := <-D.Key:
+				actTag.Handle(act, e)
+				dirty = true
+				ck()
+			}
+		}
+	}()
+	
 	for {
 		e := wind.NextEvent()
 		switch e := e.(type) {
+			case mus.DrainStop:
 		case mus.Drain:
-		DrainLoop:
-			for {
-				switch wind.NextEvent().(type) {
-				case mus.DrainStop:
-					break DrainLoop
-				}
-			}
+//		DrainLoop:
+//			for {
+//				switch wind.NextEvent().(type) {
+//				case mus.DrainStop:
+//					break DrainLoop
+//				}
+//			}
 		case tag.GetEvent:
 			t := New(actCol, e.Basedir, e.Name)
 			if e.Addr != "" {
@@ -254,14 +287,14 @@ func main() {
 			} else {
 				moveMouse(t.Loc().Min)
 			}
-		case mouse.Event:
-			pt = p(e).Add(act.Loc().Min)
-			if cont == 0 {
-				activate(p(e), g)
-			}
-			e.X -= float32(act.Sp.X)
-			e.Y -= float32(act.Sp.Y)
-			mousein.Sink <- e
+//		case mouse.Event:
+//			pt = p(e).Add(act.Loc().Min)
+//			if cont == 0 {
+//				activate(p(e), g)
+//			}
+//			e.X -= float32(act.Sp.X)
+//			e.Y -= float32(act.Sp.Y)
+//			mousein.Sink <- e
 		case mus.MarkEvent:
 
 			cont = 0
@@ -287,7 +320,7 @@ func main() {
 			}
 			ck()
 		case mus.ScrollEvent:
-			doScrollEvent(act, e)
+//			doScrollEvent(act, e)
 		case mus.SweepEvent:
 			switch cont {
 			case scrollbar:
@@ -333,10 +366,10 @@ func main() {
 			}
 			cont = 0
 			ck()
-		case key.Event:
-			actTag.Handle(act, e)
-			dirty = true
-			ck()
+//		case key.Event:
+//			actTag.Handle(act, e)
+//			dirty = true
+//			ck()
 		case event.Look:
 			alook(e)
 			ck()

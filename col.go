@@ -227,7 +227,7 @@ func (co *Col) badID(id int) bool {
 }
 func (co *Col) bestGrowth(id int, dy int) int {
 	if co.badID(id) || co.badID(id-1) {
-		return dy
+		return 0
 	}
 	nclicks := co.List[id-1].Loc().Dy() / dy
 	if nclicks < 3 {
@@ -242,6 +242,7 @@ func (co *Col) bestGrowth(id int, dy int) int {
 	return dy * 4
 }
 func (co *Col) Grow(id int, dy int) {
+	g.aerr("id, dy = %d, %d", id, dy)
 	a, b := id-1, id
 	if co.badID(a) || co.badID(b) {
 		return
