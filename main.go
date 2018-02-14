@@ -231,31 +231,41 @@ func main() {
 	aerr("pid=%d", os.Getpid())
 	aerr("args=%q", os.Args)
 
-	go func(){
+	var down uint
+
+	go func() {
 		D := wind.Device()
 		for {
-			select{
-			case e := <- D.Scroll:
+			select {
+			case e := <-D.Scroll:
 				activate(p(e), g)
-				doScrollEvent(act, mus.ScrollEvent{Dy: 3, Event: e})
-			case e := <- D.Mouse:
-				activate(p(e), g)
+				doScrollEvent(act, mus.ScrollEvent{Dy: 5, Event: e})
+			case e := <-D.Mouse:
+				if int(e.Direction) == 2 {
+					down ^= 1 << uint(e.Button)
+				}
+				if down == 0 {
+					activate(p(e), g)
+				}
+				if int(e.Direction) == 1 {
+					down |= 1 << uint(e.Button)
+				}
 				pt = p(e).Add(act.Loc().Min)
 				e.X -= float32(act.Sp.X)
 				e.Y -= float32(act.Sp.Y)
-			//	if cont == 0 {
-					//activate(p(e), g)
-		//		}
-		//		fmt.Printf("mouse event %#v\n", e)
+				//	if cont == 0 {
+				//activate(p(e), g)
+				//		}
+				//		fmt.Printf("mouse event %#v\n", e)
 				mousein.Sink <- e
 			}
 		}
 	}()
-	
-	go func(){
+
+	go func() {
 		D := wind.Device()
 		for {
-			select{
+			select {
 			case e := <-D.Key:
 				actTag.Handle(act, e)
 				dirty = true
@@ -263,19 +273,12 @@ func main() {
 			}
 		}
 	}()
-	
+
 	for {
 		e := wind.NextEvent()
 		switch e := e.(type) {
-			case mus.DrainStop:
+		case mus.DrainStop:
 		case mus.Drain:
-//		DrainLoop:
-//			for {
-//				switch wind.NextEvent().(type) {
-//				case mus.DrainStop:
-//					break DrainLoop
-//				}
-//			}
 		case tag.GetEvent:
 			t := New(actCol, e.Basedir, e.Name)
 			if e.Addr != "" {
@@ -287,16 +290,7 @@ func main() {
 			} else {
 				moveMouse(t.Loc().Min)
 			}
-//		case mouse.Event:
-//			pt = p(e).Add(act.Loc().Min)
-//			if cont == 0 {
-//				activate(p(e), g)
-//			}
-//			e.X -= float32(act.Sp.X)
-//			e.Y -= float32(act.Sp.Y)
-//			mousein.Sink <- e
 		case mus.MarkEvent:
-
 			cont = 0
 			pt = p(e.Event).Add(act.Loc().Min)
 			if sizerHit(actTag, pt) {
@@ -320,7 +314,7 @@ func main() {
 			}
 			ck()
 		case mus.ScrollEvent:
-//			doScrollEvent(act, e)
+			//			doScrollEvent(act, e)
 		case mus.SweepEvent:
 			switch cont {
 			case scrollbar:
@@ -366,10 +360,10 @@ func main() {
 			}
 			cont = 0
 			ck()
-//		case key.Event:
-//			actTag.Handle(act, e)
-//			dirty = true
-//			ck()
+			//		case key.Event:
+			//			actTag.Handle(act, e)
+			//			dirty = true
+			//			ck()
 		case event.Look:
 			alook(e)
 			ck()
