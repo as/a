@@ -26,6 +26,7 @@ func NewGrid(dev *ui.Dev, sp, size image.Point, ft font.Face, files ...string) *
 		Color: [3]frame.Color{
 			0: frame.ATag0,
 		},
+		Ctl: events,
 	}
 	T := tag.New(dev, sp, image.Pt(size.X, tdy), conf)
 	T.Win.InsertString("Newcol Killall Exit", 0)

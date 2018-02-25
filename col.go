@@ -26,7 +26,18 @@ type Col struct {
 func New(co *Col, basedir, name string, sizerFunc ...func(int) int) (w Plane) {
 	last := co.List[len(co.List)-1]
 	last.Loc()
-	t := tag.New(co.dev, co.sp, image.Pt(co.size.X, co.tdy*2), nil)
+	ft := co.ft
+	tagpad := image.Pt(pad.X, 3)
+	conf := &tag.Config{
+		Margin:     tagpad,
+		Facer:      font.NewFace,
+		FaceHeight: ft.Height(),
+		Color: [3]frame.Color{
+			0: frame.ATag0,
+		},
+		Ctl: events,
+	}
+	t := tag.New(co.dev, co.sp, image.Pt(co.size.X, co.tdy*2), conf)
 
 	t.Open(basedir, name)
 	t.Insert([]byte(" [Edit  ,x]"), t.Len())
@@ -78,6 +89,7 @@ func NewCol(dev *ui.Dev, ft font.Face, sp, size image.Point, files ...string) *C
 		Color: [3]frame.Color{
 			0: frame.ATag1,
 		},
+		Ctl: events,
 	}
 	T := tag.New(dev, sp, image.Pt(size.X, tdy), conf)
 	//T.Open(path.NewPath(""))

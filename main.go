@@ -1,4 +1,4 @@
-package main
+package main // import "github.com/as/a"
 
 import (
 	"bytes"
@@ -20,7 +20,6 @@ import (
 	"golang.org/x/mobile/event/lifecycle"
 	"golang.org/x/mobile/event/mouse"
 	"golang.org/x/mobile/event/paint"
-	"golang.org/x/mobile/event/size"
 	"golang.org/x/time/rate"
 
 	"github.com/as/edit"
@@ -100,13 +99,20 @@ func black() {
 
 var dirty bool
 
-func ck() {
-	if dirty || (act != nil && act.Dirty()) {
-		act.Window().Send(paint.Event{})
+var ck = repaint
+
+func repaint() {
+	if !dirty || act == nil {
+		return
+	}
+	select {
+	case act.Window().Device().Paint <- paint.Event{}:
+	default:
 	}
 }
 
 var g *Grid
+var events = make(chan interface{}, 10)
 
 // Put
 func main() {
@@ -122,14 +128,25 @@ func main() {
 	}
 
 	list := argparse()
+	println("create")
 	dev, err := ui.Init(&screen.NewWindowOptions{Width: winSize.X, Height: winSize.Y, Title: "A"})
+	println("after")
 	if err != nil {
 		log.Fatalln(err)
 	}
 	wind := dev.Window()
+	D := wind.Device()
+	select {
+	case e := <-D.Paint:
+		fmt.Printf("%#v\n", e)
+	case e := <-D.Size:
+		fmt.Printf("%#v\n", e)
+	case e := <-D.Lifecycle:
+		fmt.Printf("%#v\n", e)
+	}
 
 	// Linux will segfault here if X is not present
-	wind.Send(paint.Event{})
+	repaint()
 	ft := font.NewFace(*ftsize)
 	g = NewGrid(dev, image.ZP, winSize, ft, list...)
 
@@ -140,10 +157,10 @@ func main() {
 
 	var pt image.Point
 	r := act.Bounds()
-	mousein := mus.NewMouse(time.Second/3, wind)
+	Drel := make(chan mouse.Event, 10)
+	mousein := mus.NewMouse(time.Second/3, Drel, events)
 	mousein.Machine.SetRect(image.Rect(r.Min.X, r.Min.Y+pad.Y, r.Max.X, r.Max.Y-pad.Y))
 
-	//
 	// Temporary just until col and tag can be seperated into their own packages. The
 	// majority of these closures will disappear as the program becomes more stable
 	sweepend := func() {
@@ -234,7 +251,6 @@ func main() {
 	var down uint
 
 	go func() {
-		D := wind.Device()
 		for {
 			select {
 			case e := <-D.Scroll:
@@ -257,179 +273,28 @@ func main() {
 				//activate(p(e), g)
 				//		}
 				//		fmt.Printf("mouse event %#v\n", e)
-				mousein.Sink <- e
+				Drel <- e
 			}
 		}
 	}()
 
 	go func() {
-		D := wind.Device()
 		for {
 			select {
 			case e := <-D.Key:
 				actTag.Handle(act, e)
 				dirty = true
-				ck()
+				repaint()
 			}
 		}
 	}()
 
 	for {
-		e := wind.NextEvent()
-		switch e := e.(type) {
-		case mus.DrainStop:
-		case mus.Drain:
-		case tag.GetEvent:
-			t := New(actCol, e.Basedir, e.Name)
-			if e.Addr != "" {
-				actTag = t.(*tag.Tag)
-				act = actTag.Body
-				actTag.Handle(actTag.Body, edit.MustCompile(e.Addr))
-				p0, _ := act.Frame.Dot()
-				moveMouse(act.Loc().Min.Add(act.PointOf(p0)))
-			} else {
-				moveMouse(t.Loc().Min)
-			}
-		case mus.MarkEvent:
-			cont = 0
-			pt = p(e.Event).Add(act.Loc().Min)
-			if sizerHit(actTag, pt) {
-				if e.Button == 1 {
-					if tophit() {
-						detachcol()
-					} else {
-						detachwin()
-					}
-					cont = sizer
-				} else {
-					growshrink(e.Event)
-				}
-
-			} else if x := int(e.X); x >= 0 && x < 10 {
-				cont = scrollbar
-				act.Clicksb(p(e.Event), int(e.Button))
-			} else {
-				actTag.Handle(act, e)
-				cont = window
-			}
-			ck()
-		case mus.ScrollEvent:
-			//			doScrollEvent(act, e)
-		case mus.SweepEvent:
-			switch cont {
-			case scrollbar:
-				act.Clicksb(p(e.Event), 0)
-			case sizer:
-			case window:
-				if !e.Motion() && act != nil {
-					r := act.Frame.Bounds()
-					if p(e.Event).In(r) {
-						continue
-					}
-				}
-				actTag.Handle(act, e)
-			}
-			ck()
-		case mus.CommitEvent:
-			cont = 0
-			ck()
-		case mus.SnarfEvent, mus.InsertEvent:
-			actTag.Handle(act, e)
-			ck()
-		case mus.SelectEvent:
-			switch cont {
-			case scrollbar:
-				act.Clicksb(p(e.Event), 0)
-				wind.SendFirst(mus.Drain{})
-				wind.Send(mus.DrainStop{})
-			case sizer:
-				e.X += float32(act.Sp.X)
-				e.Y += float32(act.Sp.Y)
-				pt.X = int(e.X)
-				pt.Y = int(e.Y)
-				activate(p(e.Event), g)
-				sweepend()
-			case window:
-				actTag.Handle(act, e)
-				//q0, q1 := act.Dot()
-				if e.Button == 2 {
-					//	s := string(act.Bytes()[q0:q1])
-					//	actTag.Handle(act, s)
-					//	wind.Send(s)
-				}
-			}
-			cont = 0
-			ck()
-			//		case key.Event:
-			//			actTag.Handle(act, e)
-			//			dirty = true
-			//			ck()
-		case event.Look:
-			alook(e)
-			ck()
-		case event.Cmd:
-			s := string(e.P)
-			switch s {
-			case "Put", "Get":
-				actTag.Handle(act, s)
-				ck()
-			case "New":
-				moveMouse(New(actCol, "", "").Loc().Min)
-			case "Newcol":
-				moveMouse(NewCol2(g, "").Loc().Min)
-			case "Del":
-				Del(actCol, actCol.ID(actTag))
-			case "Sort":
-				aerr("Sort: TODO")
-			case "Delcol":
-				Delcol(g, g.ID(actCol))
-			case "Exit":
-				aerr("Exit: TODO")
-			default:
-				if len(e.To) == 0 {
-					aerr("cmd has no destination: %q", s)
-				}
-				abs := AbsOf(e.Basedir, e.Name)
-				if strings.HasPrefix(s, "Edit ") {
-					s = s[5:]
-					// The event sink shouldn't be specified during
-					// compile time, but its the easiest way to
-					// see it works correctly with the editor
-					prog, err := edit.Compile(s, &edit.Options{Sender: wind, Origin: abs})
-					if err != nil {
-						aerr(err.Error())
-						continue
-					}
-					prog.Run(e.To[0])
-					w := e.To[0].(*win.Win)
-					w.Resize(w.Size())
-					//e.To[0].(*win.Win).Refresh()
-					ajump(e.To[0], false)
-				} else if strings.HasPrefix(s, "Install ") {
-					s = s[8:]
-					g.Install(actTag, s)
-				} else {
-					x := strings.Fields(s)
-					if len(x) < 1 {
-						aerr("empty command")
-						continue
-					}
-					tagname := fmt.Sprintf("%s%c-%s", path.DirOf(abs), filepath.Separator, x[0])
-					to := g.afinderr(path.DirOf(abs), tagname)
-					cmd(to.Body, path.DirOf(abs), s)
-					dirty = true
-				}
-			}
-			ck()
-		case edit.File:
-			g.acolor(e)
-		case edit.Print:
-			g.aout(string(e))
-		case size.Event:
-			winSize = image.Pt(e.WidthPx, e.HeightPx)
-			g.Resize(winSize)
-			ck()
-		case paint.Event:
+		select {
+		case e := <-D.Lifecycle:
+			e = e
+			println("Lifecycle")
+		case <-D.Paint:
 			if !focused {
 				g.Resize(winSize)
 			}
@@ -438,21 +303,177 @@ func main() {
 			}
 			g.Upload(wind)
 			wind.Publish()
-		case lifecycle.Event:
-			if e.To == lifecycle.StageDead {
-				return
+		case e := <-D.Size:
+			winSize = image.Pt(e.WidthPx, e.HeightPx)
+			g.Resize(winSize)
+			ck()
+		case e := <-events:
+			//		e := wind.NextEvent()
+			switch e := e.(type) {
+			case mus.DrainStop:
+			case mus.Drain:
+			case tag.GetEvent:
+				t := New(actCol, e.Basedir, e.Name)
+				if e.Addr != "" {
+					actTag = t.(*tag.Tag)
+					act = actTag.Body
+					actTag.Handle(actTag.Body, edit.MustCompile(e.Addr))
+					p0, _ := act.Frame.Dot()
+					moveMouse(act.Loc().Min.Add(act.PointOf(p0)))
+				} else {
+					moveMouse(t.Loc().Min)
+				}
+			case mus.MarkEvent:
+				cont = 0
+				pt = p(e.Event).Add(act.Loc().Min)
+				if sizerHit(actTag, pt) {
+					if e.Button == 1 {
+						if tophit() {
+							detachcol()
+						} else {
+							detachwin()
+						}
+						cont = sizer
+					} else {
+						growshrink(e.Event)
+					}
+
+				} else if x := int(e.X); x >= 0 && x < 10 {
+					cont = scrollbar
+					act.Clicksb(p(e.Event), int(e.Button))
+				} else {
+					actTag.Handle(act, e)
+					cont = window
+				}
+				ck()
+			case mus.ScrollEvent:
+				//			doScrollEvent(act, e)
+			case mus.SweepEvent:
+				switch cont {
+				case scrollbar:
+					act.Clicksb(p(e.Event), 0)
+				case sizer:
+				case window:
+					if !e.Motion() && act != nil {
+						r := act.Frame.Bounds()
+						if p(e.Event).In(r) {
+							continue
+						}
+					}
+					actTag.Handle(act, e)
+				}
+				ck()
+			case mus.CommitEvent:
+				cont = 0
+				ck()
+			case mus.SnarfEvent, mus.InsertEvent:
+				actTag.Handle(act, e)
+				ck()
+			case mus.SelectEvent:
+				switch cont {
+				case scrollbar:
+					act.Clicksb(p(e.Event), 0)
+					//				wind.SendFirst(mus.Drain{})
+					//				wind.Send(mus.DrainStop{})
+				case sizer:
+					e.X += float32(act.Sp.X)
+					e.Y += float32(act.Sp.Y)
+					pt.X = int(e.X)
+					pt.Y = int(e.Y)
+					activate(p(e.Event), g)
+					sweepend()
+				case window:
+					actTag.Handle(act, e)
+					//q0, q1 := act.Dot()
+					if e.Button == 2 {
+						//	s := string(act.Bytes()[q0:q1])
+						//	actTag.Handle(act, s)
+						//	wind.Send(s)
+					}
+				}
+				cont = 0
+				ck()
+				//		case key.Event:
+				//			actTag.Handle(act, e)
+				//			dirty = true
+				//			ck()
+			case event.Look:
+				alook(e)
+				ck()
+			case event.Cmd:
+				s := string(e.P)
+				switch s {
+				case "Put", "Get":
+					actTag.Handle(act, s)
+					ck()
+				case "New":
+					moveMouse(New(actCol, "", "").Loc().Min)
+				case "Newcol":
+					moveMouse(NewCol2(g, "").Loc().Min)
+				case "Del":
+					Del(actCol, actCol.ID(actTag))
+				case "Sort":
+					aerr("Sort: TODO")
+				case "Delcol":
+					Delcol(g, g.ID(actCol))
+				case "Exit":
+					aerr("Exit: TODO")
+				default:
+					if len(e.To) == 0 {
+						aerr("cmd has no destination: %q", s)
+					}
+					abs := AbsOf(e.Basedir, e.Name)
+					if strings.HasPrefix(s, "Edit ") {
+						s = s[5:]
+						// The event sink shouldn't be specified during
+						// compile time, but its the easiest way to
+						// see it works correctly with the editor
+						prog, err := edit.Compile(s, &edit.Options{Sender: nil, Origin: abs})
+						if err != nil {
+							aerr(err.Error())
+							continue
+						}
+						prog.Run(e.To[0])
+						w := e.To[0].(*win.Win)
+						w.Resize(w.Size())
+						//e.To[0].(*win.Win).Refresh()
+						ajump(e.To[0], false)
+					} else if strings.HasPrefix(s, "Install ") {
+						s = s[8:]
+						g.Install(actTag, s)
+					} else {
+						x := strings.Fields(s)
+						if len(x) < 1 {
+							aerr("empty command")
+							continue
+						}
+						tagname := fmt.Sprintf("%s%c-%s", path.DirOf(abs), filepath.Separator, x[0])
+						to := g.afinderr(path.DirOf(abs), tagname)
+						cmd(to.Body, path.DirOf(abs), s)
+						dirty = true
+					}
+				}
+				ck()
+			case edit.File:
+				g.acolor(e)
+			case edit.Print:
+				g.aout(string(e))
+			case lifecycle.Event:
+				if e.To == lifecycle.StageDead {
+					return
+				}
+				// NT doesn't repaint the window if another window covers it
+				if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOff {
+					focused = false
+					ck()
+				} else if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOn {
+					focused = true
+				}
+			case error:
+				aerr(e.Error())
+			case interface{}:
+				log.Printf("missing event: %#v\n", e)
 			}
-			// NT doesn't repaint the window if another window covers it
-			if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOff {
-				focused = false
-				wind.Send(paint.Event{})
-			} else if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOn {
-				focused = true
-			}
-		case error:
-			aerr(e.Error())
-		case interface{}:
-			log.Printf("missing event: %#v\n", e)
 		}
 	}
 

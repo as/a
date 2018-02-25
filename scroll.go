@@ -3,7 +3,6 @@ package main
 import (
 	mus "github.com/as/text/mouse"
 	"github.com/as/ui/win"
-	"golang.org/x/mobile/event/paint"
 )
 
 func doScrollEvent(act *win.Win, e mus.ScrollEvent) {
@@ -11,5 +10,5 @@ func doScrollEvent(act *win.Win, e mus.ScrollEvent) {
 		e.Dy = -e.Dy
 	}
 	actTag.Body.Scroll(e.Dy)
-	act.Window().Send(paint.Event{})
+	repaint()
 }
