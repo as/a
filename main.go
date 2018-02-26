@@ -294,12 +294,13 @@ func main() {
 		case e := <-D.Lifecycle:
 			e = e
 			println("Lifecycle")
-		case <-D.Paint:
-			if !focused {
-				g.Resize(winSize)
-			}
+		case e := <-D.Paint:
 			if !lim.Allow() {
 				continue
+			}
+			if e.External {
+				println("fffffffff")
+				g.Resize(winSize)
 			}
 			g.Upload(wind)
 			wind.Publish()
@@ -360,6 +361,7 @@ func main() {
 							continue
 						}
 					}
+					println("Handle")
 					actTag.Handle(act, e)
 				}
 				ck()
