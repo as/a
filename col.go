@@ -33,7 +33,7 @@ func New(co *Col, basedir, name string, sizerFunc ...func(int) int) (w Plane) {
 		Facer:      font.NewFace,
 		FaceHeight: ft.Height(),
 		Color: [3]frame.Color{
-			0: frame.ATag0,
+			0: frame.ATag1,
 		},
 		Ctl: events,
 	}
