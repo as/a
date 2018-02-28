@@ -128,7 +128,6 @@ func main() {
 	}
 
 	list := argparse()
-	println("create")
 	dev, err := ui.Init(&screen.NewWindowOptions{Width: winSize.X, Height: winSize.Y, Title: "A"})
 	println("after")
 	if err != nil {
@@ -136,15 +135,6 @@ func main() {
 	}
 	wind := dev.Window()
 	D := wind.Device()
-	select {
-	case e := <-D.Paint:
-		fmt.Printf("%#v\n", e)
-	case e := <-D.Size:
-		fmt.Printf("%#v\n", e)
-	case e := <-D.Lifecycle:
-		fmt.Printf("%#v\n", e)
-	}
-
 	// Linux will segfault here if X is not present
 	repaint()
 	ft := font.NewFace(*ftsize)
@@ -361,7 +351,6 @@ func main() {
 							continue
 						}
 					}
-					println("Handle")
 					actTag.Handle(act, e)
 				}
 				ck()
