@@ -33,7 +33,7 @@ func (f *LocalFS) Cmd(ctx context.Context, name string, arg ...string) (*exec.Cm
 
 type ServeFS struct {
 	LocalFS
-	fd             net.Listener
+	fd    net.Listener
 	donec, donesrv chan bool
 }
 
@@ -43,19 +43,19 @@ func Serve(netw, addr string) (*ServeFS, error) {
 		return nil, err
 	}
 	s := &ServeFS{
-		LocalFS: LocalFS{},
-		fd:      fd,
-		donec:   make(chan bool, 1),
+		LocalFS: LocalFS{}, 
+		fd: fd, 
+		donec: make(chan bool, 1),
 		donesrv: make(chan bool),
 	}
 	s.donec <- true
-
+	
 	//	go s.run()
 	go func() {
 		for {
 			select {
 			case <-s.donesrv:
-				break
+				return
 			default:
 				conn, err := fd.Accept()
 				if err != nil {
@@ -75,10 +75,10 @@ type client struct {
 	tx   chan []byte
 }
 
-func (s *ServeFS) Close() error {
-	select {
-	case ok := <-s.donec:
-		if ok {
+func (s *ServeFS) Close() error{
+	select{
+	case ok := <- s.donec:
+		if ok{
 			close(s.donec)
 			close(s.donesrv)
 		}
@@ -96,7 +96,7 @@ func (s *ServeFS) handle(c *client) {
 		if err != nil {
 			log.Printf("invalid header: %s", err)
 		}
-		select {
+		select{
 		case <-s.donesrv:
 			return
 		default:
