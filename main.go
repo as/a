@@ -66,6 +66,9 @@ var (
 	elastic = flag.Bool("elastic", false, "enable elastic tabstops")
 	oled    = flag.Bool("b", false, "OLED display mode (black)")
 	ftsize  = flag.Int("ftsize", 11, "font size")
+	srvaddr = flag.String("l", "", "listen (extermely dangerous) announce and serve file system clients on given endpoint")
+	clientaddr = flag.String("d", "", "dial to a remote file system on given endpoint")
+	r = flag.Bool("q", false, "dont interact with the user or graphical subsystem (use with -l)")
 )
 
 /*
@@ -114,13 +117,23 @@ func repaint() {
 var g *Grid
 var events = make(chan interface{}, 10)
 
+func init(){
+	flag.Parse()
+}
+
+
 // Put
 func main() {
-	flag.Parse()
 	defer trypprof()()
 	frame.ForceUTF8 = *utf8
 	frame.ForceElastic = *elastic
 
+	// Startup
+	err := createnetworks()
+	if err != nil{
+		log.Fatalln(err)
+	}
+	
 	lim := rate.NewLimiter(rate.Every(time.Second/120), 2)
 
 	if *oled {
@@ -237,6 +250,12 @@ func main() {
 	aerr("ver=%s", Version)
 	aerr("pid=%d", os.Getpid())
 	aerr("args=%q", os.Args)
+	if srv != nil{
+		aerr("listening for remote connections")
+	}
+	if client != nil{
+		aerr("connected to remote filesystem")
+	}
 
 	var down uint
 
