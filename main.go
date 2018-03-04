@@ -62,13 +62,13 @@ func argparse() (list []string) {
 }
 
 var (
-	utf8    = flag.Bool("u", false, "enable utf8 experiment")
-	elastic = flag.Bool("elastic", false, "enable elastic tabstops")
-	oled    = flag.Bool("b", false, "OLED display mode (black)")
-	ftsize  = flag.Int("ftsize", 11, "font size")
-	srvaddr = flag.String("l", "", "listen (extermely dangerous) announce and serve file system clients on given endpoint")
+	utf8       = flag.Bool("u", false, "enable utf8 experiment")
+	elastic    = flag.Bool("elastic", false, "enable elastic tabstops")
+	oled       = flag.Bool("b", false, "OLED display mode (black)")
+	ftsize     = flag.Int("ftsize", 11, "font size")
+	srvaddr    = flag.String("l", "", "listen (extermely dangerous) announce and serve file system clients on given endpoint")
 	clientaddr = flag.String("d", "", "dial to a remote file system on given endpoint")
-	r = flag.Bool("q", false, "dont interact with the user or graphical subsystem (use with -l)")
+	r          = flag.Bool("q", false, "dont interact with the user or graphical subsystem (use with -l)")
 )
 
 /*
@@ -117,10 +117,9 @@ func repaint() {
 var g *Grid
 var events = make(chan interface{}, 10)
 
-func init(){
+func init() {
 	flag.Parse()
 }
-
 
 // Put
 func main() {
@@ -130,10 +129,10 @@ func main() {
 
 	// Startup
 	err := createnetworks()
-	if err != nil{
+	if err != nil {
 		log.Fatalln(err)
 	}
-	
+
 	lim := rate.NewLimiter(rate.Every(time.Second/120), 2)
 
 	if *oled {
@@ -250,10 +249,10 @@ func main() {
 	aerr("ver=%s", Version)
 	aerr("pid=%d", os.Getpid())
 	aerr("args=%q", os.Args)
-	if srv != nil{
+	if srv != nil {
 		aerr("listening for remote connections")
 	}
-	if client != nil{
+	if client != nil {
 		aerr("connected to remote filesystem")
 	}
 

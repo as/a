@@ -29,6 +29,7 @@ func New(co *Col, basedir, name string, sizerFunc ...func(int) int) (w Plane) {
 	ft := co.ft
 	tagpad := image.Pt(pad.X, 3)
 	conf := &tag.Config{
+		Filesystem: newfsclient(),
 		Margin:     tagpad,
 		Facer:      font.NewFace,
 		FaceHeight: ft.Height(),
@@ -83,6 +84,7 @@ func NewCol(dev *ui.Dev, ft font.Face, sp, size image.Point, files ...string) *C
 	tdy := ft.Dy() + ft.Dy()/2
 	tagpad := image.Pt(pad.X, 3)
 	conf := &tag.Config{
+		Filesystem: newfsclient(),
 		Margin:     tagpad,
 		Facer:      font.NewFace,
 		FaceHeight: ft.Height(),

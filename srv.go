@@ -3,18 +3,18 @@ package main
 import "github.com/as/srv/fs"
 
 var (
-	srv    *fs.Server
-	client *fs.Client
+	srv               *fs.Server
+	client            *fs.Client
 	srverr, clienterr error
 )
 
 func createnetworks() (fatal error) {
-	if *srvaddr != ""{
+	if *srvaddr != "" {
 		srv, srverr = fs.Serve("tcp", *srvaddr)
 	}
-	if *clientaddr != ""{
+	if *clientaddr != "" {
 		client, clienterr = fs.Dial("tcp", *clientaddr)
-		if clienterr != nil{
+		if clienterr != nil {
 			return clienterr
 		}
 	}

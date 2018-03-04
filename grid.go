@@ -20,6 +20,7 @@ func NewGrid(dev *ui.Dev, sp, size image.Point, ft font.Face, files ...string) *
 	tdy := tag.TagSize(ft)
 	tagpad := tag.TagPad(pad)
 	conf := &tag.Config{
+		Filesystem: newfsclient(),
 		Margin:     tagpad,
 		Facer:      font.NewFace,
 		FaceHeight: ft.Height(),
