@@ -1,6 +1,8 @@
 package main
 
-import "github.com/as/srv/fs"
+import (
+	"github.com/as/srv/fs"
+)
 
 var (
 	srv               *fs.Server
@@ -22,8 +24,14 @@ func createnetworks() (fatal error) {
 }
 
 func newfsclient() fs.Fs {
-	if client != nil {
+	if client == nil {
+		return &fs.Local{}
+	}
+	if clienterr != nil {
+		client, clienterr = fs.Dial("tcp", *clientaddr)
+	}
+	if clienterr == nil {
 		return client
 	}
-	return &fs.Local{}
+	panic(clienterr)
 }

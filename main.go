@@ -115,7 +115,7 @@ func repaint() {
 }
 
 var g *Grid
-var events = make(chan interface{}, 10)
+var events = make(chan interface{}, 5)
 
 func init() {
 	flag.Parse()

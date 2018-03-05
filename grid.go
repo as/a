@@ -1,6 +1,8 @@
 package main
 
 import (
+	"image"
+
 	"github.com/as/edit"
 	"github.com/as/font"
 	"github.com/as/frame"
@@ -8,7 +10,6 @@ import (
 	"github.com/as/ui"
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
-	"image"
 )
 
 type Grid struct {
