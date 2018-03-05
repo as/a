@@ -300,8 +300,16 @@ func main() {
 	for {
 		select {
 		case e := <-D.Lifecycle:
-			e = e
-			println("Lifecycle")
+			if e.To == lifecycle.StageDead {
+				return
+			}
+			// NT doesn't repaint the window if another window covers it
+			if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOff {
+				focused = false
+				ck()
+			} else if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOn {
+				focused = true
+			}
 		case e := <-D.Paint:
 			if !lim.Allow() {
 				continue
@@ -467,17 +475,6 @@ func main() {
 				g.acolor(e)
 			case edit.Print:
 				g.aout(string(e))
-			case lifecycle.Event:
-				if e.To == lifecycle.StageDead {
-					return
-				}
-				// NT doesn't repaint the window if another window covers it
-				if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOff {
-					focused = false
-					ck()
-				} else if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOn {
-					focused = true
-				}
 			case error:
 				aerr(e.Error())
 			case interface{}:
