@@ -68,7 +68,7 @@ var (
 	ftsize     = flag.Int("ftsize", 11, "font size")
 	srvaddr    = flag.String("l", "", "listen (extermely dangerous) announce and serve file system clients on given endpoint")
 	clientaddr = flag.String("d", "", "dial to a remote file system on given endpoint")
-	r          = flag.Bool("q", false, "dont interact with the user or graphical subsystem (use with -l)")
+	quiet      = flag.Bool("q", false, "dont interact with the user or graphical subsystem (use with -l)")
 )
 
 /*
@@ -114,8 +114,18 @@ func repaint() {
 	}
 }
 
-var g *Grid
-var events = make(chan interface{}, 5)
+var (
+	g         *Grid
+	events    = make(chan interface{}, 5)
+	done      = make(chan bool)
+	moribound = make(chan bool, 1)
+)
+
+func init() {
+	// this grants the capability to shut down the program
+	// it happens exactly once
+	moribound <- true
+}
 
 func init() {
 	flag.Parse()
@@ -140,6 +150,11 @@ func main() {
 	}
 
 	list := argparse()
+	if *quiet {
+		<-done
+		os.Exit(0)
+	}
+
 	dev, err := ui.Init(&screen.NewWindowOptions{Width: winSize.X, Height: winSize.Y, Title: "A"})
 	println("after")
 	if err != nil {
