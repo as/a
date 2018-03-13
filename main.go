@@ -35,19 +35,11 @@ import (
 )
 
 var (
-	Version   = "0.5.3"
-	xx        Cursor
-	eprint    = fmt.Println
-	timefmt   = "2006.01.02 15.04.05"
-	winSize   = image.Pt(1024, 768)
-	pad       = image.Pt(15, 15)
-	tagHeight = *ftsize*2 + *ftsize/2 - 2
-	scrollX   = 10
+	Version = "0.5.3"
+	xx      Cursor
+	eprint  = fmt.Println
+	timefmt = "2006.01.02 15.04.05"
 )
-
-func p(e mouse.Event) image.Point {
-	return image.Pt(int(e.X), int(e.Y))
-}
 
 var focused = false
 
@@ -196,17 +188,6 @@ func main() {
 			moveMouse(xx.src.Loc().Min)
 		}
 	}
-	// Returns the bounding box of the invisible sizer you can use
-	// to draw windows and columns around.
-	sizerOf := func(p Plane) image.Rectangle {
-		r := p.Loc()
-		r.Max = r.Min.Add(image.Pt(scrollX, tagHeight))
-		return r
-	}
-	sizerHit := func(p Plane, pt image.Point) bool {
-		in := pt.In(sizerOf(p))
-		return in
-	}
 	markwin := func() {
 		xx.srcCol = actCol
 		xx.src = actTag
@@ -237,10 +218,6 @@ func main() {
 		}
 		moveMouse(actTag.Loc().Min)
 	}
-	tophit := func() bool {
-		return pt.Y > g.sp.Y+g.tdy && pt.Y < g.sp.Y+g.tdy*2
-	}
-
 	ajump := func(ed text.Editor, cursor bool) {
 		fn := moveMouse
 		if !cursor {
@@ -274,29 +251,111 @@ func main() {
 	var down uint
 
 	go func() {
+		var c0 time.Time
 		for {
 			select {
 			case e := <-D.Scroll:
 				activate(p(e), g)
 				doScrollEvent(act, mus.ScrollEvent{Dy: 5, Event: e})
 			case e := <-D.Mouse:
-				if int(e.Direction) == 2 {
-					down ^= 1 << uint(e.Button)
+
+				switch e.Direction {
+				case 1:
+					down |= 1 << uint(e.Button-1)
+				case 2:
+					down ^= 1 << uint(e.Button-1)
 				}
+				activate(p(e), g)
+
 				if down == 0 {
-					activate(p(e), g)
+					continue
 				}
-				if int(e.Direction) == 1 {
-					down |= 1 << uint(e.Button)
-				}
+
 				pt = p(e).Add(act.Loc().Min)
 				e.X -= float32(act.Sp.X)
 				e.Y -= float32(act.Sp.Y)
-				//	if cont == 0 {
-				//activate(p(e), g)
-				//		}
-				//		fmt.Printf("mouse event %#v\n", e)
-				Drel <- e
+				switch down {
+				case 1:
+					if inSizer(p(e)) {
+						aerr("InSizer: %s", p(e))
+					} else if inScroll(p(e)) {
+						aerr("inScroll: %s", p(e))
+					} else {
+						aerr("sweepOrClock: %s", p(e))
+						// sweep or click
+
+						org := act.Origin()
+						q0 := org + act.IndexOf(p(e))
+						q1 := q0
+						act.Sq = q0
+						pt0 := p(e)
+
+						act.Select(q0, q1)
+						ck()
+					Loop:
+						for {
+							select {
+							case e := <-D.Mouse:
+								switch e.Direction {
+								case 1:
+									down |= 1 << uint(e.Button-1)
+								case 2:
+									down ^= 1 << uint(e.Button-1)
+								}
+								if down == 0 {
+									// What about snarf and look and exec and etc?
+									break Loop
+								}
+								e.X -= float32(act.Sp.X)
+								e.Y -= float32(act.Sp.Y)
+								act.Sq, q0, q1 = sweep(act, e, act.Sq, q0, q1) //TODO (nil was act)
+								act.Select(q0, q1)
+								ck()
+							}
+						}
+						if doubleclick(pt0, p(e), c0) {
+							aerr("double click")
+						}
+						c0 = time.Now().Add(time.Second / 3)
+						act.Select(q0, q1)
+						ck()
+					}
+				case 2:
+					aerr("execute: %s", p(e))
+					org := act.Origin()
+					q0 := org + act.IndexOf(p(e))
+					q1 := q0
+					t := actTag
+					act.Ctl() <- event.Cmd{
+						Rec: event.Rec{
+							Q0: q0, Q1: q1,
+							P: act.Bytes()[q0:q1],
+						},
+						From: t,
+						To:   []event.Editor{t.Body},
+						//						Basedir: t.basedir,
+						Name: t.FileName(),
+					}
+				case 3:
+					aerr("look: %s", p(e))
+					org := act.Origin()
+					q0 := org + act.IndexOf(p(e))
+					q1 := q0
+					t := actTag
+					act.Ctl() <- event.Look{
+						Rec: event.Rec{
+							Q0: q0,
+							Q1: q1,
+							P:  act.Bytes()[q0:q1],
+						},
+						From: t,
+						To:   []event.Editor{t.Body},
+						//						Basedir: t.basedir,
+						Name: t.FileName(),
+					}
+				}
+
+				//Drel <- e
 			}
 		}
 	}()
@@ -358,23 +417,24 @@ func main() {
 			case mus.MarkEvent:
 				cont = 0
 				pt = p(e.Event).Add(act.Loc().Min)
-				if sizerHit(actTag, pt) {
-					if e.Button == 1 {
-						if tophit() {
+				if inSizer(p(e.Event)) {
+					switch e.Button {
+					case 1:
+						if canopy(pt) {
 							detachcol()
 						} else {
 							detachwin()
 						}
 						cont = sizer
-					} else {
+					default:
 						growshrink(e.Event)
-					}
 
-				} else if x := int(e.X); x >= 0 && x < 10 {
+					}
+				} else if p := p(e.Event); inScroll(p) {
 					cont = scrollbar
-					act.Clicksb(p(e.Event), int(e.Button))
+					act.Clicksb(p, int(e.Button))
 				} else {
-					actTag.Handle(act, e)
+					actTag.Handle(act, p)
 					cont = window
 				}
 				ck()
@@ -405,8 +465,6 @@ func main() {
 				switch cont {
 				case scrollbar:
 					act.Clicksb(p(e.Event), 0)
-					//				wind.SendFirst(mus.Drain{})
-					//				wind.Send(mus.DrainStop{})
 				case sizer:
 					e.X += float32(act.Sp.X)
 					e.Y += float32(act.Sp.Y)
@@ -425,10 +483,6 @@ func main() {
 				}
 				cont = 0
 				ck()
-				//		case key.Event:
-				//			actTag.Handle(act, e)
-				//			dirty = true
-				//			ck()
 			case event.Look:
 				alook(e)
 				ck()
