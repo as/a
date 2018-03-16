@@ -3,12 +3,10 @@ package main
 import (
 	"fmt"
 	"image"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/as/edit"
 	"github.com/as/event"
 	"github.com/as/path"
 	"github.com/as/text"
@@ -39,105 +37,57 @@ func AbsOf(basedir, path string) string {
 //
 // 4). An address in the destination
 
+var resolver = &fileresolver{ // from fs.go:/resolver/
+	Fs: newfsclient(), // called in :/Grid..Look/
+}
+
 func (g *Grid) Look(e event.Look) {
-	name, addr := action.SplitPath(string(e.P))
 	if g.meta(e.To[0]) {
 		return
 	}
+
+	ed := e.To[0]
+	t, _ := ed.(*tag.Tag)
+	body, _ := ed.(*win.Win)
+	if t != nil {
+		body = t.Body
+	}
+
+	e.Q0, e.Q1 = expand3(ed, e.Q0, e.Q1)
+	e.P = ed.Bytes()[e.Q0:e.Q1]
+
+	name, addr := action.SplitPath(string(e.P))
 	if name == "" && addr == "" {
 		return
 	}
 	if name == "" {
-		prog, err := edit.Compile(addr)
-		if err != nil {
-			g.aerr(err.Error())
-			return
+		if g.EditRun(addr, ed) {
+			ajump(ed, cursorNop)
 		}
-		t := e.To[0]
-		prog.Run(t)
-		ajump(t, cursorNop)
 		return
 	}
 
 	// Existing window label?
-	if label := g.Lookup(name); label != nil {
-		fn := moveMouse
-		if name == "" {
-			fn = cursorNop
-		}
-		//TODO(as): danger, edit needs a way to ensure it will only jump to an address
-		// we can expose an address parsing function from edit
-		prog, err := edit.Compile(addr)
-		if err != nil {
-			g.aerr(err.Error())
-			return
-		}
-		if t := label.(*tag.Tag); t.Body != nil {
-			prog.Run(t.Body)
-			ajump(t.Body, fn)
+	if label := g.Lookup(name); label != nil && body != nil {
+		if g.EditRun(addr, body) {
+			ajump(body, moveMouse)
 		}
 		return
 	}
 
-	abspath := ""
-	visible := ""
-	exists := false
-	switch {
-	case filepath.IsAbs(name):
-		if !path.Exists(name) {
-			break
-		}
-		abspath = filepath.Clean(name)
-		visible = abspath
-	case filepath.IsAbs(e.Name):
-		if !path.Exists(e.Name) {
-			// The tag might point to a non-existent file but its parent directory
-			// might be valid. In this case we should look inside the directory
-			// even though the file doesn't exist. This makes +Error windows work
-			// as intended
-			e.Name = filepath.Dir(e.Name)
-		}
-		if !path.Exists(e.Name) {
-			break
-		}
-		abspath = filepath.Join(path.DirOf(e.Name), name)
-		visible = abspath
-	case filepath.IsAbs(e.Basedir):
-		if !path.Exists(e.Basedir) {
-			break
-		}
-		abspath = path.DirOf(e.Basedir)
-		visible = filepath.Join(path.DirOf(e.Name), name)
-	default:
-	}
+	g.aerr("res: %#v\n", resolver)
+	info, exists := resolver.look(pathinfo{tag: e.Name, name: name})
+	t, exists = g.Lookup(info.abspath).(*tag.Tag)
 
-	stat := func(name string) os.FileInfo {
-		fi, _ := os.Stat(name)
-		return fi
-	}
-	VisitAll(g, func(p Named) {
-		if abspath == p.FileName() {
-			exists = true
-		} else if os.SameFile(stat(abspath), stat(p.FileName())) {
-			exists = true
-		}
-	})
-
-	var t *tag.Tag
 	if exists {
-		q := g.Lookup(abspath)
-		if q, ok := q.(*tag.Tag); ok {
-			t = q
-		}
-	} else if abspath == visible && path.Exists(visible) {
-		t = New(actCol, path.DirOf(abspath), visible).(*tag.Tag)
-	} else if realpath := filepath.Join(abspath, visible); path.Exists(realpath) {
-		t = New(actCol, path.DirOf(abspath), visible).(*tag.Tag)
+	} else if info.abspath == info.visible && path.Exists(info.visible) {
+		t, _ = New(actCol, path.DirOf(info.abspath), info.visible).(*tag.Tag)
+	} else if realpath := filepath.Join(info.abspath, info.visible); path.Exists(realpath) {
+		t, _ = New(actCol, path.DirOf(info.abspath), info.visible).(*tag.Tag)
 	}
+
 	if t != nil {
-		if addr != "" {
-			//TODO(as): danger, edit needs a way to ensure it will only jump to an address
-			edit.MustCompile(addr).Run(t.Body)
+		if g.EditRun(addr, t.Body) || g.EditRun(addr, t) {
 			ajump(t.Body, moveMouse)
 		} else {
 			ajump(t, moveMouse)
@@ -151,10 +101,10 @@ func (g *Grid) Look(e event.Look) {
 			if p == nil {
 				return
 			}
-			lookliteral(p.(*tag.Tag).Body, e.P, cursorNop)
+			lookliteral(p.(*tag.Tag).Body, e, cursorNop)
 		})
 	} else {
-		lookliteral(e.To[0], e.P, moveMouse)
+		lookliteral(e.To[0], e, moveMouse)
 	}
 
 }
@@ -169,7 +119,7 @@ func (g *Grid) afinderr(wd string, name string) *tag.Tag {
 		if t == nil {
 			panic("cant create tag")
 		}
-		moveMouse(t.Loc().Min)
+		//moveMouse(t.Loc().Min)
 	}
 	return t
 }
@@ -189,9 +139,36 @@ func (g *Grid) aout(fm string, i ...interface{}) {
 	t.Body.Select(q1, q1+n)
 	t.Body.Jump(cursorNop)
 }
-func lookliteral(ed text.Editor, p []byte, mouseFunc func(image.Point)) {
-	// String literal
-	q0, q1 := find.FindNext(ed, p)
+
+// expand3 return (r0:r1) if and only if that range is wide and
+// not inside ed's dot, otherwise it returns dot
+func expand3(ed text.Editor, r0, r1 int64) (int64, int64) {
+	q0, q1 := ed.Dot()
+	if r0 == r1 && text.Region3(r0, q0, q1) == 0 {
+		return q0, q1
+	}
+	return r0, r1
+}
+
+func lookliteral(ed text.Editor, e event.Look, mouseFunc func(image.Point)) {
+	// The behavior of look:
+	//
+	// Independent of the dot range, mark the given range as the starting point.
+	// Advance to the end of the starting point
+	// Search for the value repsesenting the range under the original starting point.
+	// If the found range is identical to the starting point, no result has been found
+
+	t0, t1 := ed.Dot()
+	g.aerr("lookliteral:  dot(%d:%d)", t0, t1)
+	g.aerr("lookliteral: find(%d:%d) [%q]", e.Q0, e.Q1, e.P)
+	q0, q1 := find.FindNext(ed, e.Q0, e.Q1, e.P)
+	g.aerr("lookliteral: next(%d:%d)", q0, q1)
+	if q0 == e.Q0 && q1 == e.Q1 {
+		g.aerr("lookliteral: not found, same output(%d:%d)", q0, q1)
+		ed.Select(t0, t1)
+		return
+	}
+	g.aerr("lookliteral: found, diff output(%d:%d) != input(%d:%d)", q0, q1, e.Q0, e.Q1)
 	ed.Select(q0, q1)
 	ajump(ed, mouseFunc)
 }

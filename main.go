@@ -23,15 +23,13 @@ import (
 	"golang.org/x/time/rate"
 
 	"github.com/as/edit"
-	"github.com/as/font" ///"git
+	"github.com/as/font"
 	"github.com/as/frame"
 	"github.com/as/path"
 	"github.com/as/text"
 	"github.com/as/ui"
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
-	//	"github.com/as/font/vga"
-	//	"golang.org/x/image/font/plan9font"
 )
 
 var (
@@ -86,10 +84,6 @@ func black() {
 
 	frame.ATag1.Text = frame.MTextW
 	frame.ATag1.Back = frame.MTagC
-
-	//	tag.Gray = image.NewUniform(color.RGBA{192, 192, 232, 255})
-	//	tag.LtGray = image.NewUniform(color.RGBA{192, 192, 232, 255})
-	//	tag.X = image.NewUniform(color.RGBA{192, 192, 232, 255})
 }
 
 var dirty bool
@@ -148,12 +142,13 @@ func main() {
 	}
 
 	dev, err := ui.Init(&screen.NewWindowOptions{Width: winSize.X, Height: winSize.Y, Title: "A"})
-	println("after")
 	if err != nil {
 		log.Fatalln(err)
 	}
+
 	wind := dev.Window()
 	D := wind.Device()
+
 	// Linux will segfault here if X is not present
 	repaint()
 	ft := font.NewFace(*ftsize)
@@ -166,9 +161,6 @@ func main() {
 
 	var pt image.Point
 	r := act.Bounds()
-	Drel := make(chan mouse.Event, 10)
-	mousein := mus.NewMouse(time.Second/3, Drel, events)
-	mousein.Machine.SetRect(image.Rect(r.Min.X, r.Min.Y+pad.Y, r.Max.X, r.Max.Y-pad.Y))
 
 	// Temporary just until col and tag can be seperated into their own packages. The
 	// majority of these closures will disappear as the program becomes more stable
@@ -250,8 +242,24 @@ func main() {
 
 	var down uint
 
+	readmouse := func(e mouse.Event) mouse.Event {
+		if e.Button != 0 {
+			switch e.Direction {
+			case 1:
+				down |= 1 << uint(e.Button)
+			case 2:
+				down ^= 1 << uint(e.Button)
+			}
+		}
+		activate(p(e), g)
+		pt = p(e).Add(act.Loc().Min)
+		e.X -= float32(act.Sp.X)
+		e.Y -= float32(act.Sp.Y)
+		return e
+	}
+
 	go func() {
-		var c0 time.Time
+		//		var c0 time.Time
 		for {
 			select {
 			case e := <-D.Scroll:
@@ -259,23 +267,33 @@ func main() {
 				doScrollEvent(act, mus.ScrollEvent{Dy: 5, Event: e})
 			case e := <-D.Mouse:
 
-				switch e.Direction {
-				case 1:
-					down |= 1 << uint(e.Button-1)
-				case 2:
-					down ^= 1 << uint(e.Button-1)
-				}
-				activate(p(e), g)
-
+				e = readmouse(e)
 				if down == 0 {
 					continue
 				}
+				s0, s1 := act.Dot()
 
-				pt = p(e).Add(act.Loc().Min)
-				e.X -= float32(act.Sp.X)
-				e.Y -= float32(act.Sp.Y)
-				switch down {
-				case 1:
+				org := act.Origin()
+				q0 := org + act.IndexOf(p(e))
+				q1 := q0
+				act.Sq = q0
+
+				act.Select(q0, q1)
+				ck()
+				start := down
+				for down == start {
+					act.Sq, q0, q1 = sweep(act, e, act.Sq, q0, q1) //TODO (nil was act)
+					act.Select(q0, q1)
+					ck()
+
+					select {
+					case e = <-D.Mouse:
+						e = readmouse(e)
+					}
+				}
+
+				switch start {
+				case 1 << 1:
 					if inSizer(p(e)) {
 						aerr("InSizer: %s", p(e))
 					} else if inScroll(p(e)) {
@@ -283,52 +301,18 @@ func main() {
 					} else {
 						aerr("sweepOrClock: %s", p(e))
 						// sweep or click
-
-						org := act.Origin()
-						q0 := org + act.IndexOf(p(e))
-						q1 := q0
-						act.Sq = q0
-						pt0 := p(e)
-
-						act.Select(q0, q1)
-						ck()
-					Loop:
-						for {
-							select {
-							case e := <-D.Mouse:
-								switch e.Direction {
-								case 1:
-									down |= 1 << uint(e.Button-1)
-								case 2:
-									down ^= 1 << uint(e.Button-1)
-								}
-								if down == 0 {
-									// What about snarf and look and exec and etc?
-									break Loop
-								}
-								e.X -= float32(act.Sp.X)
-								e.Y -= float32(act.Sp.Y)
-								act.Sq, q0, q1 = sweep(act, e, act.Sq, q0, q1) //TODO (nil was act)
-								act.Select(q0, q1)
-								ck()
-							}
-						}
-						if doubleclick(pt0, p(e), c0) {
-							aerr("double click")
-						}
-						c0 = time.Now().Add(time.Second / 3)
+						//					c0 = time.Now().Add(time.Second/3)
 						act.Select(q0, q1)
 						ck()
 					}
-				case 2:
+				case 1 << 2:
+
+					act.Select(s0, s1)
 					aerr("execute: %s", p(e))
-					org := act.Origin()
-					q0 := org + act.IndexOf(p(e))
-					q1 := q0
 					t := actTag
 					act.Ctl() <- event.Cmd{
 						Rec: event.Rec{
-							Q0: q0, Q1: q1,
+							Q0: q0, Q1: q0,
 							P: act.Bytes()[q0:q1],
 						},
 						From: t,
@@ -336,17 +320,14 @@ func main() {
 						//						Basedir: t.basedir,
 						Name: t.FileName(),
 					}
-				case 3:
+				case 1 << 3:
+					act.Select(s0, s1)
 					aerr("look: %s", p(e))
-					org := act.Origin()
-					q0 := org + act.IndexOf(p(e))
-					q1 := q0
 					t := actTag
 					act.Ctl() <- event.Look{
 						Rec: event.Rec{
-							Q0: q0,
-							Q1: q1,
-							P:  act.Bytes()[q0:q1],
+							Q0: q0, Q1: q1,
+							P: act.Bytes()[q0:q1],
 						},
 						From: t,
 						To:   []event.Editor{t.Body},
