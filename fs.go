@@ -52,7 +52,7 @@ func (r *fileresolver) isAbs(name string) bool {
 	if path.IsAbs(name) || filepath.IsAbs(name) || name[0] == '\\' {
 		return true
 	}
-	return len(name) > 1 && name[1] == ':' && strings.IndexAny(name[:1], Letters) != -1
+	return len(name) > 1 && name[1] == ':' && strings.ContainsAny(name[:1], Letters)
 }
 
 func (r *fileresolver) look(pi pathinfo) (f fileinfo, ok bool) {

@@ -26,26 +26,6 @@ func active2(pt image.Point, list ...Plane) (x Plane) {
 	return nil
 }
 
-// Put
-func active(pt image.Point, act Plane, list ...Plane) (x Plane) {
-	if tag.Buttonsdown != 0 {
-		return act
-	}
-	if act != nil {
-		list = append([]Plane{act}, list...)
-	}
-	for i, w := range list {
-		if w == nil {
-			continue
-		}
-		r := w.Loc()
-		if pt.In(r) {
-			return list[i]
-		}
-	}
-	return act
-}
-
 func activate(pt image.Point, w Plane) {
 	if tag.Buttonsdown != 0 {
 		return

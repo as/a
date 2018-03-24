@@ -86,6 +86,8 @@ func (g *Grid) Look(e event.Look) {
 		t, _ = New(actCol, path.DirOf(info.abspath), info.visible).(*tag.Tag)
 	}
 
+	g.guru(e.Name, e.Q0, e.Q1)
+
 	if t != nil {
 		if g.EditRun(addr, t.Body) || g.EditRun(addr, t) {
 			ajump(t.Body, moveMouse)

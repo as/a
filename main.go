@@ -34,7 +34,6 @@ import (
 
 var (
 	Version = "0.5.3"
-	xx      Cursor
 	eprint  = fmt.Println
 	timefmt = "2006.01.02 15.04.05"
 )
@@ -61,33 +60,7 @@ var (
 	quiet      = flag.Bool("q", false, "dont interact with the user or graphical subsystem (use with -l)")
 )
 
-/*
-func vgaface() font.Face {
-	data, err := ioutil.ReadFile("u_vga16.font")
-	if err != nil {
-		panic(err)
-	}
-	face, err := plan9font.ParseFont(data, ioutil.ReadFile)
-	if err != nil {
-		panic(err)
-	}
-	return face
-}
-*/
-// TODO(as): refactor frame so this stuff doesn't have to exist here
-func black() {
-	frame.A.Text = frame.MTextW
-	frame.A.Back = frame.MBodyW
-
-	frame.ATag0.Text = frame.MTextW
-	frame.ATag0.Back = frame.MTagG
-
-	frame.ATag1.Text = frame.MTextW
-	frame.ATag1.Back = frame.MTagC
-}
-
 var dirty bool
-
 var ck = repaint
 
 func repaint() {
@@ -132,7 +105,7 @@ func main() {
 	lim := rate.NewLimiter(rate.Every(time.Second/120), 2)
 
 	if *oled {
-		black()
+		usedarkcolors()
 	}
 
 	list := argparse()
@@ -159,42 +132,8 @@ func main() {
 	actTag = actCol.List[1].(*tag.Tag)
 	act = actTag.Body
 
-	var pt image.Point
 	r := act.Bounds()
 
-	// Temporary just until col and tag can be seperated into their own packages. The
-	// majority of these closures will disappear as the program becomes more stable
-	sweepend := func() {
-		if xx.sweepCol {
-			xx.sweepCol = false
-			g.fill()
-			g.Attach(xx.srcCol, pt.X)
-			moveMouse(xx.srcCol.Loc().Min)
-		} else {
-			xx.sweep = false
-			xx.srcCol.fill()
-			if xx.src == nil {
-				return
-			}
-			actCol.Attach(xx.src, pt.Y)
-			moveMouse(xx.src.Loc().Min)
-		}
-	}
-	markwin := func() {
-		xx.srcCol = actCol
-		xx.src = actTag
-	}
-	detachcol := func() {
-		xx.srcCol = actCol
-		xx.sweepCol = true
-		xx.src = nil
-		g.detach(g.ID(xx.srcCol))
-		g.fill()
-	}
-	detachwin := func() {
-		markwin()
-		xx.srcCol.detach(xx.srcCol.ID(xx.src))
-	}
 	growshrink := func(e mouse.Event) {
 		dy := r.Min.Y
 		id := actCol.ID(actTag)
@@ -240,24 +179,6 @@ func main() {
 		aerr("connected to remote filesystem")
 	}
 
-	var down uint
-
-	readmouse := func(e mouse.Event) mouse.Event {
-		if e.Button != 0 {
-			switch e.Direction {
-			case 1:
-				down |= 1 << uint(e.Button)
-			case 2:
-				down ^= 1 << uint(e.Button)
-			}
-		}
-		activate(p(e), g)
-		pt = p(e).Add(act.Loc().Min)
-		e.X -= float32(act.Sp.X)
-		e.Y -= float32(act.Sp.Y)
-		return e
-	}
-
 	go func() {
 		//		var c0 time.Time
 		for {
@@ -281,24 +202,31 @@ func main() {
 				act.Select(q0, q1)
 				ck()
 				start := down
-				for down == start {
-					act.Sq, q0, q1 = sweep(act, e, act.Sq, q0, q1) //TODO (nil was act)
-					act.Select(q0, q1)
-					ck()
-
-					select {
-					case e = <-D.Mouse:
-						e = readmouse(e)
+				sweepFunc := func() {
+					for down == start {
+						act.Sq, q0, q1 = sweep(act, e, act.Sq, q0, q1) //TODO (nil was act)
+						act.Select(q0, q1)
+						ck()
+						select {
+						case e = <-D.Mouse:
+							e = readmouse(e)
+						}
 					}
 				}
-
 				switch start {
 				case 1 << 1:
 					if inSizer(p(e)) {
 						aerr("InSizer: %s", p(e))
+						if canopy(absP(e, act.Bounds().Min)) {
+							g.dragCol(actCol, e, D.Mouse)
+						} else {
+							g.dragTag(actCol, actTag, e, D.Mouse)
+						}
 					} else if inScroll(p(e)) {
+						sweepFunc()
 						aerr("inScroll: %s", p(e))
 					} else {
+						sweepFunc()
 						aerr("sweepOrClock: %s", p(e))
 						// sweep or click
 						//					c0 = time.Now().Add(time.Second/3)
@@ -306,7 +234,7 @@ func main() {
 						ck()
 					}
 				case 1 << 2:
-
+					sweepFunc()
 					act.Select(s0, s1)
 					aerr("execute: %s", p(e))
 					t := actTag
@@ -321,6 +249,7 @@ func main() {
 						Name: t.FileName(),
 					}
 				case 1 << 3:
+					sweepFunc()
 					act.Select(s0, s1)
 					aerr("look: %s", p(e))
 					t := actTag
@@ -370,7 +299,6 @@ func main() {
 				continue
 			}
 			if e.External {
-				println("fffffffff")
 				g.Resize(winSize)
 			}
 			g.Upload(wind)
@@ -402,9 +330,9 @@ func main() {
 					switch e.Button {
 					case 1:
 						if canopy(pt) {
-							detachcol()
+							detachcol(g, actCol)
 						} else {
-							detachwin()
+							detachtag(g, actCol, actTag)
 						}
 						cont = sizer
 					default:
@@ -443,27 +371,7 @@ func main() {
 				actTag.Handle(act, e)
 				ck()
 			case mus.SelectEvent:
-				switch cont {
-				case scrollbar:
-					act.Clicksb(p(e.Event), 0)
-				case sizer:
-					e.X += float32(act.Sp.X)
-					e.Y += float32(act.Sp.Y)
-					pt.X = int(e.X)
-					pt.Y = int(e.Y)
-					activate(p(e.Event), g)
-					sweepend()
-				case window:
-					actTag.Handle(act, e)
-					//q0, q1 := act.Dot()
-					if e.Button == 2 {
-						//	s := string(act.Bytes()[q0:q1])
-						//	actTag.Handle(act, s)
-						//	wind.Send(s)
-					}
-				}
-				cont = 0
-				ck()
+				g.aerr("mus.SelectEvent: is deprecated")
 			case event.Look:
 				alook(e)
 				ck()
@@ -492,9 +400,6 @@ func main() {
 					abs := AbsOf(e.Basedir, e.Name)
 					if strings.HasPrefix(s, "Edit ") {
 						s = s[5:]
-						// The event sink shouldn't be specified during
-						// compile time, but its the easiest way to
-						// see it works correctly with the editor
 						prog, err := edit.Compile(s, &edit.Options{Sender: nil, Origin: abs})
 						if err != nil {
 							aerr(err.Error())

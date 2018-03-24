@@ -59,6 +59,16 @@ func yRegion(y, ymin, ymax int) int {
 	return 0
 }
 
+func clamp(v, l, h int64) int64 {
+	if v < l {
+		return l
+	}
+	if v > h {
+		return h
+	}
+	return v
+}
+
 func sweep(w *win.Win, e mouse.Event, s, q0, q1 int64) (int64, int64, int64) {
 	r := image.Rectangle{image.ZP, w.Size()}
 	y := int(e.Y)
@@ -66,6 +76,9 @@ func sweep(w *win.Win, e mouse.Event, s, q0, q1 int64) (int64, int64, int64) {
 	lo := r.Min.Y + padY
 	hi := r.Dy() - padY
 	units := w.Bounds().Dy()
+	if units == 0 {
+		units++
+	}
 	reg := yRegion(y, lo, hi)
 
 	if reg != 0 {

@@ -31,7 +31,7 @@ func NewGrid(dev *ui.Dev, sp, size image.Point, ft font.Face, files ...string) *
 		Ctl: events,
 	}
 	T := tag.New(dev, sp, image.Pt(size.X, tdy), conf)
-	T.Win.InsertString("Newcol Killall Exit", 0)
+	T.Win.InsertString("Newcol Killall Exit    guru^(callees callers callstack definition describe freevars implements peers pointsto referrers what whicherrs)", 0)
 	g := &Grid{&Col{dev: dev, sp: sp, size: size, ft: ft, Tag: T, tdy: tdy, List: make([]Plane, len(files))}}
 	size.Y -= tdy
 	sp.Y += tdy
