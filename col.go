@@ -239,22 +239,6 @@ func (co *Col) RollUp(id int, dy int) {
 func (co *Col) badID(id int) bool {
 	return id <= 0
 }
-func (co *Col) bestGrowth(id int, dy int) int {
-	if co.badID(id) || co.badID(id-1) {
-		return 0
-	}
-	nclicks := co.List[id-1].Loc().Dy() / dy
-	if nclicks < 3 {
-		return dy
-	}
-	if nclicks < 5 {
-		return dy * 2
-	}
-	if nclicks < 8 {
-		return dy * 3
-	}
-	return dy * 4
-}
 func (co *Col) Grow(id int, dy int) {
 	g.aerr("id, dy = %d, %d", id, dy)
 	a, b := id-1, id

@@ -18,15 +18,15 @@ var (
 	winSize     = image.Pt(1024, 768)
 	pad         = image.Pt(15, 15)
 	sizerR      = image.Rect(0, 0, scrollX, tagHeight)
-	dcPerimeter = image.Rect(-4, -4, 4, 4)
+	dcPerimeter = image.ZR.Inset(-4)
 )
 
 func doubleclick(pt0, pt1 image.Point, deadline time.Time) bool {
 	return !time.Now().After(deadline) && pt1.In(dcPerimeter.Add(pt0))
 }
 
-func relative(e mouse.Event, p Plane) mouse.Event {
-	pt := p.Bounds().Min
+func rel(e mouse.Event, p Plane) mouse.Event {
+	pt := p.Loc().Min
 	e.X -= float32(pt.X)
 	e.Y -= float32(pt.Y)
 	return e

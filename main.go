@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	Version = "0.5.3"
+	Version = "0.6.0"
 	eprint  = fmt.Println
 	timefmt = "2006.01.02 15.04.05"
 )
@@ -116,7 +116,7 @@ func main() {
 	repaint()
 	ft := font.NewFace(*ftsize)
 	g = NewGrid(dev, image.ZP, winSize, ft, list...)
-	aerr = g.aerr
+	setLogFunc(g.aerr)
 
 	// This in particular needs to go
 	actCol = g.List[1].(*Col)
@@ -127,109 +127,100 @@ func main() {
 		g.Look(e)
 	}
 
-	aerr("ver=%s", Version)
-	aerr("pid=%d", os.Getpid())
-	aerr("args=%q", os.Args)
+	logf("ver=%s", Version)
+	logf("pid=%d", os.Getpid())
+	logf("args=%q", os.Args)
 	if srv != nil {
-		aerr("listening for remote connections")
+		logf("listening for remote connections")
 	}
 	if client != nil {
-		aerr("connected to remote filesystem")
+		logf("connected to remote filesystem")
 	}
 
 	go func() {
-		//		var c0 time.Time
 		for {
 			select {
 			case e := <-D.Scroll:
 				activate(p(e), g)
-				doScrollEvent(act, mus.ScrollEvent{Dy: 5, Event: e})
+				scroll(act, mus.ScrollEvent{Dy: 5, Event: e})
 			case e := <-D.Mouse:
-
-				e = readmouse(e)
+				activate(p(e), g)
+				e = rel(readmouse(e), act)
 				if down == 0 {
 					continue
 				}
-				s0, s1 := act.Dot()
-
-				org := act.Origin()
-				q0 := org + act.IndexOf(p(e))
-				q1 := q0
-				act.Sq = q0
-
-				act.Select(q0, q1)
-				ck()
-				start := down
-				sweepFunc := func() {
-					for down == start {
-						act.Sq, q0, q1 = sweep(act, e, act.Sq, q0, q1)
-						act.Select(q0, q1)
-						ck()
-						e = readmouse(<-D.Mouse)
-					}
-				}
-				switch start {
-				case 1 << 1:
-					if inSizer(p(e)) {
-						aerr("InSizer: %s", p(e))
-						if canopy(absP(e, act.Bounds().Min)) {
-							g.dragCol(actCol, e, D.Mouse)
-						} else {
-							g.dragTag(actCol, actTag, e, D.Mouse)
+				if pt := p(e); inSizer(pt) || inScroll(pt) {
+					if inSizer(pt) {
+						if HasButton(1, down) {
+							if canopy(absP(e, act.Bounds().Min)) {
+								g.dragCol(actCol, e, D.Mouse)
+							} else {
+								g.dragTag(actCol, actTag, e, D.Mouse)
+							}
 						}
-					} else if inScroll(p(e)) {
-						sweepFunc()
-						aerr("inScroll: %s", p(e))
-					} else {
-						sweepFunc()
-						for down != 0 {
-							if down&(1<<2) != 0 {
-								act.Select(q0, q1)
-								tag.Snarf(act, e)
-								aerr("should snarf")
-
-								ck()
-							} else if down&(1<<3) != 0 {
-								act.Select(q0, q1)
-								tag.Paste(act, e)
-								//act.Select(q0,q1)
-								aerr("should paste")
+					} else if inScroll(pt) {
+						switch down {
+						case Button(1):
+							scroll(act, mus.ScrollEvent{Dy: 5, Event: e})
+						case Button(2):
+							w := act
+							y0 := p(e).Y
+							for down != 0 {
+								e = rel(readmouse(e), w)
+								dy := 5
+								y := p(e).Y
+								if y < y0 {
+									dy = -dy
+								}
+								y0 = y
+								scroll(w, mus.ScrollEvent{Dy: dy, Event: e})
 								ck()
 							}
-							e = readmouse(<-D.Mouse)
+						case Button(3):
+							scroll(act, mus.ScrollEvent{Dy: -5, Event: e})
 						}
-						act.Select(q0, q1)
+						logf("inScroll: %s", p(e))
+					}
+					continue
+				}
+
+				t, w := actTag, act
+				s0, s1 := w.Dot()
+				q := w.IndexOf(p(e)) + w.Origin()
+				act.Select(q, q)
+				ck()
+				switch down {
+				case Button(1):
+					q0, q1, e := sweepFunc(w, e, D.Mouse)
+					for down != 0 {
+						t.Select(q0, q1)
+						if HasButton(2, down) {
+							tag.Snarf(w, e)
+						} else if HasButton(3, down) {
+							tag.Paste(w, e)
+						}
 						ck()
+						e = rel(readmouse(<-D.Mouse), t)
 					}
-				case 1 << 2:
-					sweepFunc()
-					act.Select(s0, s1)
-					aerr("execute: %s", p(e))
-					t := actTag
-					act.Ctl() <- event.Cmd{
-						Rec: event.Rec{
-							Q0: q0, Q1: q0,
-							P: act.Bytes()[q0:q1],
-						},
-						From: t,
-						To:   []event.Editor{t.Body},
+					w.Select(q0, q1)
+				case Button(2):
+					q0, q1, _ := sweepFunc(w, e, D.Mouse)
+					w.Select(s0, s1)
+					w.Ctl() <- event.Cmd{
 						Name: t.FileName(),
+						From: t, To: []event.Editor{t.Body},
+						Rec: event.Rec{Q0: q0, Q1: q0, P: w.Bytes()[q0:q1]},
 					}
-				case 1 << 3:
-					sweepFunc()
-					act.Select(s0, s1)
-					aerr("look: %s", p(e))
-					t := actTag
-					act.Ctl() <- event.Look{
-						Rec: event.Rec{
-							Q0: q0, Q1: q1,
-							P: act.Bytes()[q0:q1],
-						},
-						From: t,
-						To:   []event.Editor{t.Body},
+				case Button(3):
+					q0, q1, _ := sweepFunc(w, e, D.Mouse)
+					w.Select(s0, s1)
+					w.Ctl() <- event.Look{
 						Name: t.FileName(),
+						From: t, To: []event.Editor{t.Body},
+						Rec: event.Rec{Q0: q0, Q1: q1, P: w.Bytes()[q0:q1]},
 					}
 				}
+				ck()
 			}
 		}
 	}()
@@ -293,7 +284,7 @@ Main:
 			case edit.Print:
 				g.aout(string(e))
 			case error:
-				aerr(e.Error())
+				logf(e.Error())
 			case interface{}:
 				log.Printf("missing event: %#v\n", e)
 				continue Main

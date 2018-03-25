@@ -5,9 +5,31 @@ import (
 
 	"github.com/as/text"
 	"github.com/as/ui/tag"
+	"github.com/as/ui/win"
+	"golang.org/x/mobile/event/mouse"
 )
 
+func Button(n uint) uint {
+	return 1 << n
+}
+func HasButton(n, mask uint) bool {
+	return Button(n)&mask != 0
+}
+
 // mouseMove(pt image.Point) // defined in mouse_other.go and mouse_linux.go
+
+func sweepFunc(w *win.Win, e mouse.Event, mc <-chan mouse.Event) (q0, q1 int64, e1 mouse.Event) {
+	start := down
+	q0, q1 = w.Dot()
+	act.Sq = q0
+	for down == start {
+		w.Sq, q0, q1 = sweep(w, e, w.Sq, q0, q1)
+		w.Select(q0, q1)
+		ck()
+		e = rel(readmouse(<-mc), w)
+	}
+	return q0, q1, e
+}
 
 func cursorNop(p image.Point) {}
 

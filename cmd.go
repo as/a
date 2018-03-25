@@ -16,38 +16,38 @@ import (
 	"github.com/as/ui/win"
 )
 
-var aerr = g.aerr
-
 func acmd(e event.Cmd) {
-	aerr("acmd: %#v\n", e)
-	s := string(e.P[0])
+	g.aerr("aaaaaaaaaaaaaaaaaaaaacmd: %#v\n", e)
+	s := string(e.P)
 	switch s {
 	case "Put", "Get":
 		actTag.Handle(act, s)
 		ck()
 	case "New":
-		moveMouse(New(actCol, "", "").Loc().Min)
+		newtag := New(actCol, "", "")
+		logf("%v\n", newtag.Loc())
+		moveMouse(newtag.Loc().Min)
 	case "Newcol":
 		moveMouse(NewCol2(g, "").Loc().Min)
 	case "Del":
-		aerr("Del -> %#v\n", e)
+		logf("Del -> %#v\n", e)
 		Del(actCol, actCol.ID(actTag))
 	case "Sort":
-		aerr("Sort: TODO")
+		logf("Sort: TODO")
 	case "Delcol":
 		Delcol(g, g.ID(actCol))
 	case "Exit":
-		aerr("Exit: TODO")
+		logf("Exit: TODO")
 	default:
 		if len(e.To) == 0 {
-			aerr("cmd has no destination: %q", s)
+			logf("cmd has no destination: %q", s)
 		}
 		abs := AbsOf(e.Basedir, e.Name)
 		if strings.HasPrefix(s, "Edit ") {
 			s = s[5:]
 			prog, err := edit.Compile(s, &edit.Options{Sender: nil, Origin: abs})
 			if err != nil {
-				aerr(err.Error())
+				logf(err.Error())
 				return
 			}
 			prog.Run(e.To[0])
@@ -61,7 +61,7 @@ func acmd(e event.Cmd) {
 		} else {
 			x := strings.Fields(s)
 			if len(x) < 1 {
-				aerr("empty command")
+				logf("empty command")
 				return
 			}
 			tagname := fmt.Sprintf("%s%c-%s", path.DirOf(abs), filepath.Separator, x[0])

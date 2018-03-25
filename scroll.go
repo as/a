@@ -5,7 +5,7 @@ import (
 	"github.com/as/ui/win"
 )
 
-func doScrollEvent(act *win.Win, e mus.ScrollEvent) {
+func scroll(act *win.Win, e mus.ScrollEvent) {
 	if e.Button == -1 {
 		e.Dy = -e.Dy
 	}

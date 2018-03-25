@@ -10,9 +10,6 @@ import (
 	"github.com/as/srv/fs"
 )
 
-type tagresolver struct {
-}
-
 type fileresolver struct {
 	fs.Fs
 	err error
@@ -22,13 +19,11 @@ type pathinfo struct {
 	wd   string
 	tag  string
 	name string
-	src  interface{}
 }
 
 type fileinfo struct {
 	os.FileInfo
 	abspath, visible string
-	err              error
 }
 
 func (r *fileresolver) set(f *fileinfo, name string) (ok bool) {
