@@ -1,35 +1,25 @@
 package main // import "github.com/as/a"
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"image"
-	"io"
 	"log"
 	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
-	"sync"
 	"time"
 
 	"github.com/as/event"
 	"github.com/as/shiny/screen"
 	mus "github.com/as/text/mouse"
 	"golang.org/x/mobile/event/lifecycle"
-	"golang.org/x/mobile/event/mouse"
 	"golang.org/x/mobile/event/paint"
 	"golang.org/x/time/rate"
 
 	"github.com/as/edit"
 	"github.com/as/font"
 	"github.com/as/frame"
-	"github.com/as/path"
-	"github.com/as/text"
 	"github.com/as/ui"
 	"github.com/as/ui/tag"
-	"github.com/as/ui/win"
 )
 
 var (
@@ -93,8 +83,6 @@ func init() {
 // Put
 func main() {
 	defer trypprof()()
-	frame.ForceUTF8 = *utf8
-	frame.ForceElastic = *elastic
 
 	// Startup
 	err := createnetworks()
@@ -114,6 +102,8 @@ func main() {
 		os.Exit(0)
 	}
 
+	frame.ForceUTF8 = *utf8
+	frame.ForceElastic = *elastic
 	dev, err := ui.Init(&screen.NewWindowOptions{Width: winSize.X, Height: winSize.Y, Title: "A"})
 	if err != nil {
 		log.Fatalln(err)
@@ -126,48 +116,16 @@ func main() {
 	repaint()
 	ft := font.NewFace(*ftsize)
 	g = NewGrid(dev, image.ZP, winSize, ft, list...)
+	aerr = g.aerr
 
 	// This in particular needs to go
 	actCol = g.List[1].(*Col)
 	actTag = actCol.List[1].(*tag.Tag)
 	act = actTag.Body
 
-	r := act.Bounds()
-
-	growshrink := func(e mouse.Event) {
-		dy := r.Min.Y
-		id := actCol.ID(actTag)
-		switch e.Button {
-		case 3:
-			actCol.RollUp(id, dy)
-			//actCol.MoveWin(id, dy)
-		case 2:
-			dy -= *ftsize * 2
-			actCol.MoveWin(id, dy)
-		case 1:
-			actCol.Grow(id, actCol.bestGrowth(id, tagHeight))
-		}
-		moveMouse(actTag.Loc().Min)
-	}
-	ajump := func(ed text.Editor, cursor bool) {
-		fn := moveMouse
-		if !cursor {
-			fn = nil
-		}
-		if ed, ok := ed.(text.Jumper); ok {
-			ed.Jump(fn)
-		}
-	}
 	alook := func(e event.Look) {
 		g.Look(e)
 	}
-	aerr := g.aerr
-	var (
-		scrollbar = 1
-		sizer     = 2
-		window    = 4
-		cont      = 0
-	)
 
 	aerr("ver=%s", Version)
 	aerr("pid=%d", os.Getpid())
@@ -204,13 +162,10 @@ func main() {
 				start := down
 				sweepFunc := func() {
 					for down == start {
-						act.Sq, q0, q1 = sweep(act, e, act.Sq, q0, q1) //TODO (nil was act)
+						act.Sq, q0, q1 = sweep(act, e, act.Sq, q0, q1)
 						act.Select(q0, q1)
 						ck()
-						select {
-						case e = <-D.Mouse:
-							e = readmouse(e)
-						}
+						e = readmouse(<-D.Mouse)
 					}
 				}
 				switch start {
@@ -227,9 +182,22 @@ func main() {
 						aerr("inScroll: %s", p(e))
 					} else {
 						sweepFunc()
-						aerr("sweepOrClock: %s", p(e))
-						// sweep or click
-						//					c0 = time.Now().Add(time.Second/3)
+						for down != 0 {
+							if down&(1<<2) != 0 {
+								act.Select(q0, q1)
+								tag.Snarf(act, e)
+								aerr("should snarf")
+
+								ck()
+							} else if down&(1<<3) != 0 {
+								act.Select(q0, q1)
+								tag.Paste(act, e)
+								//act.Select(q0,q1)
+								aerr("should paste")
+								ck()
+							}
+							e = readmouse(<-D.Mouse)
+						}
 						act.Select(q0, q1)
 						ck()
 					}
@@ -245,7 +213,6 @@ func main() {
 						},
 						From: t,
 						To:   []event.Editor{t.Body},
-						//						Basedir: t.basedir,
 						Name: t.FileName(),
 					}
 				case 1 << 3:
@@ -260,27 +227,22 @@ func main() {
 						},
 						From: t,
 						To:   []event.Editor{t.Body},
-						//						Basedir: t.basedir,
 						Name: t.FileName(),
 					}
 				}
-
-				//Drel <- e
 			}
 		}
 	}()
 
 	go func() {
-		for {
-			select {
-			case e := <-D.Key:
-				actTag.Handle(act, e)
-				dirty = true
-				repaint()
-			}
+		for e := range D.Key {
+			actTag.Handle(act, e)
+			dirty = true
+			repaint()
 		}
 	}()
 
+Main:
 	for {
 		select {
 		case e := <-D.Lifecycle:
@@ -290,28 +252,25 @@ func main() {
 			// NT doesn't repaint the window if another window covers it
 			if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOff {
 				focused = false
-				ck()
 			} else if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOn {
 				focused = true
+				continue Main
 			}
+		case e := <-D.Size:
+			winSize = image.Pt(e.WidthPx, e.HeightPx)
+			g.Resize(winSize)
 		case e := <-D.Paint:
 			if !lim.Allow() {
-				continue
+				continue Main
 			}
 			if e.External {
 				g.Resize(winSize)
 			}
 			g.Upload(wind)
 			wind.Publish()
-		case e := <-D.Size:
-			winSize = image.Pt(e.WidthPx, e.HeightPx)
-			g.Resize(winSize)
-			ck()
+			continue Main
 		case e := <-events:
-			//		e := wind.NextEvent()
 			switch e := e.(type) {
-			case mus.DrainStop:
-			case mus.Drain:
 			case tag.GetEvent:
 				t := New(actCol, e.Basedir, e.Name)
 				if e.Addr != "" {
@@ -323,109 +282,12 @@ func main() {
 				} else {
 					moveMouse(t.Loc().Min)
 				}
-			case mus.MarkEvent:
-				cont = 0
-				pt = p(e.Event).Add(act.Loc().Min)
-				if inSizer(p(e.Event)) {
-					switch e.Button {
-					case 1:
-						if canopy(pt) {
-							detachcol(g, actCol)
-						} else {
-							detachtag(g, actCol, actTag)
-						}
-						cont = sizer
-					default:
-						growshrink(e.Event)
-
-					}
-				} else if p := p(e.Event); inScroll(p) {
-					cont = scrollbar
-					act.Clicksb(p, int(e.Button))
-				} else {
-					actTag.Handle(act, p)
-					cont = window
-				}
-				ck()
-			case mus.ScrollEvent:
-				//			doScrollEvent(act, e)
-			case mus.SweepEvent:
-				switch cont {
-				case scrollbar:
-					act.Clicksb(p(e.Event), 0)
-				case sizer:
-				case window:
-					if !e.Motion() && act != nil {
-						r := act.Frame.Bounds()
-						if p(e.Event).In(r) {
-							continue
-						}
-					}
-					actTag.Handle(act, e)
-				}
-				ck()
-			case mus.CommitEvent:
-				cont = 0
-				ck()
 			case mus.SnarfEvent, mus.InsertEvent:
 				actTag.Handle(act, e)
-				ck()
-			case mus.SelectEvent:
-				g.aerr("mus.SelectEvent: is deprecated")
 			case event.Look:
 				alook(e)
-				ck()
 			case event.Cmd:
-				s := string(e.P)
-				switch s {
-				case "Put", "Get":
-					actTag.Handle(act, s)
-					ck()
-				case "New":
-					moveMouse(New(actCol, "", "").Loc().Min)
-				case "Newcol":
-					moveMouse(NewCol2(g, "").Loc().Min)
-				case "Del":
-					Del(actCol, actCol.ID(actTag))
-				case "Sort":
-					aerr("Sort: TODO")
-				case "Delcol":
-					Delcol(g, g.ID(actCol))
-				case "Exit":
-					aerr("Exit: TODO")
-				default:
-					if len(e.To) == 0 {
-						aerr("cmd has no destination: %q", s)
-					}
-					abs := AbsOf(e.Basedir, e.Name)
-					if strings.HasPrefix(s, "Edit ") {
-						s = s[5:]
-						prog, err := edit.Compile(s, &edit.Options{Sender: nil, Origin: abs})
-						if err != nil {
-							aerr(err.Error())
-							continue
-						}
-						prog.Run(e.To[0])
-						w := e.To[0].(*win.Win)
-						w.Resize(w.Size())
-						//e.To[0].(*win.Win).Refresh()
-						ajump(e.To[0], false)
-					} else if strings.HasPrefix(s, "Install ") {
-						s = s[8:]
-						g.Install(actTag, s)
-					} else {
-						x := strings.Fields(s)
-						if len(x) < 1 {
-							aerr("empty command")
-							continue
-						}
-						tagname := fmt.Sprintf("%s%c-%s", path.DirOf(abs), filepath.Separator, x[0])
-						to := g.afinderr(path.DirOf(abs), tagname)
-						cmd(to.Body, path.DirOf(abs), s)
-						dirty = true
-					}
-				}
-				ck()
+				acmd(e)
 			case edit.File:
 				g.acolor(e)
 			case edit.Print:
@@ -434,111 +296,10 @@ func main() {
 				aerr(e.Error())
 			case interface{}:
 				log.Printf("missing event: %#v\n", e)
+				continue Main
 			}
 		}
+		ck()
 	}
-
-}
-
-func cmd(f text.Editor, dir string, argv string) {
-	x := strings.Fields(argv)
-	if len(x) == 0 {
-		eprint("|: nothing on rhs")
-		return
-	}
-	n := x[0]
-	var a []string
-	if len(x) > 1 {
-		a = x[1:]
-	}
-
-	cmd := exec.Command(n, a...)
-	cmd.Dir = dir
-	q0, q1 := f.Dot()
-	f.Delete(q0, q1)
-	q1 = q0
-	var fd0 io.WriteCloser
-	fd1, err := cmd.StdoutPipe()
-	if err != nil {
-		panic(err)
-	}
-	fd2, err := cmd.StderrPipe()
-	if err != nil {
-		panic(err)
-	}
-	fd0, err = cmd.StdinPipe()
-	if err != nil {
-		panic(err)
-	}
-
-	fd0.Close()
-	var wg sync.WaitGroup
-	donec := make(chan bool)
-	outc := make(chan []byte)
-	errc := make(chan []byte)
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		b := make([]byte, 65536)
-		for {
-			select {
-			case <-donec:
-				return
-			default:
-				n, err := fd1.Read(b)
-				if err != nil {
-					if err == io.EOF {
-						break
-					}
-					eprint(err)
-				}
-				outc <- append([]byte{}, b[:n]...)
-			}
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-		b := make([]byte, 65536)
-		for {
-			select {
-			case <-donec:
-				return
-			default:
-				n, err := fd2.Read(b)
-				if err != nil {
-					if err == io.EOF {
-						break
-					}
-				}
-				errc <- append([]byte{}, b[:n]...)
-			}
-		}
-	}()
-	cmd.Start()
-	go func() {
-		_, err = io.Copy(fd0, bytes.NewReader(append([]byte{}, f.Bytes()[q0:q1]...)))
-		if err != nil {
-			eprint(err)
-			return
-		}
-		cmd.Wait()
-		close(donec)
-	}()
-	go func() {
-	Loop:
-		for {
-			select {
-			case p := <-outc:
-				f.Insert(p, q1)
-				q1 += int64(len(p))
-			case p := <-errc:
-				f.Insert(p, q1)
-				q1 += int64(len(p))
-			case <-donec:
-				break Loop
-			}
-		}
-	}()
 
 }

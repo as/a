@@ -25,6 +25,13 @@ func doubleclick(pt0, pt1 image.Point, deadline time.Time) bool {
 	return !time.Now().After(deadline) && pt1.In(dcPerimeter.Add(pt0))
 }
 
+func relative(e mouse.Event, p Plane) mouse.Event {
+	pt := p.Bounds().Min
+	e.X -= float32(pt.X)
+	e.Y -= float32(pt.Y)
+	return e
+}
+
 func absP(e mouse.Event, sp image.Point) image.Point {
 	return p(e).Add(sp)
 }

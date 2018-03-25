@@ -270,29 +270,3 @@ func ptInAny(pt image.Point, list ...Plane) (x Plane) {
 	}
 	return nil
 }
-
-func ajump(p interface{}, cursor func(image.Point)) {
-	switch p := p.(type) {
-	case *tag.Tag:
-		if p != nil {
-			cursor(p.Loc().Min)
-		}
-	case text.Jumper:
-		p.Jump(cursor)
-	case Plane:
-		if cursor == nil {
-			cursor = shouldCursor(p)
-		}
-		cursor(p.Loc().Min)
-	}
-}
-
-func cursorNop(p image.Point) {}
-func shouldCursor(p Plane) (fn func(image.Point)) {
-	switch p.(type) {
-	case Named:
-		return cursorNop
-	default:
-		return moveMouse
-	}
-}
