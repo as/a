@@ -80,11 +80,9 @@ func init() {
 	flag.Parse()
 }
 
-// Put
 func main() {
 	defer trypprof()()
 
-	// Startup
 	err := createnetworks()
 	if err != nil {
 		log.Fatalln(err)
@@ -157,6 +155,16 @@ func main() {
 							} else {
 								g.dragTag(actCol, actTag, e, D.Mouse)
 							}
+						} else {
+							switch down {
+							case Button(2):
+							case Button(3):
+								actCol.RollUp(actCol.ID(actTag), act.Loc().Min.Y)
+								moveMouse(act.Loc().Min)
+							}
+							for down != 0 {
+								readmouse(<-D.Mouse)
+							}
 						}
 					} else if inScroll(pt) {
 						switch down {
@@ -164,18 +172,9 @@ func main() {
 							scroll(act, mus.ScrollEvent{Dy: 5, Event: e})
 						case Button(2):
 							w := act
-							y0 := p(e).Y
-							for down != 0 {
-								e = rel(readmouse(e), w)
-								dy := 5
-								y := p(e).Y
-								if y < y0 {
-									dy = -dy
-								}
-								y0 = y
-								scroll(w, mus.ScrollEvent{Dy: dy, Event: e})
-								ck()
-							}
+							e = rel(readmouse(e), w)
+							scroll(w, mus.ScrollEvent{Dy: 5, Event: e})
+							ck()
 						case Button(3):
 							scroll(act, mus.ScrollEvent{Dy: -5, Event: e})
 						}
