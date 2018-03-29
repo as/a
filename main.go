@@ -10,6 +10,7 @@ import (
 
 	"github.com/as/event"
 	"github.com/as/shiny/screen"
+	"github.com/as/text/find"
 	mus "github.com/as/text/mouse"
 	"golang.org/x/mobile/event/lifecycle"
 	"golang.org/x/mobile/event/paint"
@@ -135,6 +136,13 @@ func main() {
 		logf("connected to remote filesystem")
 	}
 
+	var (
+		double bool
+		last   = down
+		lastpt image.Point
+	)
+	last = 0
+	var t0 = time.Now()
 	go func() {
 		for {
 			select {
@@ -147,6 +155,14 @@ func main() {
 				if down == 0 {
 					continue
 				}
+				if last == down {
+					if time.Since(t0) < time.Second/2 && lastpt.In(image.Rect(-3, -3, 3, 3).Add(p(e))) {
+						double = true
+					}
+				}
+				t0 = time.Now()
+				last = down
+				lastpt = p(e)
 				if pt := p(e); inSizer(pt) || inScroll(pt) {
 					if inSizer(pt) {
 						if HasButton(1, down) {
@@ -185,37 +201,52 @@ func main() {
 
 				t, w := actTag, act
 				s0, s1 := w.Dot()
-				q := w.IndexOf(p(e)) + w.Origin()
-				act.Select(q, q)
+				q0 := w.IndexOf(p(e)) + w.Origin()
+				q1 := q0
+				act.Select(q0, q1)
 				ck()
+
 				switch down {
 				case Button(1):
-					q0, q1, e := sweepFunc(w, e, D.Mouse)
-					for down != 0 {
-						t.Select(q0, q1)
-						if HasButton(2, down) {
-							tag.Snarf(w, e)
-						} else if HasButton(3, down) {
-							tag.Paste(w, e)
+					if double {
+						q0, q1 = find.FreeExpand(w, q0)
+						double = false
+					} else {
+						q0, q1, e = sweepFunc(w, e, D.Mouse)
+						for down != 0 {
+							t.Select(q0, q1)
+							if HasButton(2, down) {
+								tag.Snarf(w, e)
+							} else if HasButton(3, down) {
+								tag.Paste(w, e)
+							}
+							ck()
+							e = rel(readmouse(<-D.Mouse), t)
 						}
-						ck()
-						e = rel(readmouse(<-D.Mouse), t)
+						t0 = time.Now()
 					}
 					w.Select(q0, q1)
+					ck()
 				case Button(2):
 					q0, q1, _ := sweepFunc(w, e, D.Mouse)
+					if q0 == q1 {
+						q0, q1 = find.ExpandFile(act.Bytes(), q0)
+					}
 					w.Select(s0, s1)
 					w.Ctl() <- event.Cmd{
 						Name: t.FileName(),
-						From: t, To: []event.Editor{t.Body},
+						From: t, To: []event.Editor{lookTarget(act, t)},
 						Rec: event.Rec{Q0: q0, Q1: q0, P: w.Bytes()[q0:q1]},
 					}
 				case Button(3):
 					q0, q1, _ := sweepFunc(w, e, D.Mouse)
+					if q0 == q1 {
+						q0, q1 = find.ExpandFile(act.Bytes(), q0)
+					}
 					w.Select(s0, s1)
 					w.Ctl() <- event.Look{
 						Name: t.FileName(),
-						From: t, To: []event.Editor{t.Body},
+						From: t, To: []event.Editor{lookTarget(act, t)},
 						Rec: event.Rec{Q0: q0, Q1: q1, P: w.Bytes()[q0:q1]},
 					}
 				}
@@ -235,17 +266,6 @@ func main() {
 Main:
 	for {
 		select {
-		case e := <-D.Lifecycle:
-			if e.To == lifecycle.StageDead {
-				return
-			}
-			// NT doesn't repaint the window if another window covers it
-			if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOff {
-				focused = false
-			} else if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOn {
-				focused = true
-				continue Main
-			}
 		case e := <-D.Size:
 			winSize = image.Pt(e.WidthPx, e.HeightPx)
 			g.Resize(winSize)
@@ -285,7 +305,18 @@ Main:
 			case error:
 				logf(e.Error())
 			case interface{}:
-				log.Printf("missing event: %#v\n", e)
+				logf("missing event: %#v\n", e)
+				continue Main
+			}
+		case e := <-D.Lifecycle:
+			if e.To == lifecycle.StageDead {
+				return
+			}
+			// NT doesn't repaint the window if another window covers it
+			if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOff {
+				focused = false
+			} else if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOn {
+				focused = true
 				continue Main
 			}
 		}

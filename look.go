@@ -41,6 +41,16 @@ var resolver = &fileresolver{ // from fs.go:/resolver/
 	Fs: newfsclient(), // called in :/Grid..Look/
 }
 
+func lookTarget(current *win.Win, t *tag.Tag) *win.Win {
+	if t == nil || current == nil {
+		return nil
+	}
+	if current == t.Win {
+		return t.Body
+	}
+	return current
+}
+
 func (g *Grid) Look(e event.Look) {
 	if g.meta(e.To[0]) {
 		return
@@ -55,12 +65,15 @@ func (g *Grid) Look(e event.Look) {
 
 	e.Q0, e.Q1 = expand3(ed, e.Q0, e.Q1)
 	e.P = ed.Bytes()[e.Q0:e.Q1]
-
+	logf("event: %#v\n", e)
 	name, addr := action.SplitPath(string(e.P))
 	if name == "" && addr == "" {
 		return
 	}
 	if name == "" {
+		if t != nil && ed == t.Win {
+			ed = t.Body
+		}
 		if g.EditRun(addr, ed) {
 			ajump(ed, cursorNop)
 		}
