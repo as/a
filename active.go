@@ -13,6 +13,13 @@ var (
 	act    *win.Win
 )
 
+func actinit(g *Grid) {
+	// This in particular needs to go
+	actCol = g.List[1].(*Col)
+	actTag = actCol.List[1].(*tag.Tag)
+	act = actTag.Body
+}
+
 func active2(pt image.Point, list ...Plane) (x Plane) {
 	for i, w := range list {
 		if w == nil {

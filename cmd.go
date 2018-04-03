@@ -22,7 +22,7 @@ func acmd(e event.Cmd) {
 	switch s {
 	case "Put", "Get":
 		actTag.Handle(act, s)
-		ck()
+		repaint()
 	case "New":
 		newtag := New(actCol, "", "")
 		logf("%v\n", newtag.Loc())

@@ -15,7 +15,6 @@ const (
 
 var (
 	tagHeight   = *ftsize*2 + *ftsize/2 - 2
-	winSize     = image.Pt(1024, 768)
 	pad         = image.Pt(15, 15)
 	sizerR      = image.Rect(0, 0, scrollX, tagHeight)
 	dcPerimeter = image.ZR.Inset(-4)

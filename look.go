@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"image"
 	"path/filepath"
@@ -24,8 +25,11 @@ func AbsOf(basedir, path string) string {
 }
 
 // Looks are done in the following order
-// 1). Tag name - if it exists already jump to the tag, if there's an address jump
-//	to that address in the tag
+// 1). Tag name
+//		A. if it exists already jump to the tag
+//		B. if there's an address jump to it
+//		C. if there's a file and address, jump to it
+//		D. If it's a resolvable file, open it
 //
 // 2). Readable absolute file - if the name matches a readable file in the namespaces
 //	file system
@@ -51,6 +55,85 @@ func lookTarget(current *win.Win, t *tag.Tag) *win.Win {
 	return current
 }
 
+type Looker struct {
+	*tag.Tag // owning tag
+	*win.Win // source of the address below
+	Q0, Q1   int64
+	P        []byte
+	err      error
+}
+
+var (
+	ErrNoWin = errors.New("no window")
+	ErrNoTag = errors.New("no tag")
+)
+
+func (e *Looker) Err() error {
+	if e.err == nil {
+		if e.Win == nil {
+			e.err = ErrNoWin
+		}
+		if e.Tag == nil {
+			e.err = ErrNoTag
+		}
+	}
+	return e.err
+}
+
+func (l *Looker) FromTag() bool {
+	return l.Tag.Win == l.Win
+}
+
+func (e *Looker) SplitAddr() (name, addr string) {
+	e.Q0, e.Q1 = expand3(e.Win, e.Q0, e.Q1)
+	logf("event: %#v", e)
+	return action.SplitPath(string(e.Win.Bytes()[e.Q0:e.Q1]))
+}
+
+/*
+func (e *Looker) LookGrid(g *Grid) (error) {
+	panic("unfinished")
+	if e.Err() != nil {
+		return e.Err()
+	}
+
+	name, addr := e.SplitAddr()
+	if name == "" && addr == "" {
+		return nil
+	}
+
+	if name == "" {
+		if g.EditRun(addr, e.Tag.Body) {
+			ajump(e.Tag.Body, cursorNop)
+		}
+		return nil
+	}
+
+	// Existing window label?
+	if label := g.Lookup(name); label != nil  {
+		logf("look: d: %#v", e)
+		t, _ := label.(*tag.Tag)
+		if t == nil{
+			logf("look d: tag is nil")
+			return
+		}
+		if g.EditRun(addr, t.Body) {
+			logf("look: d1: %#v", e)
+			ajump(t.Body, moveMouse)
+		}
+		return
+	}
+
+	// A file on the filesystem
+	logf("res: %#v", resolver)
+	info, exists := resolver.look(pathinfo{tag: e.Name, name: name})
+	t, exists = g.Lookup(info.abspath).(*tag.Tag)
+
+
+	panic("unfinished")
+}
+*/
+
 func (g *Grid) Look(e event.Look) {
 	if g.meta(e.To[0]) {
 		return
@@ -58,32 +141,38 @@ func (g *Grid) Look(e event.Look) {
 
 	ed := e.To[0]
 	t, _ := ed.(*tag.Tag)
-	body, _ := ed.(*win.Win)
-	if t != nil {
-		body = t.Body
-	}
 
 	e.Q0, e.Q1 = expand3(ed, e.Q0, e.Q1)
-	e.P = ed.Bytes()[e.Q0:e.Q1]
-	logf("event: %#v\n", e)
+	logf("event: %#v", e)
 	name, addr := action.SplitPath(string(e.P))
+	e.P = ed.Bytes()[e.Q0:e.Q1]
 	if name == "" && addr == "" {
 		return
 	}
 	if name == "" {
-		if t != nil && ed == t.Win {
-			ed = t.Body
+		logf("look: c: %#v", e)
+		if t.Body == nil {
+			logf("look: c: nil body")
+			return
 		}
-		if g.EditRun(addr, ed) {
+		if g.EditRun(addr, t.Body) {
+			logf("look: c2: %#v", e)
 			ajump(ed, cursorNop)
 		}
 		return
 	}
 
 	// Existing window label?
-	if label := g.Lookup(name); label != nil && body != nil {
-		if g.EditRun(addr, body) {
-			ajump(body, moveMouse)
+	if label := g.Lookup(name); label != nil {
+		logf("look: d: %#v", e)
+		t, _ := label.(*tag.Tag)
+		if t == nil {
+			logf("look d: tag is nil")
+			return
+		}
+		if g.EditRun(addr, t.Body) {
+			logf("look: d1: %#v", e)
+			ajump(t.Body, moveMouse)
 		}
 		return
 	}
@@ -93,6 +182,7 @@ func (g *Grid) Look(e event.Look) {
 	t, exists = g.Lookup(info.abspath).(*tag.Tag)
 
 	if exists {
+		logf("look: e9: %#v", e)
 	} else if info.abspath == info.visible && path.Exists(info.visible) {
 		t, _ = New(actCol, path.DirOf(info.abspath), info.visible).(*tag.Tag)
 	} else if realpath := filepath.Join(info.abspath, info.visible); path.Exists(realpath) {

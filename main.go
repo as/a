@@ -4,42 +4,25 @@ import (
 	"flag"
 	"fmt"
 	"image"
-	"log"
 	"os"
 	"time"
 
 	"github.com/as/event"
-	"github.com/as/shiny/screen"
 	"github.com/as/text/find"
 	mus "github.com/as/text/mouse"
 	"golang.org/x/mobile/event/lifecycle"
-	"golang.org/x/mobile/event/paint"
-	"golang.org/x/time/rate"
 
 	"github.com/as/edit"
-	"github.com/as/font"
-	"github.com/as/frame"
-	"github.com/as/ui"
 	"github.com/as/ui/tag"
 )
 
 var (
-	Version = "0.6.0"
+	Version = "0.6.1"
 	eprint  = fmt.Println
-	timefmt = "2006.01.02 15.04.05"
+	timefmt = "15.04.05"
 )
 
 var focused = false
-
-func argparse() (list []string) {
-	if len(flag.Args()) > 0 {
-		list = append(list, flag.Args()...)
-	} else {
-		list = append(list, "guide")
-		list = append(list, ".")
-	}
-	return
-}
 
 var (
 	utf8       = flag.Bool("u", false, "enable utf8 experiment")
@@ -50,19 +33,6 @@ var (
 	clientaddr = flag.String("d", "", "dial to a remote file system on given endpoint")
 	quiet      = flag.Bool("q", false, "dont interact with the user or graphical subsystem (use with -l)")
 )
-
-var dirty bool
-var ck = repaint
-
-func repaint() {
-	if !dirty || act == nil {
-		return
-	}
-	select {
-	case act.Window().Device().Paint <- paint.Event{}:
-	default:
-	}
-}
 
 var (
 	g         *Grid
@@ -77,72 +47,36 @@ func init() {
 	moribound <- true
 }
 
-func init() {
-	flag.Parse()
+func banner() {
+	logf("ver=%s", Version)
+	logf("pid=%d", os.Getpid())
+	logf("args=%q", os.Args)
+	repaint()
 }
 
 func main() {
 	defer trypprof()()
-
-	err := createnetworks()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	lim := rate.NewLimiter(rate.Every(time.Second/120), 2)
-
-	if *oled {
-		usedarkcolors()
-	}
-
 	list := argparse()
 	if *quiet {
+		banner()
+		createnetworks()
 		<-done
 		os.Exit(0)
 	}
 
-	frame.ForceUTF8 = *utf8
-	frame.ForceElastic = *elastic
-	dev, err := ui.Init(&screen.NewWindowOptions{Width: winSize.X, Height: winSize.Y, Title: "A"})
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	wind := dev.Window()
-	D := wind.Device()
-
-	// Linux will segfault here if X is not present
-	repaint()
-	ft := font.NewFace(*ftsize)
+	dev, wind, D, ft := frameinstall()
 	g = NewGrid(dev, image.ZP, winSize, ft, list...)
 	setLogFunc(g.aerr)
-
-	// This in particular needs to go
-	actCol = g.List[1].(*Col)
-	actTag = actCol.List[1].(*tag.Tag)
-	act = actTag.Body
-
-	alook := func(e event.Look) {
-		g.Look(e)
-	}
-
-	logf("ver=%s", Version)
-	logf("pid=%d", os.Getpid())
-	logf("args=%q", os.Args)
-	if srv != nil {
-		logf("listening for remote connections")
-	}
-	if client != nil {
-		logf("connected to remote filesystem")
-	}
+	banner()
+	createnetworks()
+	actinit(g)
 
 	var (
 		double bool
-		last   = down
+		last   = uint(0)
 		lastpt image.Point
+		t0     = time.Now()
 	)
-	last = 0
-	var t0 = time.Now()
 	go func() {
 		for {
 			select {
@@ -190,7 +124,7 @@ func main() {
 							w := act
 							e = rel(readmouse(e), w)
 							scroll(w, mus.ScrollEvent{Dy: 5, Event: e})
-							ck()
+							repaint()
 						case Button(3):
 							scroll(act, mus.ScrollEvent{Dy: -5, Event: e})
 						}
@@ -204,7 +138,7 @@ func main() {
 				q0 := w.IndexOf(p(e)) + w.Origin()
 				q1 := q0
 				act.Select(q0, q1)
-				ck()
+				repaint()
 
 				switch down {
 				case Button(1):
@@ -220,37 +154,36 @@ func main() {
 							} else if HasButton(3, down) {
 								tag.Paste(w, e)
 							}
-							ck()
+							repaint()
 							e = rel(readmouse(<-D.Mouse), t)
 						}
 						t0 = time.Now()
 					}
 					w.Select(q0, q1)
-					ck()
 				case Button(2):
 					q0, q1, _ := sweepFunc(w, e, D.Mouse)
 					if q0 == q1 {
-						q0, q1 = find.ExpandFile(act.Bytes(), q0)
+						q0, q1 = find.ExpandFile(w.Bytes(), q0)
 					}
 					w.Select(s0, s1)
 					w.Ctl() <- event.Cmd{
 						Name: t.FileName(),
-						From: t, To: []event.Editor{lookTarget(act, t)},
+						From: t, To: []event.Editor{w},
 						Rec: event.Rec{Q0: q0, Q1: q0, P: w.Bytes()[q0:q1]},
 					}
 				case Button(3):
 					q0, q1, _ := sweepFunc(w, e, D.Mouse)
 					if q0 == q1 {
-						q0, q1 = find.ExpandFile(act.Bytes(), q0)
+						q0, q1 = find.ExpandFile(w.Bytes(), q0)
 					}
 					w.Select(s0, s1)
 					w.Ctl() <- event.Look{
 						Name: t.FileName(),
-						From: t, To: []event.Editor{lookTarget(act, t)},
+						From: t, To: []event.Editor{w},
 						Rec: event.Rec{Q0: q0, Q1: q1, P: w.Bytes()[q0:q1]},
 					}
 				}
-				ck()
+				repaint()
 			}
 		}
 	}()
@@ -270,7 +203,7 @@ Main:
 			winSize = image.Pt(e.WidthPx, e.HeightPx)
 			g.Resize(winSize)
 		case e := <-D.Paint:
-			if !lim.Allow() {
+			if !unthrottled() {
 				continue Main
 			}
 			if e.External {
@@ -295,7 +228,7 @@ Main:
 			case mus.SnarfEvent, mus.InsertEvent:
 				actTag.Handle(act, e)
 			case event.Look:
-				alook(e)
+				g.Look(e)
 			case event.Cmd:
 				acmd(e)
 			case edit.File:
@@ -320,7 +253,7 @@ Main:
 				continue Main
 			}
 		}
-		ck()
+		repaint()
 	}
 
 }

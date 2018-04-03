@@ -20,6 +20,12 @@ func createnetworks() (fatal error) {
 			return clienterr
 		}
 	}
+	if srv != nil {
+		logf("listening for remote connections")
+	}
+	if client != nil {
+		logf("connecting to remote filesystem")
+	}
 	return nil
 }
 

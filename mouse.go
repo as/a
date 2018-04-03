@@ -25,7 +25,7 @@ func sweepFunc(w *win.Win, e mouse.Event, mc <-chan mouse.Event) (q0, q1 int64, 
 	for down == start {
 		w.Sq, q0, q1 = sweep(w, e, w.Sq, q0, q1)
 		w.Select(q0, q1)
-		ck()
+		repaint()
 		e = rel(readmouse(<-mc), w)
 	}
 	return q0, q1, e
