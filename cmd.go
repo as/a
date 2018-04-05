@@ -17,7 +17,7 @@ import (
 )
 
 func acmd(e event.Cmd) {
-	g.aerr("aaaaaaaaaaaaaaaaaaaaacmd: %#v\n", e)
+	g.aerr("cmd: %#v\n", e)
 	s := string(e.P)
 	switch s {
 	case "Put", "Get":
@@ -119,13 +119,15 @@ func cmdexec(f text.Editor, dir string, argv string) {
 				return
 			default:
 				n, err := fd1.Read(b)
-				if err != nil {
-					if err == io.EOF {
-						break
-					}
-					eprint(err)
+				if n > 0{
+					outc <- append([]byte{}, b[:n]...)
 				}
-				outc <- append([]byte{}, b[:n]...)
+				if err != nil {
+					if err != io.EOF {
+						eprint(err)
+					}
+					return
+				}
 			}
 		}
 	}()
@@ -139,12 +141,15 @@ func cmdexec(f text.Editor, dir string, argv string) {
 				return
 			default:
 				n, err := fd2.Read(b)
-				if err != nil {
-					if err == io.EOF {
-						break
-					}
+				if n > 0{
+					errc <- append([]byte{}, b[:n]...)
 				}
-				errc <- append([]byte{}, b[:n]...)
+				if err != nil {
+					if err != io.EOF {
+						eprint(err)
+					}
+					return
+				}
 			}
 		}
 	}()
@@ -171,6 +176,7 @@ func cmdexec(f text.Editor, dir string, argv string) {
 			case <-donec:
 				break Loop
 			}
+			repaint()
 		}
 	}()
 
