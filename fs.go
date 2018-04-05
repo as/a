@@ -44,6 +44,9 @@ func (f *fileinfo) String() string {
 
 func (r *fileresolver) isAbs(name string) bool {
 	const Letters = "cCABDEFGHIJKLMNOPQRSTUVWXYZabdefghijklmnopqrstuvwxyz"
+	if len(name) == 0{
+		return false
+	}
 	if path.IsAbs(name) || filepath.IsAbs(name) || name[0] == '\\' {
 		return true
 	}
