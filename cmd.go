@@ -119,7 +119,7 @@ func cmdexec(f text.Editor, dir string, argv string) {
 				return
 			default:
 				n, err := fd1.Read(b)
-				if n > 0{
+				if n > 0 {
 					outc <- append([]byte{}, b[:n]...)
 				}
 				if err != nil {
@@ -141,7 +141,7 @@ func cmdexec(f text.Editor, dir string, argv string) {
 				return
 			default:
 				n, err := fd2.Read(b)
-				if n > 0{
+				if n > 0 {
 					errc <- append([]byte{}, b[:n]...)
 				}
 				if err != nil {

@@ -134,7 +134,7 @@ func (g *Grid) Look(e event.Look) {
 	}
 	if name == "" {
 		logf("look: c: %#v", e)
-		if t == nil{
+		if t == nil {
 			logf("look: c: nil t")
 			return
 		}
@@ -152,16 +152,16 @@ func (g *Grid) Look(e event.Look) {
 	if label := g.Lookup(name); label != nil {
 		logf("look: d: %#v", e)
 		t, _ := label.(*tag.Tag)
-		if t == nil{
+		if t == nil {
 			logf("nil tag")
 			return
 		}
-		if t.Body == nil  || !g.EditRun(addr, t.Body){
+		if t.Body == nil || !g.EditRun(addr, t.Body) {
 			ajump(t, cursorNop)
-		return
+			return
 		} else if t.Body != nil {
 			ajump(t.Body, moveMouse)
-		return
+			return
 		}
 	}
 
