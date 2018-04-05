@@ -24,23 +24,6 @@ func AbsOf(basedir, path string) string {
 	return filepath.Join(basedir, path)
 }
 
-// Looks are done in the following order
-// 1). Tag name
-//		A. if it exists already jump to the tag
-//		B. if there's an address jump to it
-//		C. if there's a file and address, jump to it
-//		D. If it's a resolvable file, open it
-//
-// 2). Readable absolute file - if the name matches a readable file in the namespaces
-//	file system
-//
-// 3). Readable relative file - if the name matches the name of a readable file in
-//	the tags base directory
-//
-// Address lookups follow for each of the three above
-//
-// 4). An address in the destination
-
 var resolver = &fileresolver{ // from fs.go:/resolver/
 	Fs: newfsclient(), // called in :/Grid..Look/
 }
@@ -166,19 +149,20 @@ func (g *Grid) Look(e event.Look) {
 		return
 	}
 
-	// Existing window label?
 	if label := g.Lookup(name); label != nil {
 		logf("look: d: %#v", e)
 		t, _ := label.(*tag.Tag)
-		if t == nil {
-			logf("look d: tag is nil")
+		if t == nil{
+			logf("nil tag")
 			return
 		}
-		if g.EditRun(addr, t.Body) {
-			logf("look: d1: %#v", e)
-			ajump(t.Body, moveMouse)
-		}
+		if t.Body == nil  || !g.EditRun(addr, t.Body){
+			ajump(t, cursorNop)
 		return
+		} else if t.Body != nil {
+			ajump(t.Body, moveMouse)
+		return
+		}
 	}
 
 	g.aerr("res: %#v\n", resolver)
@@ -196,7 +180,7 @@ func (g *Grid) Look(e event.Look) {
 	g.guru(e.Name, e.Q0, e.Q1)
 
 	if t != nil {
-		if (t.Body != nil && g.EditRun(addr, t.Body)) || g.EditRun(addr, t) {
+		if t.Body != nil && g.EditRun(addr, t.Body) {
 			ajump(t.Body, moveMouse)
 		} else {
 			ajump(t, moveMouse)
@@ -215,7 +199,6 @@ func (g *Grid) Look(e event.Look) {
 	} else {
 		lookliteral(e.To[0], e, moveMouse)
 	}
-
 }
 func (g *Grid) afinderr(wd string, name string) *tag.Tag {
 	if !strings.HasSuffix(name, "+Errors") {
@@ -237,7 +220,7 @@ func (g *Grid) aerr(fm string, i ...interface{}) {
 	q1 := t.Body.Len()
 	t.Body.Select(q1, q1)
 	n := int64(t.Body.Insert([]byte(time.Now().Format(timefmt)+": "+fmt.Sprintf(fm, i...)+"\n"), q1))
-	t.Body.Select(q1, q1+n)
+	t.Body.Select(q1+n, q1+n)
 	t.Body.Jump(cursorNop)
 }
 func (g *Grid) aout(fm string, i ...interface{}) {

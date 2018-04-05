@@ -53,6 +53,8 @@ func ajump2(ed text.Editor, cursor bool) {
 
 func ajump(p interface{}, cursor func(image.Point)) {
 	switch p := p.(type) {
+	case nil:
+		return //TODO(as): error message without a recursive call
 	case *tag.Tag:
 		if p != nil {
 			cursor(p.Loc().Min)
