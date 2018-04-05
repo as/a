@@ -151,6 +151,10 @@ func (g *Grid) Look(e event.Look) {
 	}
 	if name == "" {
 		logf("look: c: %#v", e)
+		if t == nil{
+			logf("look: c: nil t")
+			return
+		}
 		if t.Body == nil {
 			logf("look: c: nil body")
 			return
@@ -192,7 +196,7 @@ func (g *Grid) Look(e event.Look) {
 	g.guru(e.Name, e.Q0, e.Q1)
 
 	if t != nil {
-		if g.EditRun(addr, t.Body) || g.EditRun(addr, t) {
+		if (t.Body != nil && g.EditRun(addr, t.Body)) || g.EditRun(addr, t) {
 			ajump(t.Body, moveMouse)
 		} else {
 			ajump(t, moveMouse)
