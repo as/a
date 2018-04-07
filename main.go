@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"image"
 	"os"
-	"time"
 
 	"github.com/as/event"
-	"github.com/as/text/find"
+	"github.com/as/shiny/screen"
 	mus "github.com/as/text/mouse"
 	"golang.org/x/mobile/event/lifecycle"
 
@@ -54,6 +53,8 @@ func banner() {
 	repaint()
 }
 
+var D *screen.Device
+
 func main() {
 	defer trypprof()()
 	list := argparse()
@@ -64,19 +65,14 @@ func main() {
 		os.Exit(0)
 	}
 
-	dev, wind, D, ft := frameinstall()
+	dev, wind, d, ft := frameinstall()
+	D = d
 	g = NewGrid(dev, image.ZP, winSize, ft, list...)
 	setLogFunc(g.aerr)
 	banner()
 	createnetworks()
 	actinit(g)
 
-	var (
-		double bool
-		last   = uint(0)
-		lastpt image.Point
-		t0     = time.Now()
-	)
 	go func() {
 		for {
 			select {
@@ -89,99 +85,10 @@ func main() {
 				if down == 0 {
 					continue
 				}
-				if last == down {
-					if time.Since(t0) < time.Second/2 && lastpt.In(image.Rect(-3, -3, 3, 3).Add(p(e))) {
-						double = true
-					}
-				}
-				t0 = time.Now()
-				last = down
-				lastpt = p(e)
-				if pt := p(e); inSizer(pt) || inScroll(pt) {
-					if inSizer(pt) {
-						if HasButton(1, down) {
-							if canopy(absP(e, act.Bounds().Min)) {
-								g.dragCol(actCol, e, D.Mouse)
-							} else {
-								g.dragTag(actCol, actTag, e, D.Mouse)
-							}
-						} else {
-							switch down {
-							case Button(2):
-							case Button(3):
-								actCol.RollUp(actCol.ID(actTag), act.Loc().Min.Y)
-								moveMouse(act.Loc().Min)
-							}
-							for down != 0 {
-								readmouse(<-D.Mouse)
-							}
-						}
-					} else if inScroll(pt) {
-						switch down {
-						case Button(1):
-							scroll(act, mus.ScrollEvent{Dy: 5, Event: e})
-						case Button(2):
-							w := act
-							e = rel(readmouse(e), w)
-							scroll(w, mus.ScrollEvent{Dy: 5, Event: e})
-							repaint()
-						case Button(3):
-							scroll(act, mus.ScrollEvent{Dy: -5, Event: e})
-						}
-						logf("inScroll: %s", p(e))
-					}
-					continue
-				}
-
-				t, w := actTag, act
-				s0, s1 := w.Dot()
-				q0 := w.IndexOf(p(e)) + w.Origin()
-				q1 := q0
-				act.Select(q0, q1)
-				repaint()
-
-				switch down {
-				case Button(1):
-					if double {
-						q0, q1 = find.FreeExpand(w, q0)
-						double = false
-					} else {
-						q0, q1, e = sweepFunc(w, e, D.Mouse)
-						for down != 0 {
-							t.Select(q0, q1)
-							if HasButton(2, down) {
-								tag.Snarf(w, e)
-							} else if HasButton(3, down) {
-								tag.Paste(w, e)
-							}
-							repaint()
-							e = rel(readmouse(<-D.Mouse), t)
-						}
-						t0 = time.Now()
-					}
-					w.Select(q0, q1)
-				case Button(2):
-					q0, q1, _ := sweepFunc(w, e, D.Mouse)
-					if q0 == q1 {
-						q0, q1 = find.ExpandFile(w.Bytes(), q0)
-					}
-					w.Select(s0, s1)
-					w.Ctl() <- event.Cmd{
-						Name: t.FileName(),
-						From: t, To: []event.Editor{w},
-						Rec: event.Rec{Q0: q0, Q1: q0, P: w.Bytes()[q0:q1]},
-					}
-				case Button(3):
-					q0, q1, _ := sweepFunc(w, e, D.Mouse)
-					if q0 == q1 {
-						q0, q1 = find.ExpandFile(w.Bytes(), q0)
-					}
-					w.Select(s0, s1)
-					w.Ctl() <- event.Look{
-						Name: t.FileName(),
-						From: t, To: []event.Editor{w},
-						Rec: event.Rec{Q0: q0, Q1: q1, P: w.Bytes()[q0:q1]},
-					}
+				if borderHit(e) {
+					procBorderHit(e)
+				} else {
+					procButton(e)
 				}
 				repaint()
 			}

@@ -2,8 +2,11 @@ package main
 
 import (
 	"image"
+	"time"
 
+	"github.com/as/event"
 	"github.com/as/text"
+	"github.com/as/text/find"
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
 	"golang.org/x/mobile/event/mouse"
@@ -14,6 +17,73 @@ func Button(n uint) uint {
 }
 func HasButton(n, mask uint) bool {
 	return Button(n)&mask != 0
+}
+
+var (
+	last   uint
+	lastpt image.Point
+	t0     = time.Now()
+)
+
+func procButton(e mouse.Event) {
+	double := false
+	if last == down {
+		if time.Since(t0) < time.Second/2 && lastpt.In(image.Rect(-3, -3, 3, 3).Add(p(e))) {
+			double = true
+		}
+	}
+	t0 = time.Now()
+	last = down
+	lastpt = p(e)
+	t, w := actTag, act
+	s0, s1 := w.Dot()
+	q0 := w.IndexOf(p(e)) + w.Origin()
+	q1 := q0
+	act.Select(q0, q1)
+	repaint()
+	switch down {
+	case Button(1):
+		if double {
+			q0, q1 = find.FreeExpand(w, q0)
+			double = false
+		} else {
+			q0, q1, e = sweepFunc(w, e, D.Mouse)
+			for down != 0 {
+				t.Select(q0, q1)
+				if HasButton(2, down) {
+					tag.Snarf(w, e)
+				} else if HasButton(3, down) {
+					tag.Paste(w, e)
+				}
+				repaint()
+				e = rel(readmouse(<-D.Mouse), t)
+			}
+			t0 = time.Now()
+		}
+		w.Select(q0, q1)
+	case Button(2):
+		q0, q1, _ := sweepFunc(w, e, D.Mouse)
+		if q0 == q1 {
+			q0, q1 = find.ExpandFile(w.Bytes(), q0)
+		}
+		w.Select(s0, s1)
+		w.Ctl() <- event.Cmd{
+			Name: t.FileName(),
+			From: t, To: []event.Editor{w},
+			Rec: event.Rec{Q0: q0, Q1: q0, P: w.Bytes()[q0:q1]},
+		}
+	case Button(3):
+		q0, q1, _ := sweepFunc(w, e, D.Mouse)
+		if q0 == q1 {
+			q0, q1 = find.ExpandFile(w.Bytes(), q0)
+		}
+		w.Select(s0, s1)
+		w.Ctl() <- event.Look{
+			Name: t.FileName(),
+			From: t, To: []event.Editor{w},
+			Rec: event.Rec{Q0: q0, Q1: q1, P: w.Bytes()[q0:q1]},
+		}
+	}
 }
 
 // mouseMove(pt image.Point) // defined in mouse_other.go and mouse_linux.go
