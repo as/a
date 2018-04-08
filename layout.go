@@ -53,9 +53,6 @@ func (g *Grid) dragTag(c *Col, t *tag.Tag, e mouse.Event, mousein <-chan mouse.E
 			break
 		}
 	}
-
-	logf("r0 %s", r0)
-	logf("p(e): %s", p(e))
 	if time.Since(t0) < DragTimeout && p(e).In(r0) {
 		actCol.Attach(t, p(e).Y-100)
 	} else {
