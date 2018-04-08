@@ -132,7 +132,6 @@ func main() {
 					moveMouse(t.Loc().Min)
 				}
 			case mus.SnarfEvent, mus.InsertEvent:
-				panic("!")
 				actTag.Handle(act, e)
 			case event.Look:
 				g.Look(e)
