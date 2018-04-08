@@ -123,7 +123,7 @@ Loop:
 			g.Resize(winSize)
 			repaint()
 		case e := <-D.Paint:
-			if !unthrottled() {
+			if throttled() {
 				continue
 			}
 			if e.External {

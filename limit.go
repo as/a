@@ -17,6 +17,6 @@ var lim = rate.NewLimiter(Limit, Request)
 // limited. This currently happens when processing a request
 // to repaint a section of the grid
 
-func unthrottled() bool {
-	return lim.Allow()
+func throttled() bool {
+	return !lim.Allow()
 }
