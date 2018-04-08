@@ -38,7 +38,7 @@ func (g *Grid) aguru(fm string, i ...interface{}) {
 	q1 := t.Body.Len()
 	t.Body.Select(q1, q1)
 	n := int64(t.Body.Insert([]byte(time.Now().Format(timefmt)+": "+fmt.Sprintf(fm, i...)), q1))
-	t.Body.Select(q1, q1+n)
+	t.Body.Select(q1+n, q1+n)
 	t.Body.Jump(cursorNop)
 }
 
