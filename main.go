@@ -6,7 +6,6 @@ import (
 	"image"
 	"os"
 
-	"github.com/as/event"
 	"github.com/as/shiny/screen"
 	mus "github.com/as/text/mouse"
 	"golang.org/x/mobile/event/lifecycle"
@@ -38,6 +37,7 @@ var (
 	events    = make(chan interface{}, 5)
 	done      = make(chan bool)
 	moribound = make(chan bool, 1)
+	sigterm   = make(chan bool)
 )
 
 func init() {
@@ -91,23 +91,37 @@ func main() {
 					procButton(e)
 				}
 				repaint()
+			case <-sigterm:
+				logf("mouse: sigterm")
+				return
 			}
 		}
 	}()
 
 	go func() {
-		for e := range D.Key {
-			actTag.Handle(act, e)
-			dirty = true
-			repaint()
+		for {
+			select {
+			case e := <-D.Key:
+				actTag.Handle(act, e)
+				dirty = true
+				repaint()
+			case <-sigterm:
+				logf("kbd: sigterm")
+				return
+			}
 		}
 	}()
 
+Loop:
 	for {
 		select {
+		case <-sigterm:
+			logf("mainselect: sigterm")
+			break Loop
 		case e := <-D.Size:
 			winSize = image.Pt(e.WidthPx, e.HeightPx)
 			g.Resize(winSize)
+			repaint()
 		case e := <-D.Paint:
 			if !unthrottled() {
 				continue
@@ -117,7 +131,9 @@ func main() {
 			}
 			g.Upload(wind)
 			wind.Publish()
-			continue
+		case e := <-D.Lifecycle:
+			procLifeCycle(e)
+			repaint()
 		case e := <-events:
 			switch e := e.(type) {
 			case tag.GetEvent:
@@ -131,12 +147,6 @@ func main() {
 				} else {
 					moveMouse(t.Loc().Min)
 				}
-			case mus.SnarfEvent, mus.InsertEvent:
-				actTag.Handle(act, e)
-			case event.Look:
-				g.Look(e)
-			case event.Cmd:
-				acmd(e)
 			case edit.File:
 				g.acolor(e)
 			case edit.Print:
@@ -147,19 +157,30 @@ func main() {
 				logf("missing event: %#v\n", e)
 				continue
 			}
-		case e := <-D.Lifecycle:
-			if e.To == lifecycle.StageDead {
-				return
-			}
-			// NT doesn't repaint the window if another window covers it
-			if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOff {
-				focused = false
-			} else if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOn {
-				focused = true
-				continue
-			}
+			repaint()
 		}
-		repaint()
 	}
+}
 
+func teardown() {
+	select {
+	case clean := <-moribound:
+		if clean {
+			logf("TODO: polite shutdown")
+			close(sigterm)
+			close(moribound)
+		}
+	}
+}
+
+func procLifeCycle(e lifecycle.Event) {
+	if e.To == lifecycle.StageDead {
+		teardown()
+		return
+	}
+	if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOff {
+		focused = false
+	} else if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOn {
+		focused = true
+	}
 }

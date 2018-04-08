@@ -74,22 +74,24 @@ func procButton(e mouse.Event) {
 			q0, q1 = find.ExpandFile(w.Bytes(), q0)
 		}
 		w.Select(s0, s1)
-		w.Ctl() <- event.Cmd{
+		acmd(event.Cmd{
 			Name: t.FileName(),
 			From: t, To: []event.Editor{w},
 			Rec: event.Rec{Q0: q0, Q1: q0, P: w.Bytes()[q0:q1]},
-		}
+		})
+		//w.Ctl() <-
 	case Button(3):
 		q0, q1, _ := sweepFunc(w, e, D.Mouse)
 		if q0 == q1 {
 			q0, q1 = find.ExpandFile(w.Bytes(), q0)
 		}
 		w.Select(s0, s1)
-		w.Ctl() <- event.Look{
+		g.Look(event.Look{
 			Name: t.FileName(),
 			From: t, To: []event.Editor{w},
 			Rec: event.Rec{Q0: q0, Q1: q1, P: w.Bytes()[q0:q1]},
-		}
+		})
+		//w.Ctl() <-
 	}
 }
 
