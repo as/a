@@ -46,20 +46,27 @@ func procButton(e mouse.Event) {
 		if double {
 			q0, q1 = find.FreeExpand(w, q0)
 			double = false
+			w.Select(q0, q1)
 		} else {
+			// In Acme and Sam, the double click action doesn't maintain
+			// a hold on the selection if the mouse is moved out of a rectangular
+			// region. I don't do the same thing here because it's sometimes
+			// advantageous to make the selection hold for a scrolling select
+			// operation.
 			q0, q1, e = sweepFunc(w, e, D.Mouse)
-			for down != 0 {
-				t.Select(q0, q1)
-				if HasButton(2, down) {
-					tag.Snarf(w, e)
-				} else if HasButton(3, down) {
-					tag.Paste(w, e)
-				}
-				repaint()
-				e = rel(readmouse(<-D.Mouse), t)
-			}
-			t0 = time.Now()
 		}
+		for down != 0 {
+			w.Select(q0, q1)
+			if HasButton(2, down) {
+				tag.Snarf(w, e)
+				q1 = q0
+			} else if HasButton(3, down) {
+				q0, q1 = tag.Paste(w, e)
+			}
+			repaint()
+			e = rel(readmouse(<-D.Mouse), t)
+		}
+		t0 = time.Now()
 		w.Select(q0, q1)
 	case Button(2):
 		q0, q1, _ := sweepFunc(w, e, D.Mouse)
