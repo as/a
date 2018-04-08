@@ -103,7 +103,6 @@ func main() {
 		}
 	}()
 
-Main:
 	for {
 		select {
 		case e := <-D.Size:
@@ -111,14 +110,14 @@ Main:
 			g.Resize(winSize)
 		case e := <-D.Paint:
 			if !unthrottled() {
-				continue Main
+				continue
 			}
 			if e.External {
 				g.Resize(winSize)
 			}
 			g.Upload(wind)
 			wind.Publish()
-			continue Main
+			continue
 		case e := <-events:
 			switch e := e.(type) {
 			case tag.GetEvent:
@@ -133,6 +132,7 @@ Main:
 					moveMouse(t.Loc().Min)
 				}
 			case mus.SnarfEvent, mus.InsertEvent:
+				panic("!")
 				actTag.Handle(act, e)
 			case event.Look:
 				g.Look(e)
@@ -146,7 +146,7 @@ Main:
 				logf(e.Error())
 			case interface{}:
 				logf("missing event: %#v\n", e)
-				continue Main
+				continue
 			}
 		case e := <-D.Lifecycle:
 			if e.To == lifecycle.StageDead {
@@ -157,7 +157,7 @@ Main:
 				focused = false
 			} else if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOn {
 				focused = true
-				continue Main
+				continue
 			}
 		}
 		repaint()
