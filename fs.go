@@ -70,8 +70,13 @@ func (r *fileresolver) look(pi pathinfo) (f fileinfo, ok bool) {
 
 	f.FileInfo, r.err = r.Fs.Stat(pi.tag)
 	if r.err != nil {
-		logf("resolver: C: fileinfo: %v err=%s", f, r.err)
-		return f, false
+		fi2, err := r.Fs.Stat(filepath.Dir(pi.tag))
+		if err != nil {
+			logf("resolver: C: fileinfo: %v err=%s", f, r.err)
+			return f, false
+		}
+		f.FileInfo = fi2
+		r.err = nil
 	}
 
 	if !f.FileInfo.IsDir() {
