@@ -28,7 +28,7 @@ var resolver = &fileresolver{ // from fs.go:/resolver/
 	Fs: newfsclient(), // called in :/Grid..Look/
 }
 
-func lookTarget(current *win.Win, t *tag.Tag) *win.Win {
+func lookTarget(current tag.Window, t *tag.Tag) tag.Window {
 	if t == nil || current == nil {
 		return nil
 	}
@@ -227,7 +227,7 @@ func (g *Grid) aerr(fm string, i ...interface{}) {
 	t.Body.Select(q1, q1)
 	n := int64(t.Body.Insert([]byte(time.Now().Format(timefmt)+": "+fmt.Sprintf(fm, i...)+"\n"), q1))
 	t.Body.Select(q1+n, q1+n)
-	t.Body.Jump(cursorNop)
+	ajump(t.Body, cursorNop)
 }
 func (g *Grid) aout(fm string, i ...interface{}) {
 	t := g.afinderr(".", "")
@@ -235,7 +235,7 @@ func (g *Grid) aout(fm string, i ...interface{}) {
 	t.Body.Select(q1, q1)
 	n := int64(t.Body.Insert([]byte(fmt.Sprintf(fm, i...)+"\n"), q1))
 	t.Body.Select(q1, q1+n)
-	t.Body.Jump(cursorNop)
+	ajump(t.Body, cursorNop)
 }
 
 // expand3 return (r0:r1) if and only if that range is wide and

@@ -35,7 +35,12 @@ func procButton(e mouse.Event) {
 	t0 = time.Now()
 	last = down
 	lastpt = p(e)
-	t, w := actTag, act
+	t := actTag
+	w, _ := act.(*win.Win)
+	if w == nil {
+		return
+	}
+
 	s0, s1 := w.Dot()
 	q0 := w.IndexOf(p(e)) + w.Origin()
 	q1 := q0
@@ -95,19 +100,45 @@ func procButton(e mouse.Event) {
 	}
 }
 
-// mouseMove(pt image.Point) // defined in mouse_other.go and mouse_linux.go
-
-func sweepFunc(w *win.Win, e mouse.Event, mc <-chan mouse.Event) (q0, q1 int64, e1 mouse.Event) {
-	start := down
-	q0, q1 = w.Dot()
-	act.Sq = q0
-	for down == start {
-		w.Sq, q0, q1 = sweep(w, e, w.Sq, q0, q1)
-		w.Select(q0, q1)
-		repaint()
-		e = rel(readmouse(<-mc), w)
+// moveMouse(pt image.Point) // defined in mouse_other.go and mouse_linux.go
+func MoveMouse(address interface{}) {
+	switch a := address.(type) {
+	case *win.Win:
+		p0, _ := a.Frame.Dot()
+		moveMouse(a.Loc().Min.Add(a.PointOf(p0)))
+	case image.Point:
+		moveMouse(a)
+		return
+	case int64:
+		w, _ := act.(*win.Win)
+		if w == nil {
+			return
+		}
+		p0, _ := w.Frame.Dot()
+		moveMouse(w.PointOf(p0))
+		return
 	}
-	return q0, q1, e
+	logf("MoveMove: error %T act=%#v", address, act)
+}
+
+func sweepFunc(w tag.Window, e mouse.Event, mc <-chan mouse.Event) (q0, q1 int64, e1 mouse.Event) {
+	//TODO(as): Sweepfunc for non-text (see w.SQ)
+	{
+		w, _ := w.(*win.Win)
+		if w == nil {
+			return
+		}
+		start := down
+		q0, q1 = w.Dot()
+		w.Sq = q0
+		for down == start {
+			w.Sq, q0, q1 = sweep(w, e, w.Sq, q0, q1)
+			w.Select(q0, q1)
+			repaint()
+			e = rel(readmouse(<-mc), w)
+		}
+		return q0, q1, e
+	}
 }
 
 func cursorNop(p image.Point) {}

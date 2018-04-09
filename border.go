@@ -15,7 +15,7 @@ func procBorderHit(e mouse.Event) {
 	switch {
 	case inSizer(pt):
 		if HasButton(1, down) {
-			if canopy(absP(e, act.Bounds().Min)) {
+			if canopy(absP(e, act.Loc().Min)) {
 				g.dragCol(actCol, e, D.Mouse)
 			} else {
 				g.dragTag(actCol, actTag, e, D.Mouse)

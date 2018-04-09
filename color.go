@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/as/edit"
 	"github.com/as/frame"
+	"github.com/as/ui/win"
 )
 
 func usedarkcolors() {
@@ -21,7 +22,11 @@ func (g *Grid) acolor(e edit.File) {
 		if t.Body == nil {
 			return
 		}
-		fr := t.Body.Frame
+		win := t.Body.(*win.Win)
+		if win == nil {
+			return
+		}
+		fr := win.Frame
 		p0, p1 := e.Q0, e.Q1
 		p0 -= clamp(p0-t.Body.Origin(), 0, fr.Len())
 		p1 -= clamp(p1-t.Body.Origin(), 0, fr.Len())

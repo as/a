@@ -75,7 +75,10 @@ func (g *Grid) Move(sp image.Point) {
 //	,x,string,h
 // Any other use is undefined and untested for now
 func (g *Grid) Install(t *tag.Tag, srcprog string) {
-
+	w, _ := t.Body.(*win.Win)
+	if w == nil {
+		return
+	}
 	var green = frame.Palette{
 		Back: frame.Green,
 		Text: frame.A.Text,
@@ -87,18 +90,16 @@ func (g *Grid) Install(t *tag.Tag, srcprog string) {
 		return
 	}
 
-	if t.Body != nil {
-		t.Body.FuncInstall(func(w *win.Win) {
-			fr := w.Frame
-			buf := text.BufferFrom(w.Bytes()[w.Origin() : w.Origin()+fr.Len()])
-			ed, _ := text.Open(buf)
-			prog.Run(ed)
-			for _, dot := range prog.Emit.Dot {
-				w.Frame.Recolor(fr.PointOf(dot.Q0), dot.Q0, dot.Q1, green)
-			}
-			//prog.Emit = &edit.Emitted{}
-		})
-	}
+	w.FuncInstall(func(w *win.Win) {
+		fr := w.Frame
+		buf := text.BufferFrom(w.Bytes()[w.Origin() : w.Origin()+fr.Len()])
+		ed, _ := text.Open(buf)
+		prog.Run(ed)
+		for _, dot := range prog.Emit.Dot {
+			w.Frame.Recolor(fr.PointOf(dot.Q0), dot.Q0, dot.Q1, green)
+		}
+		//prog.Emit = &edit.Emitted{}
+	})
 }
 
 func (g *Grid) Resize(size image.Point) {

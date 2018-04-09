@@ -142,8 +142,7 @@ Loop:
 					actTag = t.(*tag.Tag)
 					act = actTag.Body
 					actTag.Handle(actTag.Body, edit.MustCompile(e.Addr))
-					p0, _ := act.Frame.Dot()
-					moveMouse(act.Loc().Min.Add(act.PointOf(p0)))
+					MoveMouse(act)
 				} else {
 					moveMouse(t.Loc().Min)
 				}

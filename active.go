@@ -4,13 +4,12 @@ import (
 	"image"
 
 	"github.com/as/ui/tag"
-	"github.com/as/ui/win"
 )
 
 var (
 	actCol *Col
 	actTag *tag.Tag
-	act    *win.Win
+	act    tag.Window
 )
 
 func actinit(g *Grid) {
@@ -64,7 +63,7 @@ func activate(pt image.Point, w Plane) {
 		if w.Body != nil {
 			activate(pt, active2(pt, w.Body, w.Win))
 		}
-	case *win.Win:
+	case tag.Window:
 		act = w
 	}
 }
