@@ -13,7 +13,6 @@ import (
 	"github.com/as/event"
 	"github.com/as/path"
 	"github.com/as/text"
-	"github.com/as/ui/win"
 )
 
 func acmd(e event.Cmd) {
@@ -50,11 +49,12 @@ func acmd(e event.Cmd) {
 				logf(err.Error())
 				return
 			}
-			prog.Run(e.To[0])
-			w := e.To[0].(*win.Win)
-			w.Resize(w.Size())
-			//e.To[0].(*win.Win).Refresh()
-			ajump2(e.To[0], false)
+			ed := text.Editor(e.To[0])
+			if e.To[0] == actTag.Win {
+				ed = actTag.Body
+			}
+			prog.Run(ed)
+			ajump2(ed, false)
 		} else if strings.HasPrefix(s, "Install ") {
 			s = s[8:]
 			g.Install(actTag, s)

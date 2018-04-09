@@ -36,7 +36,8 @@ func New(co *Col, basedir, name string, sizerFunc ...func(int) int) (w Plane) {
 		Color: [3]frame.Color{
 			0: frame.ATag1,
 		},
-		Ctl: events,
+		Image: true,
+		Ctl:   events,
 	}
 	t := tag.New(co.dev, co.sp, image.Pt(co.size.X, co.tdy*2), conf)
 
