@@ -132,6 +132,12 @@ func (g *Grid) Look(e event.Look) {
 	if name == "" && addr == "" {
 		return
 	}
+	if PlumberExp(&Plumbmsg{
+		Data: e.P,
+	}) {
+		return
+	}
+	logf("no match")
 	if name == "" {
 		logf("look: c: %#v", e)
 		if t == nil {
