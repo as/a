@@ -121,24 +121,18 @@ func MoveMouse(address interface{}) {
 	logf("MoveMove: error %T act=%#v", address, act)
 }
 
-func sweepFunc(w tag.Window, e mouse.Event, mc <-chan mouse.Event) (q0, q1 int64, e1 mouse.Event) {
-	//TODO(as): Sweepfunc for non-text (see w.SQ)
-	{
-		w, _ := w.(*win.Win)
-		if w == nil {
-			return
-		}
-		start := down
-		q0, q1 = w.Dot()
-		w.Sq = q0
-		for down == start {
-			w.Sq, q0, q1 = sweep(w, e, w.Sq, q0, q1)
-			w.Select(q0, q1)
-			repaint()
-			e = rel(readmouse(<-mc), w)
-		}
-		return q0, q1, e
+func sweepFunc(w *win.Win, e mouse.Event, mc <-chan mouse.Event) (q0, q1 int64, e1 mouse.Event) {
+
+	start := down
+	q0, q1 = w.Dot()
+	w.Sq = q0
+	for down == start {
+		w.Sq, q0, q1 = sweep(w, e, w.Sq, q0, q1)
+		w.Select(q0, q1)
+		repaint()
+		e = rel(readmouse(<-mc), w)
 	}
+	return q0, q1, e
 }
 
 func cursorNop(p image.Point) {}

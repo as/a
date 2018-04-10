@@ -132,12 +132,16 @@ func (g *Grid) Look(e event.Look) {
 	if name == "" && addr == "" {
 		return
 	}
-	if PlumberExp(&Plumbmsg{
-		Data: e.P,
-	}) {
+
+	if matches(httpLink.Plumb(&Plumbmsg{Data: e.P})) {
 		return
 	}
-	logf("no match")
+	//	if PlumberExp(&Plumbmsg{
+	//		Data: e.P,
+	//	}) {
+	//		return
+	//	}
+	//	logf("no match")
 	if name == "" {
 		logf("look: c: %#v", e)
 		if t == nil {
@@ -301,7 +305,12 @@ func (col *Col) Kids() []Plane {
 }
 
 func (col *Col) Dirty() bool {
-	return true
+	for _, v := range col.List {
+		if v.Dirty() {
+			return true
+		}
+	}
+	return false
 }
 
 func (grid *Grid) Lookup(pid interface{}) Plane {

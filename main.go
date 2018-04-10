@@ -103,7 +103,7 @@ func main() {
 			select {
 			case e := <-D.Key:
 				actTag.Handle(act, e)
-				dirty = true
+				//				setdirty()
 				repaint()
 			case <-sigterm:
 				logf("kbd: sigterm")
@@ -131,6 +131,7 @@ Loop:
 			}
 			g.Upload(wind)
 			wind.Publish()
+			//			setclean()
 		case e := <-D.Lifecycle:
 			procLifeCycle(e)
 			repaint()

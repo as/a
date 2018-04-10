@@ -294,13 +294,13 @@ func (co *Col) RollDown(id int, dy int) {
 func (co *Col) Upload(wind screen.Window) {
 	type Uploader interface {
 		Upload(screen.Window)
-		//		Dirty() bool
+		Dirty() bool
 	}
 	for _, t := range co.List {
 		if t, ok := t.(Uploader); ok {
-			//if co.Dirty(){
-			t.Upload(wind)
-			//}
+			if co.Dirty() {
+				t.Upload(wind)
+			}
 		}
 	}
 }

@@ -67,7 +67,7 @@ func acmd(e event.Cmd) {
 			tagname := fmt.Sprintf("%s%c-%s", path.DirOf(abs), filepath.Separator, x[0])
 			to := g.afinderr(path.DirOf(abs), tagname)
 			cmdexec(to.Body, path.DirOf(abs), s)
-			dirty = true
+			//			setdirty()
 		}
 	}
 

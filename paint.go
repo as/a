@@ -1,17 +1,12 @@
 package main
 
-import "golang.org/x/mobile/event/paint"
-
-var (
-	dirty bool
+import (
+	"golang.org/x/mobile/event/paint"
 )
 
 func repaint() {
-	if !dirty || act == nil {
-		return
-	}
 	select {
-	case act.Window().Device().Paint <- paint.Event{}:
+	case D.Paint <- paint.Event{}:
 	default:
 	}
 }

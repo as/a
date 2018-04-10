@@ -8,6 +8,11 @@ import (
 	"strings"
 )
 
+type (
+	PlumbAction func(msg *Plumbmsg) error
+	PlumbRule   func(msg *Plumbmsg) PlumbAction
+)
+
 type Plumbmsg struct {
 	src, dst string
 	wdir     string
@@ -15,16 +20,19 @@ type Plumbmsg struct {
 	Attr
 	Data []byte
 }
+type Attr map[string]string
 
 func (p *Plumbmsg) Arg() string {
 	return strings.TrimSpace(string(p.Data))
 }
 
-type Attr map[string]string
+var httpLink = NewRegexp("^http(s?)://", openBrowser)
 
-var isHTTP = regexp.MustCompile("^http(s?)://")
-var match = isHTTP
-var actionFunc = func(p *Plumbmsg) (err error) {
+func NewRegexp(expr string, action PlumbAction) *regexpRule {
+	return &regexpRule{regexp.MustCompile(expr), action}
+}
+
+var openBrowser = PlumbAction(func(p *Plumbmsg) (err error) {
 	for _, browser := range browsers() {
 		full := append(strings.Fields(browser), p.Arg())
 		cmd := exec.Command(full[0], full[1:]...)
@@ -34,16 +42,28 @@ var actionFunc = func(p *Plumbmsg) (err error) {
 		}
 	}
 	return err
+})
+
+type regexpRule struct {
+	*regexp.Regexp
+	action PlumbAction
 }
 
-// TODO(as): This is an overly-concrete implementation equivalent
-// to one plumber rule.
-func PlumberExp(msg *Plumbmsg) bool {
-	if match.Match(msg.Data) {
-		actionFunc(msg)
+func (r *regexpRule) Plumb(msg *Plumbmsg) (matched bool, error error) {
+	if r.Match(msg.Data) {
+		return true, r.action(msg)
+	}
+	return false, nil
+}
+
+func matches(match bool, err error) bool {
+	if match && err == nil {
 		return true
 	}
-	return false
+	if err != nil {
+		logf("plumber: %s", err)
+	}
+	return match
 }
 
 // browsers returns a list of commands to attempt for web visualization.
