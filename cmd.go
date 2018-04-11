@@ -29,7 +29,7 @@ func acmd(e event.Cmd) {
 	case "Newcol":
 		moveMouse(NewCol2(g, "").Loc().Min)
 	case "Del":
-		logf("Del -> %#v\n", e)
+		//		logf("Del -> %#v\n", e)
 		Del(actCol, actCol.ID(actTag))
 	case "Sort":
 		logf("Sort: TODO")

@@ -76,9 +76,13 @@ func procButton(e mouse.Event) {
 	case Button(2):
 		q0, q1, _ := sweepFunc(w, e, D.Mouse)
 		if q0 == q1 {
-			q0, q1 = find.ExpandFile(w.Bytes(), q0)
+			if text.Region3(q0, s0, s1) == 0 {
+				q0, q1 = s0, s1
+			} else {
+				q0, q1 = find.ExpandFile(w.Bytes(), q0)
+			}
 		}
-		w.Select(s0, s1)
+		w.Select(q0, q1)
 		acmd(event.Cmd{
 			Name: t.FileName(),
 			From: t, To: []event.Editor{w},
@@ -122,7 +126,6 @@ func MoveMouse(address interface{}) {
 }
 
 func sweepFunc(w *win.Win, e mouse.Event, mc <-chan mouse.Event) (q0, q1 int64, e1 mouse.Event) {
-
 	start := down
 	q0, q1 = w.Dot()
 	w.Sq = q0
