@@ -128,7 +128,7 @@ func (g *Grid) Look(e event.Look) {
 	e.Q0, e.Q1 = expand3(ed, e.Q0, e.Q1)
 	logf("event: %#v", e)
 	name, addr := action.SplitPath(string(e.P))
-	e.P = ed.Bytes()[e.Q0:e.Q1]
+	//	e.P = ed.Bytes()[e.Q0:e.Q1]
 	if name == "" && addr == "" {
 		return
 	}
@@ -136,31 +136,20 @@ func (g *Grid) Look(e event.Look) {
 	if matches(httpLink.Plumb(&Plumbmsg{Data: e.P})) {
 		return
 	}
-	//	if PlumberExp(&Plumbmsg{
-	//		Data: e.P,
-	//	}) {
-	//		return
-	//	}
-	//	logf("no match")
 	if name == "" {
-		logf("look: c: %#v", e)
 		if t == nil {
-			logf("look: c: nil t")
 			return
 		}
 		if t.Body == nil {
-			logf("look: c: nil body")
 			return
 		}
 		if g.EditRun(addr, t.Body) {
-			logf("look: c2: %#v", e)
 			ajump(ed, cursorNop)
 		}
 		return
 	}
 
 	if label := g.Lookup(name); label != nil {
-		logf("look: d: %#v", e)
 		t, _ := label.(*tag.Tag)
 		if t == nil {
 			logf("nil tag")
@@ -207,7 +196,12 @@ func (g *Grid) Look(e event.Look) {
 			lookliteral(p.(*tag.Tag).Body, e, cursorNop)
 		})
 	} else {
-		lookliteral(e.To[0], e, moveMouse)
+		what := e.P
+		if e.To[0] != e.From {
+			lookliteraltag(e.To[0], e.Q0, e.Q1, what)
+		} else {
+			lookliteral(e.To[0], e, moveMouse)
+		}
 	}
 }
 func (g *Grid) afinderr(wd string, name string) *tag.Tag {
@@ -250,6 +244,13 @@ func expand3(ed text.Editor, r0, r1 int64) (int64, int64) {
 		return q0, q1
 	}
 	return r0, r1
+}
+
+func lookliteraltag(ed text.Editor, q0, q1 int64, what []byte) {
+	q0, q1 = ed.Dot()
+	s0, s1 := find.FindNext(ed, q0, q1, what)
+	ed.Select(s0, s1)
+	ajump(ed, nil)
 }
 
 func lookliteral(ed text.Editor, e event.Look, mouseFunc func(image.Point)) {
