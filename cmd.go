@@ -19,17 +19,19 @@ func acmd(e event.Cmd) {
 	g.aerr("cmd: %#v\n", e)
 	s := string(e.P)
 	switch s {
-	case "Put", "Get":
-		actTag.Handle(act, s)
+	case "Put":
+		actTag.Put()
+		repaint()
+	case "Get":
+		actTag.Get(actTag.FileName())
 		repaint()
 	case "New":
 		newtag := New(actCol, "", "")
 		logf("%v\n", newtag.Loc())
 		moveMouse(newtag.Loc().Min)
 	case "Newcol":
-		moveMouse(NewCol2(g, "").Loc().Min)
+		moveMouse(NewColParams(g, "").Loc().Min)
 	case "Del":
-		//		logf("Del -> %#v\n", e)
 		Del(actCol, actCol.ID(actTag))
 	case "Sort":
 		logf("Sort: TODO")

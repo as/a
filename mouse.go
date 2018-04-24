@@ -93,8 +93,6 @@ func procButton(e mouse.Event) {
 		if q0 == q1 && text.Region3(q0, s0, s1) != 0 {
 			// Non-zero selection; so we want to look here explicitly
 			q0, q1 = find.ExpandFile(w.Bytes(), q0)
-		} else {
-			//q0, q1 = s0, s1
 		}
 		w.Select(s0, s1) // undo the sweep
 		g.Look(event.Look{
@@ -128,7 +126,6 @@ func MoveMouse(address interface{}) {
 		moveMouse(w.PointOf(p0))
 		return
 	}
-	logf("MoveMove: error %T act=%#v", address, act)
 }
 
 func sweepFunc(w *win.Win, e mouse.Event, mc <-chan mouse.Event) (q0, q1 int64, e1 mouse.Event) {

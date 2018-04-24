@@ -13,7 +13,7 @@ var (
 	winSize = image.Pt(1024, 768)
 )
 
-func frameinstall() (*ui.Dev, screen.Window, *screen.Device, font.Face) {
+func frameinstall() (ui.Dev, screen.Window, *screen.Device, font.Face) {
 	if *oled {
 		usedarkcolors()
 	}
@@ -24,5 +24,8 @@ func frameinstall() (*ui.Dev, screen.Window, *screen.Device, font.Face) {
 		Title: "A",
 	})
 	ckfault(err)
-	return dev, dev.Window(), dev.Window().Device(), font.NewFace(*ftsize)
+	if dev == nil {
+		panic("no device")
+	}
+	return dev, dev.Window(), screen.Dev, font.NewFace(*ftsize)
 }

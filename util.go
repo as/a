@@ -2,8 +2,8 @@ package main
 
 import (
 	"image"
-	"time"
 
+	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
 	"golang.org/x/mobile/event/mouse"
 )
@@ -14,15 +14,9 @@ const (
 )
 
 var (
-	tagHeight   = *ftsize*2 + *ftsize/2 - 2
-	pad         = image.Pt(15, 15)
-	sizerR      = image.Rect(0, 0, scrollX, tagHeight)
-	dcPerimeter = image.ZR.Inset(-4)
+	tagHeight = tag.Height(*ftsize)
+	sizerR    = image.Rect(0, 0, scrollX, tagHeight)
 )
-
-func doubleclick(pt0, pt1 image.Point, deadline time.Time) bool {
-	return !time.Now().After(deadline) && pt1.In(dcPerimeter.Add(pt0))
-}
 
 func rel(e mouse.Event, p Plane) mouse.Event {
 	pt := p.Loc().Min
@@ -35,12 +29,10 @@ func absP(e mouse.Event, sp image.Point) image.Point {
 	return p(e).Add(sp)
 }
 
-func relP(e mouse.Event, sp image.Point) image.Point {
-	return p(e).Sub(sp)
-}
-
 func canopy(pt image.Point) bool {
-	return pt.Y > g.sp.Y+g.tdy && pt.Y < g.sp.Y+g.tdy*2
+	r := g.Loc()
+	r.Max.Y = r.Min.Y + g.Tag.Loc().Dy()*2
+	return pt.In(r)
 }
 
 func p(e mouse.Event) image.Point {
@@ -78,7 +70,7 @@ func clamp(v, l, h int64) int64 {
 func sweep(w *win.Win, e mouse.Event, s, q0, q1 int64) (int64, int64, int64) {
 	r := image.Rectangle{image.ZP, w.Size()}
 	y := int(e.Y)
-	padY := 15
+	padY := tagHeight
 	lo := r.Min.Y + padY
 	hi := r.Dy() - padY
 	units := w.Bounds().Dy()

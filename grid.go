@@ -8,6 +8,7 @@ import (
 	"github.com/as/frame"
 	"github.com/as/text"
 	"github.com/as/ui"
+	"github.com/as/ui/col"
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
 )
@@ -16,49 +17,71 @@ type Grid struct {
 	*Col
 }
 
-func NewGrid(dev *ui.Dev, sp, size image.Point, ft font.Face, files ...string) *Grid {
+var (
+	GridLabel = "Newcol Killall Exit    guru^(callees callers callstack definition describe freevars implements peers pointsto referrers what whicherrs)"
+)
+
+func NewGrid(dev ui.Dev, sp, size image.Point, ft font.Face, files ...string) *Grid {
+	conf := GridConfig
+	g := &Grid{col.NewGridHack(dev, sp, size, tagHeight, ft)}
+	T := tag.New(dev, sp, image.Pt(size.X, tagHeight), conf)
+	T.Win.InsertString(GridLabel, 0)
+	g.Tag = T
 	N := len(files)
-	tdy := tag.TagSize(ft)
-	tagpad := tag.TagPad(pad)
-	conf := &tag.Config{
-		Filesystem: newfsclient(),
-		Margin:     tagpad,
-		Facer:      font.NewFace,
-		FaceHeight: ft.Height(),
-		Color: [3]frame.Color{
-			0: frame.ATag0,
-		},
-		Ctl: events,
-	}
-	T := tag.New(dev, sp, image.Pt(size.X, tdy), conf)
-	T.Win.InsertString("Newcol Killall Exit    guru^(callees callers callstack definition describe freevars implements peers pointsto referrers what whicherrs)", 0)
-	g := &Grid{&Col{dev: dev, sp: sp, size: size, ft: ft, Tag: T, tdy: tdy, List: make([]Plane, len(files))}}
-	size.Y -= tdy
-	sp.Y += tdy
+	g.List = make([]Plane, N)
+
+	size.Y -= tagHeight
+	sp.Y += tagHeight // Put
 	d := image.Pt(size.X/N, size.Y)
 	for i, v := range files {
-		g.List[i] = NewCol(dev, ft, sp, size, v)
+		g.List[i] = NewCol(dev, ft, sp, d, v)
 		sp.X += d.X
 	}
-	g.List = append([]Plane{T}, g.List...)
+
 	g.Refresh()
 	return g
 }
 
 func (g *Grid) Attach(src Plane, x int) {
-	did := g.IDPoint(image.Pt(x, g.sp.Y+g.tdy))
-	if did != 0 && did < len(g.List) {
-		d := g.List[did]
-		x := x - d.Loc().Min.X
-		y := sizeof(d.Loc()).Y
-		d.Resize(image.Pt(x, y))
+	r := g.Tag.Loc()
+	r.Min.Y = r.Max.Y
+	pt := r.Min
+	if len(g.List) == 0 {
+		src.Move(pt)
+		g.AttachFill(src, 0)
+		return
 	}
-	g.attach(src, did+1)
-	g.fill()
+	pt.X = x
+	src.Move(pt)
+	did := g.IDPoint(pt)
+	g.AttachFill(src, did+1)
 }
+
+func (g *Grid) Delta(n int) image.Point {
+	x0 := g.List[n].Loc().Min.X
+	x1 := g.Loc().Max.X
+
+	if n+1 != len(g.List) {
+		x1 = g.List[n+1].Loc().Min.X
+	}
+	return identity(x1-x0, g.Loc().Dy()-g.Tag.Loc().Dy())
+}
+
+func (g *Grid) Label() *win.Win { return g.Tag.Win }
 
 func (g *Grid) Move(sp image.Point) {
 	panic("never call this")
+}
+
+func (g *Grid) Resize(size image.Point) {
+	g.ForceSize(size)
+	g.Tag.Resize(image.Pt(size.X, g.Tag.Loc().Dy()))
+	g.fill()
+}
+
+func (g *Grid) fill() {
+	fill(g)
+	g.Tag.Resize(g.Tag.Loc().Size())
 }
 
 // Install places the given edit script in between
@@ -100,41 +123,4 @@ func (g *Grid) Install(t *tag.Tag, srcprog string) {
 		}
 		//prog.Emit = &edit.Emitted{}
 	})
-}
-
-func (g *Grid) Resize(size image.Point) {
-	g.size = size
-	g.fill()
-}
-
-// attach inserts w in position id, shifting the original right
-func (g *Grid) attach(w Plane, id int) {
-	if id < 1 {
-		return
-	}
-	g.List = append(g.List[:id], append([]Plane{w}, g.List[min(id, len(g.List)):]...)...)
-	r := g.List[id-1].Loc()
-	if id-1 == 0 {
-		r = image.Rect(g.sp.X, g.sp.Y+g.tdy, g.sp.X, g.sp.Y+g.size.Y)
-	}
-	w.Move(image.Pt(r.Max.X, g.sp.Y+g.tdy))
-}
-
-func (g *Grid) fill() {
-	tdy := g.tdy
-	g.List[0].Resize(image.Pt(g.size.X, tdy))
-	y := g.size.Y - tdy
-	x1 := g.Loc().Max.X
-	for n := len(g.List) - 1; n > 0; n-- {
-		x0 := g.List[n].Loc().Min.X
-		g.List[n].Resize(image.Pt(x1-x0, y))
-		x1 = x0
-	}
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }

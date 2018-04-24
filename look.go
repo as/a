@@ -118,7 +118,7 @@ func (e *Looker) LookGrid(g *Grid) (error) {
 */
 
 func (g *Grid) Look(e event.Look) {
-	if g.meta(e.To[0]) {
+	if g.meta(g.Tag) {
 		return
 	}
 
@@ -220,7 +220,11 @@ func (g *Grid) afinderr(wd string, name string) *tag.Tag {
 	return t
 }
 func (g *Grid) aerr(fm string, i ...interface{}) {
+	return
 	t := g.afinderr(".", "")
+	if t == nil || t.Body == nil {
+		return
+	}
 	q1 := t.Body.Len()
 	t.Body.Select(q1, q1)
 	n := int64(t.Body.Insert([]byte(time.Now().Format(timefmt)+": "+fmt.Sprintf(fm, i...)+"\n"), q1))
@@ -301,19 +305,6 @@ func VisitAll(root Plane, fn func(p Named)) {
 	}
 }
 
-func (col *Col) Kids() []Plane {
-	return col.List
-}
-
-func (col *Col) Dirty() bool {
-	for _, v := range col.List {
-		if v.Dirty() {
-			return true
-		}
-	}
-	return false
-}
-
 func (grid *Grid) Lookup(pid interface{}) Plane {
 	for _, k := range grid.Kids() {
 		if k, ok := k.(Indexer); ok {
@@ -326,53 +317,10 @@ func (grid *Grid) Lookup(pid interface{}) Plane {
 	return nil
 }
 
-func (col *Col) Lookup(pid interface{}) Plane {
-	kids := col.Kids()
-	if len(kids) == 0 {
-		return nil
-	}
-	switch pid := pid.(type) {
-	case int:
-		if pid >= len(kids) {
-			pid = len(kids) - 1
-		}
-		return col.Kids()[pid]
-	case string:
-		for i, v := range col.Kids() {
-			if v, ok := v.(Named); ok {
-				if v.FileName() == pid {
-					return col.Kids()[i]
-				}
-			}
-		}
-	case image.Point:
-		return ptInAny(pid, col.Kids()...)
-	case interface{}:
-		panic("")
-	}
-	return nil
-}
-
 type Named interface {
 	Plane
 	FileName() string
 }
 type Indexer interface {
 	Lookup(interface{}) Plane
-}
-
-func ptInPlane(pt image.Point, p Plane) bool {
-	if p == nil {
-		return false
-	}
-	return pt.In(p.Loc())
-}
-
-func ptInAny(pt image.Point, list ...Plane) (x Plane) {
-	for i, w := range list {
-		if ptInPlane(pt, w) {
-			return list[i]
-		}
-	}
-	return nil
 }

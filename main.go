@@ -34,7 +34,7 @@ var (
 
 var (
 	g         *Grid
-	events    = make(chan interface{}, 5)
+	events    = make(chan interface{}, 500)
 	done      = make(chan bool)
 	moribound = make(chan bool, 1)
 	sigterm   = make(chan bool)
@@ -67,11 +67,12 @@ func main() {
 
 	dev, wind, d, ft := frameinstall()
 	D = d
-	g = NewGrid(dev, image.ZP, winSize, ft, list...)
+	g = NewGrid(dev, image.Pt(0, 0), image.Pt(900, 900), ft, list...)
 	setLogFunc(g.aerr)
-	banner()
+	//banner()
 	createnetworks()
 	actinit(g)
+	assert("actinit", g)
 
 	go func() {
 		for {
@@ -88,6 +89,9 @@ func main() {
 				if borderHit(e) {
 					procBorderHit(e)
 				} else {
+					/////////////////////////////
+					assert("procButton", g)
+					/////////////////////////////
 					procButton(e)
 				}
 				repaint()
@@ -102,7 +106,7 @@ func main() {
 		for {
 			select {
 			case e := <-D.Key:
-				actTag.Handle(act, e)
+				actTag.Kbd(e, act)
 				//				setdirty()
 				repaint()
 			case <-sigterm:
@@ -120,6 +124,7 @@ Loop:
 			break Loop
 		case e := <-D.Size:
 			winSize = image.Pt(e.WidthPx, e.HeightPx)
+			e = e
 			g.Resize(winSize)
 			repaint()
 		case e := <-D.Paint:
@@ -142,7 +147,7 @@ Loop:
 				if e.Addr != "" {
 					actTag = t.(*tag.Tag)
 					act = actTag.Body
-					actTag.Handle(actTag.Body, edit.MustCompile(e.Addr))
+					//actTag.Handle(actTag.Body, edit.MustCompile(e.Addr))
 					MoveMouse(act)
 				} else {
 					moveMouse(t.Loc().Min)
@@ -170,6 +175,7 @@ func teardown() {
 			close(sigterm)
 			close(moribound)
 		}
+	default:
 	}
 }
 

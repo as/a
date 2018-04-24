@@ -46,10 +46,6 @@ func (g *Grid) Selection() string {
 	return string(g.List[0].(*tag.Tag).Win.Rdsel())
 }
 
-func (g *Grid) Label() string {
-	return string(g.List[0].(*tag.Tag).Win.Bytes())
-}
-
 func (g *Grid) guru(label string, q0, q1 int64) error {
 	if !strings.HasSuffix(label, ".go") {
 		return nil

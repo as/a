@@ -29,8 +29,7 @@ func readmouse(e mouse.Event) mouse.Event {
 
 func (g *Grid) dragCol(c *Col, e mouse.Event, mousein <-chan mouse.Event) {
 	c0 := actCol
-	g.detach(g.ID(c0))
-	g.fill()
+	g.DetachFill(c0)
 	for e = range mousein {
 		e = readmouse(e)
 		if down == 0 {
@@ -38,13 +37,12 @@ func (g *Grid) dragCol(c *Col, e mouse.Event, mousein <-chan mouse.Event) {
 		}
 	}
 	activate(p(e), g)
-	g.fill()
 	g.Attach(c0, p(e).X)
 	moveMouse(c0.Loc().Min)
 }
 
 func (g *Grid) dragTag(c *Col, t *tag.Tag, e mouse.Event, mousein <-chan mouse.Event) {
-	c.detach(c.ID(t))
+	c.Detach(c.ID(t))
 	t0 := time.Now()
 	r0 := DragArea.Add(p(e).Add(t.Bounds().Min))
 	for e = range mousein {
@@ -57,7 +55,7 @@ func (g *Grid) dragTag(c *Col, t *tag.Tag, e mouse.Event, mousein <-chan mouse.E
 		actCol.Attach(t, p(e).Y-100)
 	} else {
 		activate(p(e), g)
-		c.fill()
+		c.Fill()
 		if t == nil {
 			return
 		}
