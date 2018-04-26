@@ -70,12 +70,12 @@ func New(c *Col, basedir, name string, sizerFunc ...func(int) int) (w Plane) {
 		return t
 	}
 	r := c.List[len(c.List)-1].Loc()
-	c.Attach(t, r.Max.Y+r.Dy()/2)
+	c.Attach(t, r.Min.Y+r.Dy()/2)
 	return t
 }
 
 func Delcol(g *Grid, id int) {
-	co := g.Detach(id)
+	co := col.Detach(g, id)
 	x := co.Loc().Min.X
 	y := co.Loc().Min.Y
 	for ; id < len(g.List); id++ {
@@ -83,7 +83,7 @@ func Delcol(g *Grid, id int) {
 		g.List[id].Move(image.Pt(x, y))
 		x = x2
 	}
-	g.fill()
+	col.Fill(g)
 }
 
 func Del(co *Col, id int) {
@@ -96,5 +96,5 @@ func Del(co *Col, id int) {
 		co.List[id].Move(image.Pt(x, y))
 		y = y2
 	}
-	co.Fill()
+	col.Fill(co)
 }

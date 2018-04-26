@@ -54,7 +54,7 @@ func activate(pt image.Point, w Plane) {
 		switch x := x.(type) {
 		case *tag.Tag:
 			panic("tag not allowed in column anymore")
-			actCol = w.Col
+			//actCol = w.Col
 			actTag = x
 			act = x.Win
 		case *Col:

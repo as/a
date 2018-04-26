@@ -22,7 +22,7 @@ func assert(where string, g *Grid) {
 	}
 	if g.Tag.Vis != tag.VisTag {
 		log.Printf("%v\n", g.Tag.Vis)
-		panic("grid tag not vistag") // Put
+		//		panic("grid tag not vistag") // Put
 	}
 	for i, c := range g.List {
 		if c.(*Col).Tag.Vis != tag.VisTag {

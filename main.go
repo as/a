@@ -67,7 +67,7 @@ func main() {
 
 	dev, wind, d, ft := frameinstall()
 	D = d
-	g = NewGrid(dev, image.Pt(0, 0), image.Pt(900, 900), ft, list...)
+	g = NewGrid(dev, image.Pt(77, 77), image.Pt(900, 900), ft, list...)
 	setLogFunc(g.aerr)
 	//banner()
 	createnetworks()

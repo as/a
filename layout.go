@@ -6,6 +6,7 @@ import (
 	"image"
 	"time"
 
+	"github.com/as/ui/col"
 	"github.com/as/ui/tag"
 
 	"golang.org/x/mobile/event/mouse"
@@ -29,7 +30,8 @@ func readmouse(e mouse.Event) mouse.Event {
 
 func (g *Grid) dragCol(c *Col, e mouse.Event, mousein <-chan mouse.Event) {
 	c0 := actCol
-	g.DetachFill(c0)
+	col.Detach(g, g.ID(c0))
+	col.Fill(c0)
 	for e = range mousein {
 		e = readmouse(e)
 		if down == 0 {
@@ -37,7 +39,8 @@ func (g *Grid) dragCol(c *Col, e mouse.Event, mousein <-chan mouse.Event) {
 		}
 	}
 	activate(p(e), g)
-	g.Attach(c0, p(e).X)
+	col.Attach(g, c0, p(e))
+	//g.Attach(c0, p(e).X)
 	moveMouse(c0.Loc().Min)
 }
 
@@ -55,7 +58,7 @@ func (g *Grid) dragTag(c *Col, t *tag.Tag, e mouse.Event, mousein <-chan mouse.E
 		actCol.Attach(t, p(e).Y-100)
 	} else {
 		activate(p(e), g)
-		c.Fill()
+		col.Fill(c)
 		if t == nil {
 			return
 		}

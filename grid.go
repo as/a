@@ -14,7 +14,7 @@ import (
 )
 
 type Grid struct {
-	*Col
+	col.Table2
 }
 
 var (
@@ -22,66 +22,25 @@ var (
 )
 
 func NewGrid(dev ui.Dev, sp, size image.Point, ft font.Face, files ...string) *Grid {
-	conf := GridConfig
-	g := &Grid{col.NewGridHack(dev, sp, size, tagHeight, ft)}
-	T := tag.New(dev, sp, image.Pt(size.X, tagHeight), conf)
-	T.Win.InsertString(GridLabel, 0)
-	g.Tag = T
-	N := len(files)
-	g.List = make([]Plane, N)
+	g := &Grid{col.NewTable2(dev, sp, size, GridConfig)}
+	g.Tag.Win.Delete(0, g.Tag.Win.Len())
+	g.Tag.Win.InsertString(GridLabel, 0)
 
-	size.Y -= tagHeight
-	sp.Y += tagHeight // Put
-	d := image.Pt(size.X/N, size.Y)
-	for i, v := range files {
-		g.List[i] = NewCol(dev, ft, sp, d, v)
-		sp.X += d.X
+	d := size.X / len(files)
+	for _, v := range files {
+		col.Attach(g, NewCol(dev, ft, image.ZP, image.ZP, v), sp)
+		sp.X += d
 	}
 
 	g.Refresh()
+	col.Fill(g)
 	return g
-}
-
-func (g *Grid) Attach(src Plane, x int) {
-	r := g.Tag.Loc()
-	r.Min.Y = r.Max.Y
-	pt := r.Min
-	if len(g.List) == 0 {
-		src.Move(pt)
-		g.AttachFill(src, 0)
-		return
-	}
-	pt.X = x
-	src.Move(pt)
-	did := g.IDPoint(pt)
-	g.AttachFill(src, did+1)
-}
-
-func (g *Grid) Delta(n int) image.Point {
-	x0 := g.List[n].Loc().Min.X
-	x1 := g.Loc().Max.X
-
-	if n+1 != len(g.List) {
-		x1 = g.List[n+1].Loc().Min.X
-	}
-	return identity(x1-x0, g.Loc().Dy()-g.Tag.Loc().Dy())
-}
-
-func (g *Grid) Label() *win.Win { return g.Tag.Win }
-
-func (g *Grid) Move(sp image.Point) {
-	panic("never call this")
 }
 
 func (g *Grid) Resize(size image.Point) {
 	g.ForceSize(size)
 	g.Tag.Resize(image.Pt(size.X, g.Tag.Loc().Dy()))
-	g.fill()
-}
-
-func (g *Grid) fill() {
-	fill(g)
-	g.Tag.Resize(g.Tag.Loc().Size())
+	col.Fill(g)
 }
 
 // Install places the given edit script in between
