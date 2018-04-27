@@ -22,7 +22,9 @@ var (
 )
 
 func NewGrid(dev ui.Dev, sp, size image.Point, ft font.Face, files ...string) *Grid {
-	g := &Grid{col.NewTable2(dev, sp, size, GridConfig)}
+	g := &Grid{col.NewTable2(dev, GridConfig)}
+	g.Move(sp)
+	g.Resize(size)
 	g.Tag.Win.Delete(0, g.Tag.Win.Len())
 	g.Tag.Win.InsertString(GridLabel, 0)
 
@@ -37,9 +39,13 @@ func NewGrid(dev ui.Dev, sp, size image.Point, ft font.Face, files ...string) *G
 	return g
 }
 
+func (g *Grid) Move(sp image.Point) {
+	g.Table2.Move(sp)
+}
+
 func (g *Grid) Resize(size image.Point) {
 	g.ForceSize(size)
-	g.Tag.Resize(image.Pt(size.X, g.Tag.Loc().Dy()))
+	g.Tag.Resize(image.Pt(size.X, g.Config.TagHeight()))
 	col.Fill(g)
 }
 

@@ -38,39 +38,32 @@ var TagConfig = &tag.Config{
 
 type Col = col.Col
 
-func NewTag(dev ui.Dev, basedir, name string) *tag.Tag {
-	t := tag.New(dev, image.ZP, image.ZP, TagConfig)
-	t.Open(basedir, name)
-	t.Insert([]byte(" [Edit  ,x]	|"), t.Len())
-	return t
-}
-
 func NewCol(dev ui.Dev, ft font.Face, sp, size image.Point, files ...string) *Col {
-	col := col.New(dev, sp, size, TagConfig)
+	c := col.New(dev, TagConfig)
+	c.Move(sp)
+	c.Resize(size)
 	for _, name := range files {
-		New(col, ".", name)
+		New(c, ".", name, nil)
 	}
-	return col
+	return c
 }
 
 func NewColParams(g *Grid, filenames ...string) *Col {
-	r := g.Loc()
-	r.Min.X += g.Tag.Loc().Dx()
+	r := g.Area()
 	if len(g.List) == 0 {
 		r = g.List[len(g.List)-1].Loc()
-		r.Min.X += r.Size().X / 2
 	}
-	return NewCol(g.Dev(), g.Face(), r.Min, r.Size(), filenames...)
+	c := NewCol(g.Dev(), g.Face(), r.Min, r.Size(), filenames...)
+	col.Attach(g, c, r.Min.Add(r.Size().Div(2)))
+	return c
 }
 
 func New(c *Col, basedir, name string, sizerFunc ...func(int) int) (w Plane) {
-	t := NewTag(c.Dev(), basedir, name)
-	if len(c.List) == 0 {
-		c.Attach(t, c.Tag.Loc().Max.Y)
-		return t
-	}
-	r := c.List[len(c.List)-1].Loc()
-	c.Attach(t, r.Min.Y+r.Dy()/2)
+	t := tag.New(c.Dev(), TagConfig)
+	t.Open(basedir, name)
+	t.Insert([]byte(" [Edit  ,x]	|"), t.Len())
+	r := c.Area()
+	col.Attach(c, t, r.Min.Add(r.Size().Div(2)))
 	return t
 }
 
