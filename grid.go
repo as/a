@@ -4,7 +4,6 @@ import (
 	"image"
 
 	"github.com/as/edit"
-	"github.com/as/font"
 	"github.com/as/frame"
 	"github.com/as/text"
 	"github.com/as/ui"
@@ -21,21 +20,9 @@ var (
 	GridLabel = "Newcol Killall Exit    guru^(callees callers callstack definition describe freevars implements peers pointsto referrers what whicherrs)"
 )
 
-func NewGrid(dev ui.Dev, sp, size image.Point, ft font.Face, files ...string) *Grid {
-	g := &Grid{col.NewTable2(dev, GridConfig)}
-	g.Move(sp)
-	g.Resize(size)
-	g.Tag.Win.Delete(0, g.Tag.Win.Len())
+func NewGrid(dev ui.Dev, conf *tag.Config, files ...string) *Grid {
+	g := &Grid{col.NewTable2(dev, conf)}
 	g.Tag.Win.InsertString(GridLabel, 0)
-
-	d := size.X / len(files)
-	for _, v := range files {
-		col.Attach(g, NewCol(dev, ft, image.ZP, image.ZP, v), sp)
-		sp.X += d
-	}
-
-	g.Refresh()
-	col.Fill(g)
 	return g
 }
 

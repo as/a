@@ -11,33 +11,34 @@ import (
 	"golang.org/x/mobile/event/lifecycle"
 
 	"github.com/as/edit"
+	"github.com/as/ui/col"
 	"github.com/as/ui/tag"
 )
 
 var (
-	Version = "0.6.1"
+	Version = "0.6.5"
 	eprint  = fmt.Println
 	timefmt = "15.04.05"
 )
-
-var focused = false
 
 var (
 	utf8       = flag.Bool("u", false, "enable utf8 experiment")
 	elastic    = flag.Bool("elastic", false, "enable elastic tabstops")
 	oled       = flag.Bool("b", false, "OLED display mode (black)")
 	ftsize     = flag.Int("ftsize", 11, "font size")
-	srvaddr    = flag.String("l", "", "listen (extermely dangerous) announce and serve file system clients on given endpoint")
-	clientaddr = flag.String("d", "", "dial to a remote file system on given endpoint")
-	quiet      = flag.Bool("q", false, "dont interact with the user or graphical subsystem (use with -l)")
+	srvaddr    = flag.String("l", "", "(dangerous) announce and serve file system clients on given endpoint")
+	clientaddr = flag.String("d", "", "dial to a remote file system on endpoint")
+	quiet      = flag.Bool("q", false, "dont interact with the graphical subsystem (use with -l)")
 )
 
-var (
+var(
 	g         *Grid
+	D *screen.Device
 	events    = make(chan interface{}, 500)
 	done      = make(chan bool)
 	moribound = make(chan bool, 1)
 	sigterm   = make(chan bool)
+	focused = false
 )
 
 func init() {
@@ -53,7 +54,6 @@ func banner() {
 	repaint()
 }
 
-var D *screen.Device
 
 func main() {
 	defer trypprof()()
@@ -67,9 +67,21 @@ func main() {
 
 	dev, wind, d, ft := frameinstall()
 	D = d
-	g = NewGrid(dev, image.Pt(77, 77), image.Pt(900, 900), ft, list...)
+	
+	g = NewGrid(dev, GridConfig)
+	sp, size := image.Pt(0,0), image.Pt(900,900)
+	g.Move(sp)
+	g.Resize(size)
+	
+	for _, v := range list {
+		col.Attach(g, NewCol(dev, ft, image.ZP, image.ZP, v), sp)
+		sp.X += size.X/len(list)
+	}
+	col.Fill(g)
+	g.Refresh()
+
 	setLogFunc(g.aerr)
-	//banner()
+	banner()
 	createnetworks()
 	actinit(g)
 	assert("actinit", g)
@@ -82,17 +94,17 @@ func main() {
 				scroll(act, mus.ScrollEvent{Dy: 5, Event: e})
 			case e := <-D.Mouse:
 				activate(p(e), g)
-				e = rel(readmouse(e), act)
+				e = readmouse(e)
 				if down == 0 {
 					continue
 				}
-				if borderHit(e) {
+				if borderHit(rel(e, act)) {
 					procBorderHit(e)
 				} else {
 					/////////////////////////////
 					assert("procButton", g)
 					/////////////////////////////
-					procButton(e)
+					procButton(rel(e, act))
 				}
 				repaint()
 			case <-sigterm:

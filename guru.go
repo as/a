@@ -25,7 +25,7 @@ func (g *Grid) afindguru(wd string, name string) *tag.Tag {
 	t := g.FindName(name)
 	if t == nil {
 		c := g.List[len(g.List)-1].(*Col)
-		t = New(c, "", name, SizeThirdOf).(*tag.Tag)
+		t = New(c, "", name).(*tag.Tag)
 		if t == nil {
 			panic("cant create tag")
 		}

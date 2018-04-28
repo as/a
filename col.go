@@ -1,6 +1,5 @@
 package main
 
-// Put
 import (
 	"image"
 	"io"
@@ -38,12 +37,22 @@ var TagConfig = &tag.Config{
 
 type Col = col.Col
 
+// New creates opens a names resource as a tagged window in column c
+func New(c *Col, basedir, name string) (w Plane) {
+	t := tag.New(c.Dev(), TagConfig)
+	t.Open(basedir, name)
+	t.Insert([]byte(" [Edit  ,x]	|"), t.Len())
+	r := c.Area()
+	col.Attach(c, t, r.Min.Add(r.Size().Div(2)))
+	return t
+}
+
 func NewCol(dev ui.Dev, ft font.Face, sp, size image.Point, files ...string) *Col {
 	c := col.New(dev, TagConfig)
 	c.Move(sp)
 	c.Resize(size)
 	for _, name := range files {
-		New(c, ".", name, nil)
+		New(c, ".", name)
 	}
 	return c
 }
@@ -56,15 +65,6 @@ func NewColParams(g *Grid, filenames ...string) *Col {
 	c := NewCol(g.Dev(), g.Face(), r.Min, r.Size(), filenames...)
 	col.Attach(g, c, r.Min.Add(r.Size().Div(2)))
 	return c
-}
-
-func New(c *Col, basedir, name string, sizerFunc ...func(int) int) (w Plane) {
-	t := tag.New(c.Dev(), TagConfig)
-	t.Open(basedir, name)
-	t.Insert([]byte(" [Edit  ,x]	|"), t.Len())
-	r := c.Area()
-	col.Attach(c, t, r.Min.Add(r.Size().Div(2)))
-	return t
 }
 
 func Delcol(g *Grid, id int) {
