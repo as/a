@@ -2,6 +2,7 @@ package main
 
 import (
 	mus "github.com/as/text/mouse"
+	"github.com/as/ui/col"
 	"github.com/as/ui/win"
 	"golang.org/x/mobile/event/mouse"
 )
@@ -12,14 +13,24 @@ func borderHit(e mouse.Event) bool {
 }
 
 func procBorderHit(e mouse.Event) {
+	apt := p(e)
+	e = rel(e, act)
 	pt := p(e)
+	
 	switch {
 	case inSizer(pt):
 		if HasButton(1, down) {
-			if canopy(absP(e, act.Loc().Min)) {
-				g.dragCol(actCol, e, D.Mouse)
+			if !apt.In(g.Area()) {
+				for down != 0{
+					g.Move(apt)
+					g.Refresh()
+					col.Fill(g)
+					apt = p(readmouse(<-D.Mouse))
+				}
+			} else if canopy(apt) {
+				dragCol(g, actCol, e, D.Mouse)
 			} else {
-				g.dragTag(actCol, actTag, e, D.Mouse)
+				dragTag(actCol, actTag, e, D.Mouse)
 			}
 			break
 		}
@@ -43,7 +54,7 @@ func procBorderHit(e mouse.Event) {
 			if w == nil {
 				break
 			}
-			w.Clicksb(p(rel(e, w)), 0)
+			w.Clicksb(pt, 0)
 			repaint()
 			for HasButton(2, down) {
 				w.Clicksb(p(rel(readmouse(<-D.Mouse), w)), 0)
@@ -52,7 +63,6 @@ func procBorderHit(e mouse.Event) {
 		case Button(3):
 			scroll(act, mus.ScrollEvent{Dy: -10, Event: e})
 		}
-		logf("inScroll: %s", p(e))
 	default:
 		logf("unknown border action at pt: %s", pt)
 	}
