@@ -16,12 +16,12 @@ func procBorderHit(e mouse.Event) {
 	apt := p(e)
 	e = rel(e, act)
 	pt := p(e)
-	
+
 	switch {
 	case inSizer(pt):
 		if HasButton(1, down) {
 			if !apt.In(g.Area()) {
-				for down != 0{
+				for down != 0 {
 					g.Move(apt)
 					g.Refresh()
 					col.Fill(g)
