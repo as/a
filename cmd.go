@@ -13,10 +13,50 @@ import (
 	"github.com/as/event"
 	"github.com/as/path"
 	"github.com/as/text"
+	"github.com/as/ui/tag"
+	"github.com/as/ui/win"
 )
 
+func editcmd(ed interface{}, origin, cmd string) {
+	prog, err := edit.Compile(cmd, &edit.Options{Sender: nil, Origin: origin})
+	if err != nil {
+		logf("editcmd: %s", err)
+		return
+	}
+	runeditcmd(prog, ed)
+	{
+		ed, _ := ed.(text.Editor)
+		if ed != nil {
+			ajump2(ed, false)
+		}
+	}
+}
+
+func runeditcmd(prog *edit.Command, ed interface{}) {
+	switch ed := ed.(type) {
+	case *win.Win:
+		if ed == actTag.Win {
+			ed = actTag.Body.(*win.Win)
+		}
+		prog.Run(ed)
+	case *tag.Tag:
+		prog.Run(ed.Body)
+	case *Grid:
+		for _, ed := range ed.List {
+			runeditcmd(prog, ed)
+		}
+	case *Col:
+		for _, ed := range ed.List {
+			runeditcmd(prog, ed)
+		}
+	case text.Editor:
+		prog.Run(ed)
+	case interface{}:
+		logf("dont know what %T is", ed)
+	}
+}
+
 func acmd(e event.Cmd) {
-	g.aerr("cmd: %#v\n", e)
 	s := string(e.P)
 	switch s {
 	case "Put":
@@ -27,7 +67,6 @@ func acmd(e event.Cmd) {
 		repaint()
 	case "New":
 		newtag := New(actCol, "", "")
-		logf("%v\n", newtag.Loc())
 		moveMouse(newtag.Loc().Min)
 	case "Newcol":
 		moveMouse(NewColParams(g, "").Loc().Min)
@@ -46,6 +85,8 @@ func acmd(e event.Cmd) {
 		abs := AbsOf(e.Basedir, e.Name)
 		if strings.HasPrefix(s, "Edit ") {
 			s = s[5:]
+			editcmd(e.To[0], abs, s)
+			break
 			prog, err := edit.Compile(s, &edit.Options{Sender: nil, Origin: abs})
 			if err != nil {
 				logf(err.Error())
@@ -72,13 +113,12 @@ func acmd(e event.Cmd) {
 			//			setdirty()
 		}
 	}
-
 }
 
 func cmdexec(f text.Editor, dir string, argv string) {
 	x := strings.Fields(argv)
 	if len(x) == 0 {
-		eprint("|: nothing on rhs")
+		logf("|: nothing on rhs")
 		return
 	}
 	n := x[0]
@@ -93,18 +133,9 @@ func cmdexec(f text.Editor, dir string, argv string) {
 	f.Delete(q0, q1)
 	q1 = q0
 	var fd0 io.WriteCloser
-	fd1, err := cmd.StdoutPipe()
-	if err != nil {
-		panic(err)
-	}
-	fd2, err := cmd.StderrPipe()
-	if err != nil {
-		panic(err)
-	}
-	fd0, err = cmd.StdinPipe()
-	if err != nil {
-		panic(err)
-	}
+	fd1, _ := cmd.StdoutPipe()
+	fd2, _ := cmd.StderrPipe()
+	fd0, _ = cmd.StdinPipe()
 
 	fd0.Close()
 	var wg sync.WaitGroup
@@ -157,7 +188,7 @@ func cmdexec(f text.Editor, dir string, argv string) {
 	}()
 	cmd.Start()
 	go func() {
-		_, err = io.Copy(fd0, bytes.NewReader(append([]byte{}, f.Bytes()[q0:q1]...)))
+		_, err := io.Copy(fd0, bytes.NewReader(append([]byte{}, f.Bytes()[q0:q1]...)))
 		if err != nil {
 			eprint(err)
 			return
