@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"image"
+	"log"
 	"os"
 
 	"github.com/as/shiny/screen"
@@ -31,14 +32,14 @@ var (
 	quiet      = flag.Bool("q", false, "dont interact with the graphical subsystem (use with -l)")
 )
 
-var(
+var (
 	g         *Grid
-	D *screen.Device
+	D         *screen.Device
 	events    = make(chan interface{}, 500)
 	done      = make(chan bool)
 	moribound = make(chan bool, 1)
 	sigterm   = make(chan bool)
-	focused = false
+	focused   = false
 )
 
 func init() {
@@ -54,7 +55,6 @@ func banner() {
 	repaint()
 }
 
-
 func main() {
 	defer trypprof()()
 	list := argparse()
@@ -67,15 +67,15 @@ func main() {
 
 	dev, wind, d, ft := frameinstall()
 	D = d
-	
+
 	g = NewGrid(dev, GridConfig)
-	sp, size := image.Pt(0,0), image.Pt(900,900)
+	sp, size := image.Pt(0, 0), image.Pt(900, 900)
 	g.Move(sp)
 	g.Resize(size)
-	
+
 	for _, v := range list {
 		col.Attach(g, NewCol(dev, ft, image.ZP, image.ZP, v), sp)
-		sp.X += size.X/len(list)
+		sp.X += size.X / len(list)
 	}
 	col.Fill(g)
 	g.Refresh()
@@ -101,9 +101,7 @@ func main() {
 				if borderHit(rel(e, act)) {
 					procBorderHit(e)
 				} else {
-					/////////////////////////////
-					assert("procButton", g)
-					/////////////////////////////
+					// assert("procButton", g) //
 					procButton(rel(e, act))
 				}
 				repaint()
@@ -169,7 +167,7 @@ Loop:
 			case edit.Print:
 				g.aout(string(e))
 			case error:
-				logf(e.Error())
+				logf("unspecified error: %s", e)
 			case interface{}:
 				logf("missing event: %#v\n", e)
 				continue
@@ -183,6 +181,7 @@ func teardown() {
 	select {
 	case clean := <-moribound:
 		if clean {
+			setLogFunc(log.Printf)
 			logf("TODO: polite shutdown")
 			close(sigterm)
 			close(moribound)
