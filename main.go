@@ -144,7 +144,7 @@ Loop:
 			if e.External {
 				g.Resize(winSize)
 			}
-			g.Upload(wind)
+			g.Upload()
 			wind.Publish()
 			//			setclean()
 		case e := <-D.Lifecycle:
