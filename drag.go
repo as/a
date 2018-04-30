@@ -35,9 +35,13 @@ func dragCol(g *Grid, c *Col, e mouse.Event, mousein <-chan mouse.Event) {
 		if down == 0 {
 			break
 		}
+		// uncomment for really stupid stuff
+		//col.Detach(g, g.ID(c0))
+		//col.Fill(g)
+		//col.Attach(g, c0, p(e))
 	}
 	col.Detach(g, g.ID(c0))
-	col.Fill(c0)
+	col.Fill(g)
 	col.Attach(g, c0, p(e))
 	moveMouse(c0.Loc().Min)
 }
@@ -54,10 +58,10 @@ func dragTag(c *Col, t *tag.Tag, e mouse.Event, mousein <-chan mouse.Event) {
 	}
 	pt := p(e)
 	if time.Since(t0) < DragTimeout && p(e).In(r0) {
-		pt.Y-=100
+		pt.Y -= 100
 		col.Attach(actCol, t, pt)
 	} else {
-activate(p(e), g)
+		activate(p(e), g)
 		col.Fill(c)
 		if t == nil {
 			return
