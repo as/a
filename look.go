@@ -17,6 +17,19 @@ import (
 	"github.com/as/ui/win"
 )
 
+type Named interface {
+	Plane
+	FileName() string
+}
+type Indexer interface {
+	Lookup(interface{}) Plane
+}
+
+var (
+	ErrNoWin = errors.New("no window")
+	ErrNoTag = errors.New("no tag")
+)
+
 func AbsOf(basedir, path string) string {
 	if filepath.IsAbs(path) {
 		return path
@@ -46,11 +59,6 @@ type Looker struct {
 	err      error
 }
 
-var (
-	ErrNoWin = errors.New("no window")
-	ErrNoTag = errors.New("no tag")
-)
-
 func (e *Looker) Err() error {
 	if e.err == nil {
 		if e.Win == nil {
@@ -69,7 +77,6 @@ func (l *Looker) FromTag() bool {
 
 func (e *Looker) SplitAddr() (name, addr string) {
 	e.Q0, e.Q1 = expand3(e.Win, e.Q0, e.Q1)
-	logf("event: %#v", e)
 	return action.SplitPath(string(e.Win.Bytes()[e.Q0:e.Q1]))
 }
 
@@ -94,21 +101,18 @@ func (e *Looker) LookGrid(g *Grid) (error) {
 
 	// Existing window label?
 	if label := g.Lookup(name); label != nil  {
-		logf("look: d: %#v", e)
 		t, _ := label.(*tag.Tag)
 		if t == nil{
 			logf("look d: tag is nil")
 			return
 		}
 		if g.EditRun(addr, t.Body) {
-			logf("look: d1: %#v", e)
 			ajump(t.Body, moveMouse)
 		}
 		return
 	}
 
 	// A file on the filesystem
-	logf("res: %#v", resolver)
 	info, exists := resolver.look(pathinfo{tag: e.Name, name: name})
 	t, exists = g.Lookup(info.abspath).(*tag.Tag)
 
@@ -126,7 +130,6 @@ func (g *Grid) Look(e event.Look) {
 	t, _ := ed.(*tag.Tag)
 
 	e.Q0, e.Q1 = expand3(ed, e.Q0, e.Q1)
-	logf("event: %#v", e)
 	name, addr := action.SplitPath(string(e.P))
 	//	e.P = ed.Bytes()[e.Q0:e.Q1]
 	if name == "" && addr == "" {
@@ -164,12 +167,10 @@ func (g *Grid) Look(e event.Look) {
 		}
 	}
 
-	g.aerr("res: %#v\n", resolver)
 	info, exists := resolver.look(pathinfo{tag: e.Name, name: name})
 	t, exists = g.Lookup(info.abspath).(*tag.Tag)
 
 	if exists {
-		logf("look: e9: %#v", e)
 	} else if info.abspath == info.visible && path.Exists(info.visible) {
 		t, _ = New(actCol, path.DirOf(info.abspath), info.visible).(*tag.Tag)
 	} else if realpath := filepath.Join(info.abspath, info.visible); path.Exists(realpath) {
@@ -205,6 +206,7 @@ func (g *Grid) Look(e event.Look) {
 	}
 }
 func (g *Grid) afinderr(wd string, name string) *tag.Tag {
+	name = strings.TrimSpace(name)
 	if !strings.HasSuffix(name, "+Errors") {
 		name += "+Errors"
 	}
@@ -220,7 +222,6 @@ func (g *Grid) afinderr(wd string, name string) *tag.Tag {
 	return t
 }
 func (g *Grid) aerr(fm string, i ...interface{}) {
-	return
 	t := g.afinderr(".", "")
 	if t == nil || t.Body == nil {
 		return
@@ -281,20 +282,17 @@ func lookliteral(ed text.Editor, e event.Look, mouseFunc func(image.Point)) {
 }
 
 func (g *Grid) meta(p interface{}) bool {
-	if w, ok := p.(*win.Win); ok {
-		return w == g.List[0].(*tag.Tag).Win
-	}
-	return false
+	return p == g.Tag.Win
 }
 
 func VisitAll(root Plane, fn func(p Named)) {
+	type List interface {
+		Kids() []Plane
+	}
+
 	switch root := root.(type) {
-	case *Grid:
-		for _, k := range root.List[1:] {
-			VisitAll(k, fn)
-		}
-	case *Col:
-		for _, k := range root.List[1:] {
+	case List:
+		for _, k := range root.Kids() {
 			VisitAll(k, fn)
 		}
 	case Named:
@@ -305,8 +303,22 @@ func VisitAll(root Plane, fn func(p Named)) {
 	}
 }
 
-func (grid *Grid) Lookup(pid interface{}) Plane {
-	for _, k := range grid.Kids() {
+func (g *Grid) FindName(name string) *tag.Tag {
+	for _, p := range g.List {
+		c, _ := p.(*Col)
+		if c == nil {
+			continue
+		}
+		t := c.FindName(name)
+		if t != nil {
+			return t
+		}
+	}
+	return nil
+}
+
+func (g *Grid) Lookup(pid interface{}) Plane {
+	for _, k := range g.Kids() {
 		if k, ok := k.(Indexer); ok {
 			tag := k.Lookup(pid)
 			if tag != nil {
@@ -315,12 +327,4 @@ func (grid *Grid) Lookup(pid interface{}) Plane {
 		}
 	}
 	return nil
-}
-
-type Named interface {
-	Plane
-	FileName() string
-}
-type Indexer interface {
-	Lookup(interface{}) Plane
 }

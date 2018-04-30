@@ -54,18 +54,13 @@ func (r *fileresolver) isAbs(name string) bool {
 }
 
 func (r *fileresolver) look(pi pathinfo) (f fileinfo, ok bool) {
-	//	logf("resolver: look %v", pi)
 	if r.isAbs(pi.name) {
-		//		logf("resolver: A: absolute path")
 		f.FileInfo, r.err = r.Stat(pi.name)
-		//		logf("resolver: A: %v", f.FileInfo)
 		return f, r.set(&f, filepath.Clean(pi.name))
 	}
 
 	if !r.isAbs(pi.tag) {
-		//		logf("resolver: B: nottag: %v", pi.tag)
 		pi.tag = filepath.Join(pi.wd, pi.tag)
-		//		logf("resolver: B: joined: %v", pi.tag)
 	}
 
 	f.FileInfo, r.err = r.Fs.Stat(pi.tag)
@@ -73,17 +68,14 @@ func (r *fileresolver) look(pi pathinfo) (f fileinfo, ok bool) {
 		pi.tag = filepath.Dir(pi.tag)
 		f.FileInfo, r.err = r.Fs.Stat(pi.tag)
 		if r.err != nil {
-			//			logf("resolver: C: fileinfo: %v err=%s", f, r.err)
 			return f, false
 		}
 	}
 
 	if !f.FileInfo.IsDir() {
-		//		logf("resolver: D: not dir: %v", f)
 		pi.tag = filepath.Join(pi.tag, "..")
 	}
 	f.abspath = filepath.Join(pi.tag, pi.name)
 	f.visible = f.abspath
-	//	logf("resolver: E: abspath: %v", f.abspath)
 	return f, r.err == nil
 }
