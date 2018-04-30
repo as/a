@@ -29,7 +29,7 @@ func underText(p Plane) image.Point {
 	if w == nil || !w.Graphical() {
 		return pt
 	}
-	if w.Frame.Full(){
+	if w.Frame.Full() {
 		return pt
 	}
 	return w.Area().Min.Add(w.PointOf(w.Frame.Len()))

@@ -23,16 +23,6 @@ var (
 )
 
 var (
-	utf8       = flag.Bool("u", false, "enable utf8 experiment")
-	elastic    = flag.Bool("elastic", false, "enable elastic tabstops")
-	oled       = flag.Bool("b", false, "OLED display mode (black)")
-	ftsize     = flag.Int("ftsize", 11, "font size")
-	srvaddr    = flag.String("l", "", "(dangerous) announce and serve file system clients on given endpoint")
-	clientaddr = flag.String("d", "", "dial to a remote file system on endpoint")
-	quiet      = flag.Bool("q", false, "dont interact with the graphical subsystem (use with -l)")
-)
-
-var (
 	g         *Grid
 	D         *screen.Device
 	events    = make(chan interface{}, 500)
@@ -42,10 +32,26 @@ var (
 	focused   = false
 )
 
+var (
+	utf8       = flag.Bool("u", false, "enable utf8 experiment")
+	elastic    = flag.Bool("elastic", false, "enable elastic tabstops")
+	oled       = flag.Bool("b", false, "OLED display mode (black)")
+	ftsize     = flag.Int("ftsize", 11, "font size")
+	srvaddr    = flag.String("l", "", "(dangerous) announce and serve file system clients on given endpoint")
+	clientaddr = flag.String("d", "", "dial to a remote file system on endpoint")
+	quiet      = flag.Bool("q", false, "dont interact with the graphical subsystem (use with -l)")
+)
+
 func init() {
 	// this grants the capability to shut down the program
 	// it happens exactly once
 	moribound <- true
+
+	// error.go:/logFunc/
+	log.SetFlags(log.Llongfile)
+	log.SetPrefix("a: ")
+
+	flag.Parse()
 }
 
 func banner() {
@@ -116,8 +122,8 @@ func main() {
 		for {
 			select {
 			case e := <-D.Key:
-				actTag.Kbd(e, act)
-				//				setdirty()
+				kbdin(e, actTag, act)
+				// actTag.Kbd(e, act)
 				repaint()
 			case <-sigterm:
 				logf("kbd: sigterm")
@@ -134,7 +140,6 @@ Loop:
 			break Loop
 		case e := <-D.Size:
 			winSize = image.Pt(e.WidthPx, e.HeightPx)
-			e = e
 			g.Resize(winSize)
 			repaint()
 		case e := <-D.Paint:
@@ -146,7 +151,6 @@ Loop:
 			}
 			g.Upload()
 			wind.Publish()
-			//			setclean()
 		case e := <-D.Lifecycle:
 			procLifeCycle(e)
 			repaint()
