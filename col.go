@@ -54,6 +54,7 @@ func New(c *Col, basedir, name string) (w Plane) {
 
 func NewCol(dev ui.Dev, ft font.Face, sp, size image.Point, files ...string) *Col {
 	c := col.New(dev, TagConfig)
+	c.Tag.InsertString("New Delcol Sort	|", 0)
 	c.Move(sp)
 	c.Resize(size)
 	for _, name := range files {
