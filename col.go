@@ -29,12 +29,10 @@ func underText(p Plane) image.Point {
 	if w == nil || !w.Graphical() {
 		return pt
 	}
-	alt := phi(w.Area())
-	pt = w.Area().Min.Add(w.PointOf(w.Frame.Len()))
-	if pt.Y < alt.Y {
+	if w.Frame.Full(){
 		return pt
 	}
-	return pt
+	return w.Area().Min.Add(w.PointOf(w.Frame.Len()))
 }
 
 // New creates opens a names resource as a tagged window in column c
