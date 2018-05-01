@@ -91,7 +91,6 @@ func main() {
 	createnetworks()
 	actinit(g)
 	assert("actinit", g)
-
 	go func() {
 		for {
 			select {
@@ -123,7 +122,6 @@ func main() {
 			select {
 			case e := <-D.Key:
 				kbdin(e, actTag, act)
-				// actTag.Kbd(e, act)
 				repaint()
 			case <-sigterm:
 				logf("kbd: sigterm")
