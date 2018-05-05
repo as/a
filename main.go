@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	Version = "0.6.5"
+	Version = "0.6.7"
 	eprint  = fmt.Println
 	timefmt = "15.04.05"
 )
@@ -26,7 +26,7 @@ var (
 var (
 	g         *Grid
 	D         *screen.Device
-	events    = make(chan interface{}, 500)
+	events    = make(chan interface{}, 300)
 	done      = make(chan bool)
 	moribound = make(chan bool, 1)
 	sigterm   = make(chan bool)

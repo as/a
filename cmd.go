@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -16,6 +17,8 @@ import (
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
 )
+
+var null, _ = os.Open(os.DevNull)
 
 func editcmd(ed interface{}, origin, cmd string) {
 	prog, err := edit.Compile(cmd, &edit.Options{Sender: nil, Origin: origin})
@@ -107,15 +110,12 @@ func acmd(e event.Cmd) {
 				logf("empty command")
 				return
 			}
-			tagname := fmt.Sprintf("%s%c-%s", path.DirOf(abs), filepath.Separator, x[0])
-			to := g.afinderr(path.DirOf(abs), tagname)
-			cmdexec(to.Body, path.DirOf(abs), s)
-			//			setdirty()
+			cmdexec(nil, path.DirOf(abs), s)
 		}
 	}
 }
 
-func cmdexec(f text.Editor, dir string, argv string) {
+func cmdexec(input text.Editor, dir string, argv string) {
 	x := strings.Fields(argv)
 	if len(x) == 0 {
 		logf("|: nothing on rhs")
@@ -129,9 +129,6 @@ func cmdexec(f text.Editor, dir string, argv string) {
 
 	cmd := exec.Command(n, a...)
 	cmd.Dir = dir
-	q0, q1 := f.Dot()
-	f.Delete(q0, q1)
-	q1 = q0
 	var fd0 io.WriteCloser
 	fd1, _ := cmd.StdoutPipe()
 	fd2, _ := cmd.StderrPipe()
@@ -186,9 +183,32 @@ func cmdexec(f text.Editor, dir string, argv string) {
 			}
 		}
 	}()
-	cmd.Start()
+	err := cmd.Start()
+	if err != nil {
+		logf("exec: %s: %s", argv, err)
+		close(donec)
+		return
+	}
+
+	var (
+		q0, q1 int64
+		f      text.Editor
+	)
+	lazyinit := func() {
+		to := g.afinderr(dir, cmdlabel(n, dir))
+		f = to.Body
+		q0, q1 := f.Dot()
+		f.Delete(q0, q1)
+		q1 = q0
+	}
+
 	go func() {
-		_, err := io.Copy(fd0, bytes.NewReader(append([]byte{}, f.Bytes()[q0:q1]...)))
+		var stdin io.Reader
+		stdin = null
+		if input != nil {
+			stdin = bytes.NewReader(append([]byte{}, input.Bytes()[q0:q1]...))
+		}
+		_, err := io.Copy(fd0, stdin)
 		if err != nil {
 			eprint(err)
 			return
@@ -197,7 +217,19 @@ func cmdexec(f text.Editor, dir string, argv string) {
 		close(donec)
 	}()
 	go func() {
-	Loop:
+		select {
+		case p := <-outc:
+			lazyinit()
+			f.Insert(p, q1)
+			q1 += int64(len(p))
+		case p := <-errc:
+			lazyinit()
+			f.Insert(p, q1)
+			q1 += int64(len(p))
+		case <-donec:
+			return
+		}
+		repaint()
 		for {
 			select {
 			case p := <-outc:
@@ -207,10 +239,14 @@ func cmdexec(f text.Editor, dir string, argv string) {
 				f.Insert(p, q1)
 				q1 += int64(len(p))
 			case <-donec:
-				break Loop
+				return
 			}
 			repaint()
 		}
 	}()
+}
+
+func cmdlabel(name, dir string) (label string) {
+	return fmt.Sprintf("%s%c-%s", dir, filepath.Separator, name)
 
 }

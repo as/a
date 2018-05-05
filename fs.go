@@ -16,30 +16,31 @@ type fileresolver struct {
 }
 
 type pathinfo struct {
-	wd   string
+	root string
 	tag  string
-	name string
+	pred string
 }
 
 type fileinfo struct {
 	os.FileInfo
-	abspath, visible string
+	path string
+	dir  string
 }
 
 func (r *fileresolver) set(f *fileinfo, name string) (ok bool) {
-	if r.err == nil {
-		f.abspath = name
-		f.visible = name
-		return true
+	f.path = name
+	f.dir = name
+	if f.FileInfo != nil && !f.FileInfo.IsDir() {
+		f.dir = filepath.Dir(f.path)
 	}
-	return false
+	return r.err == nil
 }
 
 func (f *fileinfo) String() string {
 	if f == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("abspath: %s\nvisible: %s\nfi: %#v\n", f.abspath, f.visible, f.FileInfo)
+	return fmt.Sprint(f.FileInfo)
 }
 
 func (r *fileresolver) isAbs(name string) bool {
@@ -47,35 +48,39 @@ func (r *fileresolver) isAbs(name string) bool {
 	if len(name) == 0 {
 		return false
 	}
-	if path.IsAbs(name) || filepath.IsAbs(name) || name[0] == '\\' {
+	if path.IsAbs(name) || filepath.IsAbs(name) || name[0] == '\\' || name[0] == '/' {
 		return true
 	}
 	return len(name) > 1 && name[1] == ':' && strings.ContainsAny(name[:1], Letters)
 }
 
+// joindir resolves a to a file or directory and runs filepath.Join on
+// the directory of a. If a is already a directory the operation is
+// join(a,b), if it's a file the operation is join(a/.., b).
+func (r *fileresolver) joindir(a, b string) string {
+	info, err := r.Stat(a)
+	if err != nil || !info.IsDir() {
+		a = filepath.Dir(a)
+	}
+	return filepath.Join(a, b)
+}
+
 func (r *fileresolver) look(pi pathinfo) (f fileinfo, ok bool) {
-	if r.isAbs(pi.name) {
-		f.FileInfo, r.err = r.Stat(pi.name)
-		return f, r.set(&f, filepath.Clean(pi.name))
+	if r.isAbs(pi.pred) {
+		// last element is absolute;
+		f.FileInfo, r.err = r.Stat(pi.pred)
+		return f, r.set(&f, filepath.Clean(pi.pred))
 	}
 
-	if !r.isAbs(pi.tag) {
-		pi.tag = filepath.Join(pi.wd, pi.tag)
+	if r.isAbs(pi.tag) {
+		file := r.joindir(pi.tag, pi.pred)
+		f.FileInfo, r.err = r.Stat(file)
+		return f, r.set(&f, filepath.Clean(file))
 	}
 
-	f.FileInfo, r.err = r.Fs.Stat(pi.tag)
-	if r.err != nil {
-		pi.tag = filepath.Dir(pi.tag)
-		f.FileInfo, r.err = r.Fs.Stat(pi.tag)
-		if r.err != nil {
-			return f, false
-		}
-	}
-
-	if !f.FileInfo.IsDir() {
-		pi.tag = filepath.Join(pi.tag, "..")
-	}
-	f.abspath = filepath.Join(pi.tag, pi.name)
-	f.visible = f.abspath
-	return f, r.err == nil
+	// need to know if
+	pi.tag = filepath.Join(pi.root, pi.tag)
+	file := r.joindir(pi.tag, pi.pred)
+	f.FileInfo, r.err = r.Stat(file)
+	return f, r.set(&f, filepath.Clean(file))
 }

@@ -7,7 +7,12 @@ import (
 	"github.com/as/ui/tag"
 )
 
+const debug = 1 ^ 1
+
 func assert(where string, g *Grid) {
+	if debug == 0 {
+		return
+	}
 	log.Printf("%s: grid %s\n", where, g.Loc())
 	for i, c := range g.List {
 		for j, c2 := range g.List {
