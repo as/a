@@ -46,9 +46,9 @@ func (g *Grid) Selection() string {
 	return string(g.Tag.Rdsel())
 }
 
-func (g *Grid) guru(label string, q0, q1 int64) error {
-	if !strings.HasSuffix(label, ".go") {
-		return nil
+func (g *Grid) guru(label string, q0, q1 int64) (advance bool, err error) {
+	if strings.HasSuffix(label, ".go") {
+		return true, nil
 	}
 	asel := g.Selection()
 	mode := ""
@@ -60,7 +60,7 @@ func (g *Grid) guru(label string, q0, q1 int64) error {
 		}
 	}
 	if mode == "" {
-		return nil
+		return true, nil
 	}
 
 	data, err := exec.Command(
@@ -77,5 +77,5 @@ func (g *Grid) guru(label string, q0, q1 int64) error {
 	if len(data) != 0 {
 		g.aguru("%s", data)
 	}
-	return err
+	return false, err
 }

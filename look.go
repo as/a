@@ -188,10 +188,14 @@ func (g *Grid) Look(e event.Look) {
 		} else {
 			ajump(t, moveMouse)
 		}
+		return
 	}
 
 	if !exists && !existsRemote {
-		g.guru(e.Name, e.Q0, e.Q1)
+		advance, _ := g.guru(e.Name, e.Q0, e.Q1)
+		if !advance {
+			return
+		}
 	}
 
 	//TODO(as): fix this so it doesn't compare hard coded coordinates
