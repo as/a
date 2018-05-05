@@ -1,4 +1,4 @@
-package main
+package main // import "github.com/as/a"
 
 import (
 	"bytes"
@@ -37,7 +37,7 @@ import (
 )
 
 var (
-	Version   = "0.5.4"
+	Version   = "0.5.5"
 	xx        Cursor
 	eprint    = fmt.Println
 	timefmt   = "2006.01.02 15.04.05"
