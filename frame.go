@@ -19,6 +19,12 @@ func frameinstall() (ui.Dev, screen.Window, *screen.Device, font.Face) {
 	}
 	frame.ForceUTF8 = *utf8
 	frame.ForceElastic = *elastic
+	if *utf8{
+		TagConfig.Body.Frame.Flag |= frame.FrUTF8
+	}
+	if *elastic{
+		TagConfig.Body.Frame.Flag |= frame.FrElastic
+	}
 	dev, err := ui.Init(&screen.NewWindowOptions{
 		Width: winSize.X, Height: winSize.Y,
 		Title: "A",
