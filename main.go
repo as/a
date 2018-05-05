@@ -26,7 +26,7 @@ var (
 var (
 	g         *Grid
 	D         *screen.Device
-	events    = make(chan interface{}, 300)
+	events    = make(chan interface{}, 301)
 	done      = make(chan bool)
 	moribound = make(chan bool, 1)
 	sigterm   = make(chan bool)
