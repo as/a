@@ -89,18 +89,6 @@ func acmd(e event.Cmd) {
 		if strings.HasPrefix(s, "Edit ") {
 			s = s[5:]
 			editcmd(e.To[0], abs, s)
-			break
-			prog, err := edit.Compile(s, &edit.Options{Sender: nil, Origin: abs})
-			if err != nil {
-				logf(err.Error())
-				return
-			}
-			ed := text.Editor(e.To[0])
-			if e.To[0] == actTag.Win {
-				ed = actTag.Body
-			}
-			prog.Run(ed)
-			ajump2(ed, false)
 		} else if strings.HasPrefix(s, "Install ") {
 			s = s[8:]
 			g.Install(actTag, s)
