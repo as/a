@@ -25,10 +25,6 @@ func rel(e mouse.Event, p Plane) mouse.Event {
 	return e
 }
 
-func absP(e mouse.Event, sp image.Point) image.Point {
-	return p(e).Add(sp)
-}
-
 func canopy(pt image.Point) bool {
 	r := g.Loc()
 	r.Max.Y = r.Min.Y + g.Tag.Loc().Dy()*2

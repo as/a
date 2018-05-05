@@ -203,8 +203,7 @@ func cmdexec(input text.Editor, dir string, argv string) {
 	}
 
 	go func() {
-		var stdin io.Reader
-		stdin = null
+		stdin := io.Reader(null)
 		if input != nil {
 			stdin = bytes.NewReader(append([]byte{}, input.Bytes()[q0:q1]...))
 		}

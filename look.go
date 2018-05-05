@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"image"
 	"os"
@@ -25,11 +24,6 @@ type Indexer interface {
 	Lookup(interface{}) Plane
 }
 
-var (
-	ErrNoWin = errors.New("no window")
-	ErrNoTag = errors.New("no tag")
-)
-
 func AbsOf(basedir, path string) string {
 	if filepath.IsAbs(path) {
 		return path
@@ -41,15 +35,7 @@ var resolver = &fileresolver{ // from fs.go:/resolver/
 	Fs: newfsclient(), // called in :/Grid..Look/
 }
 
-func lookTarget(current tag.Window, t *tag.Tag) tag.Window {
-	if t == nil || current == nil {
-		return nil
-	}
-	if current == t.Win {
-		return t.Body
-	}
-	return current
-}
+/*
 
 type Looker struct {
 	*tag.Tag // owning tag
@@ -80,7 +66,6 @@ func (e *Looker) SplitAddr() (name, addr string) {
 	return action.SplitPath(string(e.Win.Bytes()[e.Q0:e.Q1]))
 }
 
-/*
 func (e *Looker) LookGrid(g *Grid) (error) {
 	panic("unfinished")
 	if e.Err() != nil {
