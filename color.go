@@ -6,18 +6,43 @@ import (
 	"github.com/as/ui/win"
 )
 
+var (
+	Tag0  = frame.ATag0
+	Tag1  = frame.ATag1
+	Tag2  = frame.ATag1
+	Body2 = frame.A
+)
+
 func usedarkcolors() {
-	// TODO(as): shouldn't have to edit the frame package here
-	frame.A.Text = frame.MTextW
-	frame.A.Back = frame.MBodyW
-	frame.ATag0.Text = frame.MTextW
-	frame.ATag0.Back = frame.MTagG
-	frame.ATag1.Text = frame.MTextW
-	frame.ATag1.Back = frame.MTagC
+	Body2.Text = frame.MTextW
+	Body2.Back = frame.MBodyW
+
+	Tag0.Text = frame.MTextW
+	Tag0.Back = frame.MTagG
+
+	Tag1.Text = frame.MTextW
+	Tag1.Back = frame.MTagC
+
+	Tag2.Text = frame.MTextW
+	Tag2.Back = frame.MTagC
+
+	GridConfig.Color[0] = Tag0
+	ColConfig.Color[0] = Tag1
+	TagConfig.Color[0] = Tag2
+	TagConfig.Color[1] = Body2
+
+	SB := frame.Color{
+		Palette: frame.Palette{
+			Text: frame.MTagC,
+			Back: frame.MTagG,
+		},
+	}
+	GridConfig.Color[2] = SB
+	ColConfig.Color[2] = SB
+	TagConfig.Color[2] = SB
 }
 
 func (g *Grid) acolor(e edit.File) {
-	// TODO(as): O(n*m) -> O(1)
 	if t := g.FindName(e.Name); t != nil {
 		if t.Body == nil {
 			return

@@ -8,26 +8,39 @@ import (
 	"github.com/as/ui/tag"
 )
 
-var GridConfig = &tag.Config{
-	Margin:     image.Pt(15, 0),
-	Filesystem: newfsclient(),
-	Facer:      font.NewFace,
-	FaceHeight: *ftsize,
-	Color: [3]frame.Color{
-		0: frame.ATag0,
-	},
-	Image: true,
-	Ctl:   events,
-}
+var (
+	GridConfig = &tag.Config{
+		Margin:     image.Pt(15, 0),
+		Filesystem: newfsclient(),
+		Facer:      font.NewFace,
+		FaceHeight: *ftsize,
+		Color: [3]frame.Color{
+			0: Tag0,
+		},
+		Ctl: events,
+	}
 
-var TagConfig = &tag.Config{
-	Margin:     image.Pt(15, 0),
-	Filesystem: newfsclient(),
-	Facer:      font.NewFace,
-	FaceHeight: *ftsize,
-	Color: [3]frame.Color{
-		0: frame.ATag1,
-	},
-	Image: true,
-	Ctl:   events,
-}
+	ColConfig = &tag.Config{
+		Margin:     image.Pt(15, 0),
+		Filesystem: newfsclient(),
+		Facer:      font.NewFace,
+		FaceHeight: *ftsize,
+		Color: [3]frame.Color{
+			0: Tag1,
+		},
+		Ctl: events,
+	}
+
+	TagConfig = &tag.Config{
+		Margin:     image.Pt(15, 0),
+		Filesystem: newfsclient(),
+		Facer:      font.NewFace,
+		FaceHeight: *ftsize,
+		Color: [3]frame.Color{
+			0: Tag2,
+			1: Body2,
+		},
+		Image: true,
+		Ctl:   events,
+	}
+)
