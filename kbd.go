@@ -63,7 +63,6 @@ func kbdin(e key.Event, t *tag.Tag, act Window) {
 				size = 6
 			}
 			t.SetFont(font.NewFace(size))
-			//t.SetFont(t.Body.Frame.Face.NewSize(size))
 			return
 		}
 	}
