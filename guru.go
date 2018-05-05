@@ -47,7 +47,7 @@ func (g *Grid) Selection() string {
 }
 
 func (g *Grid) guru(label string, q0, q1 int64) (advance bool, err error) {
-	if strings.HasSuffix(label, ".go") {
+	if !strings.HasSuffix(label, ".go") {
 		return true, nil
 	}
 	asel := g.Selection()
