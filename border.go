@@ -1,0 +1,69 @@
+package main
+
+import (
+	mus "github.com/as/text/mouse"
+	"github.com/as/ui/col"
+	"github.com/as/ui/win"
+	"golang.org/x/mobile/event/mouse"
+)
+
+func borderHit(e mouse.Event) bool {
+	pt := p(e)
+	return inSizer(pt) || inScroll(pt)
+}
+
+func procBorderHit(e mouse.Event) {
+	apt := p(e)
+	e = rel(e, act)
+	pt := p(e)
+
+	switch {
+	case inSizer(pt):
+		if HasButton(1, down) {
+			if !apt.In(g.Area()) {
+				for down != 0 {
+					g.Move(apt)
+					g.Refresh()
+					col.Fill(g)
+					apt = p(readmouse(<-D.Mouse))
+				}
+			} else if canopy(apt) {
+				dragCol(g, actCol, e, D.Mouse)
+			} else {
+				dragTag(actCol, actTag, e, D.Mouse)
+			}
+			break
+		}
+		switch down {
+		case Button(2):
+		case Button(3):
+			//			actCol.PrintList()
+			actCol.RollUp(actCol.ID(actTag), act.Loc().Min.Y)
+			//			actCol.PrintList()
+			moveMouse(act.Loc().Min)
+		}
+		for down != 0 {
+			readmouse(<-D.Mouse)
+		}
+	case inScroll(pt):
+		switch down {
+		case Button(1):
+			scroll(act, mus.ScrollEvent{Dy: 10, Event: e})
+		case Button(2):
+			w, _ := act.(*win.Win)
+			if w == nil {
+				break
+			}
+			w.Clicksb(pt, 0)
+			repaint()
+			for HasButton(2, down) {
+				w.Clicksb(p(rel(readmouse(<-D.Mouse), w)), 0)
+				repaint()
+			}
+		case Button(3):
+			scroll(act, mus.ScrollEvent{Dy: -10, Event: e})
+		}
+	default:
+		logf("unknown border action at pt: %s", pt)
+	}
+}

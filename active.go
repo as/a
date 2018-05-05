@@ -4,14 +4,20 @@ import (
 	"image"
 
 	"github.com/as/ui/tag"
-	"github.com/as/ui/win"
 )
 
 var (
 	actCol *Col
 	actTag *tag.Tag
-	act    *win.Win
+	act    tag.Window
 )
+
+func actinit(g *Grid) {
+	// This in particular needs to go
+	actCol = g.List[0].(*Col)
+	actTag = actCol.List[0].(*tag.Tag)
+	act = actTag.Body
+}
 
 func active2(pt image.Point, list ...Plane) (x Plane) {
 	for i, w := range list {
@@ -26,36 +32,29 @@ func active2(pt image.Point, list ...Plane) (x Plane) {
 	return nil
 }
 
-// Put
-func active(pt image.Point, act Plane, list ...Plane) (x Plane) {
-	if tag.Buttonsdown != 0 {
-		return act
+func activelabel(pt image.Point, t *tag.Tag) bool {
+	if t.Win == nil {
+		panic("FLAG: label is nil")
 	}
-	if act != nil {
-		list = append([]Plane{act}, list...)
+	if pt.In(t.Win.Loc()) {
+		actTag = t
+		act = t.Win
+		return true
 	}
-	for i, w := range list {
-		if w == nil {
-			continue
-		}
-		r := w.Loc()
-		if pt.In(r) {
-			return list[i]
-		}
-	}
-	return act
+	return false
 }
 
 func activate(pt image.Point, w Plane) {
-	if tag.Buttonsdown != 0 {
-		return
-	}
 	switch w := w.(type) {
 	case *Grid:
+		if activelabel(pt, w.Tag) {
+			return
+		}
 		x := active2(pt, w.List...)
 		switch x := x.(type) {
 		case *tag.Tag:
-			actCol = w.Col
+			panic("tag not allowed in column anymore")
+			//actCol = w.Col
 			actTag = x
 			act = x.Win
 		case *Col:
@@ -65,19 +64,17 @@ func activate(pt image.Point, w Plane) {
 		}
 	case *Col:
 		actCol = w
-		x := active2(pt, w.List...)
-		if eq(x, w.List[0]) {
-			actTag = x.(*tag.Tag)
-			act = x.(*tag.Tag).Win
-		} else {
-			activate(pt, x)
+		if activelabel(pt, w.Tag) {
+			return
 		}
+		x := active2(pt, w.List...)
+		activate(pt, x)
 	case *tag.Tag:
 		actTag = w
 		if w.Body != nil {
 			activate(pt, active2(pt, w.Body, w.Win))
 		}
-	case *win.Win:
+	case tag.Window:
 		act = w
 	}
 }

@@ -40,7 +40,9 @@ https://github.com/as/a/wiki/Alterations
 https://github.com/as/a/issues
 
 # hints
-To reshape the windows and columns, click on the invisible 10x10px sizer that I haven't rendered yet with the middle mouse button. Hold the button down and move the window to the location. Release the button.
+To reshape the windows and columns, click on the invisible 10x10px sizer that I haven't rendered yet with the left mouse button. 
+Hold the button down and move the window to the location. 
+Release the button.
 
 # edit
 - 80% of the sam command language is implemented.
@@ -82,10 +84,6 @@ Edit ,x,the standard editor is any editor,x,any editor,c,ed,
 # extras
 - Looking (right click) in the main tag finds the result in all open windows
 ![paint](jump.png)    
-
-# purpose
-- ACME SAC doesn't run on my computer
-- The solution is to create a text editor from scratch then
 
 # future
 - Fixing the bugs

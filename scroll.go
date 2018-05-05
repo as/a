@@ -2,14 +2,13 @@ package main
 
 import (
 	mus "github.com/as/text/mouse"
-	"github.com/as/ui/win"
-	"golang.org/x/mobile/event/paint"
+	"github.com/as/ui/tag"
 )
 
-func doScrollEvent(act *win.Win, e mus.ScrollEvent) {
+func scroll(act tag.Window, e mus.ScrollEvent) {
 	if e.Button == -1 {
 		e.Dy = -e.Dy
 	}
 	actTag.Body.Scroll(e.Dy)
-	act.Window().Send(paint.Event{})
+	repaint()
 }

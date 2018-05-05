@@ -1,535 +1,215 @@
 package main // import "github.com/as/a"
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"image"
-	"io"
 	"log"
 	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
-	"sync"
-	"time"
+	"runtime"
 
-	"github.com/as/event"
 	"github.com/as/shiny/screen"
 	mus "github.com/as/text/mouse"
-	"golang.org/x/mobile/event/key"
 	"golang.org/x/mobile/event/lifecycle"
-	"golang.org/x/mobile/event/mouse"
-	"golang.org/x/mobile/event/paint"
-	"golang.org/x/mobile/event/size"
-	"golang.org/x/time/rate"
 
 	"github.com/as/edit"
-	"github.com/as/font" ///"git
-	"github.com/as/frame"
-	"github.com/as/path"
-	"github.com/as/text"
-	"github.com/as/ui"
+	"github.com/as/ui/col"
 	"github.com/as/ui/tag"
-	"github.com/as/ui/win"
-	//	"github.com/as/font/vga"
-	//	"golang.org/x/image/font/plan9font"
 )
 
 var (
-	Version   = "0.5.5"
-	xx        Cursor
-	eprint    = fmt.Println
-	timefmt   = "2006.01.02 15.04.05"
-	winSize   = image.Pt(1024, 768)
-	pad       = image.Pt(15, 15)
-	tagHeight = *ftsize*2 + *ftsize/2 - 2
-	scrollX   = 10
+	Version = "0.6.7"
+	eprint  = fmt.Println
+	timefmt = "15.04.05"
 )
 
-func p(e mouse.Event) image.Point {
-	return image.Pt(int(e.X), int(e.Y))
-}
+var (
+	g         *Grid
+	D         *screen.Device
+	events    = make(chan interface{}, 301)
+	done      = make(chan bool)
+	moribound = make(chan bool, 1)
+	sigterm   = make(chan bool)
+	focused   = false
+)
 
-var focused = false
-
-func argparse() (list []string) {
-	if len(flag.Args()) > 0 {
-		list = append(list, flag.Args()...)
-	} else {
-		list = append(list, "guide")
-		list = append(list, ".")
+func defaultFaceSize() int {
+	switch runtime.GOOS {
+	case "darwin":
+		return 13
+	default:
+		return 11
 	}
-	return
 }
 
 var (
-	utf8    = flag.Bool("u", false, "enable utf8 experiment")
-	elastic = flag.Bool("elastic", false, "enable elastic tabstops")
-	oled    = flag.Bool("b", false, "OLED display mode (black)")
-	ftsize  = flag.Int("ftsize", 11, "font size")
+	utf8       = flag.Bool("u", false, "enable utf8 experiment")
+	elastic    = flag.Bool("elastic", false, "enable elastic tabstops")
+	oled       = flag.Bool("b", false, "OLED display mode (black)")
+	ftsize     = flag.Int("ftsize", defaultFaceSize(), "font size")
+	srvaddr    = flag.String("l", "", "(dangerous) announce and serve file system clients on given endpoint")
+	clientaddr = flag.String("d", "", "dial to a remote file system on endpoint")
+	quiet      = flag.Bool("q", false, "dont interact with the graphical subsystem (use with -l)")
 )
 
-/*
-func vgaface() font.Face {
-	data, err := ioutil.ReadFile("u_vga16.font")
-	if err != nil {
-		panic(err)
-	}
-	face, err := plan9font.ParseFont(data, ioutil.ReadFile)
-	if err != nil {
-		panic(err)
-	}
-	return face
-}
-*/
-// TODO(as): refactor frame so this stuff doesn't have to exist here
-func black() {
-	frame.A.Text = frame.MTextW
-	frame.A.Back = frame.MBodyW
+func init() {
+	// this grants the capability to shut down the program
+	// it happens exactly once
+	moribound <- true
 
-	frame.ATag0.Text = frame.MTextW
-	frame.ATag0.Back = frame.MTagG
+	// error.go:/logFunc/
+	log.SetFlags(log.Llongfile)
+	log.SetPrefix("a: ")
 
-	frame.ATag1.Text = frame.MTextW
-	frame.ATag1.Back = frame.MTagC
-
-	//	tag.Gray = image.NewUniform(color.RGBA{192, 192, 232, 255})
-	//	tag.LtGray = image.NewUniform(color.RGBA{192, 192, 232, 255})
-	//	tag.X = image.NewUniform(color.RGBA{192, 192, 232, 255})
-}
-
-var dirty bool
-
-func ck() {
-	if dirty || (act != nil && act.Dirty()) {
-		act.Window().Send(paint.Event{})
-	}
-}
-
-var g *Grid
-
-// Put
-func main() {
 	flag.Parse()
+}
+
+func banner() {
+	logf("ver=%s", Version)
+	logf("pid=%d", os.Getpid())
+	logf("args=%q", os.Args)
+	repaint()
+}
+
+func main() {
 	defer trypprof()()
-	frame.ForceUTF8 = *utf8
-	frame.ForceElastic = *elastic
-
-	lim := rate.NewLimiter(rate.Every(time.Second/120), 2)
-
-	if *oled {
-		black()
-	}
-
 	list := argparse()
-	dev, err := ui.Init(&screen.NewWindowOptions{Width: winSize.X, Height: winSize.Y, Title: "A"})
-	if err != nil {
-		log.Fatalln(err)
+	if *quiet {
+		banner()
+		createnetworks()
+		<-done
+		os.Exit(0)
 	}
-	wind := dev.Window()
 
-	// Linux will segfault here if X is not present
-	wind.Send(paint.Event{})
-	ft := font.NewFace(*ftsize)
-	g = NewGrid(dev, image.ZP, winSize, ft, list...)
+	dev, wind, d, ft := frameinstall()
+	D = d
 
-	// This in particular needs to go
-	actCol = g.List[1].(*Col)
-	actTag = actCol.List[1].(*tag.Tag)
-	act = actTag.Body
+	g = NewGrid(dev, GridConfig)
+	sp, size := image.Pt(0, 0), image.Pt(900, 900)
+	g.Move(sp)
+	g.Resize(size)
 
-	var pt image.Point
-	r := act.Bounds()
-	mousein := mus.NewMouse(time.Second/3, wind)
-	mousein.Machine.SetRect(image.Rect(r.Min.X, r.Min.Y+pad.Y, r.Max.X, r.Max.Y-pad.Y))
+	for _, v := range list {
+		col.Attach(g, NewCol(dev, ft, image.ZP, image.ZP, v), sp)
+		sp.X += size.X / len(list)
+	}
+	col.Fill(g)
+	g.Refresh()
 
-	//
-	// Temporary just until col and tag can be seperated into their own packages. The
-	// majority of these closures will disappear as the program becomes more stable
-	sweepend := func() {
-		if xx.sweepCol {
-			xx.sweepCol = false
-			g.fill()
-			g.Attach(xx.srcCol, pt.X)
-			moveMouse(xx.srcCol.Loc().Min)
-		} else {
-			xx.sweep = false
-			xx.srcCol.fill()
-			if xx.src == nil {
+	setLogFunc(g.aerr)
+	banner()
+	createnetworks()
+	actinit(g)
+	assert("actinit", g)
+	go func() {
+		for {
+			select {
+			case e := <-D.Scroll:
+				activate(p(e), g)
+				scroll(act, mus.ScrollEvent{Dy: 5, Event: e})
+			case e := <-D.Mouse:
+				activate(p(e), g)
+				e = readmouse(e)
+				if down == 0 {
+					continue
+				}
+				if borderHit(rel(e, act)) {
+					procBorderHit(e)
+				} else {
+					// assert("procButton", g) //
+					procButton(rel(e, act))
+				}
+				repaint()
+			case <-sigterm:
+				logf("mouse: sigterm")
 				return
 			}
-			actCol.Attach(xx.src, pt.Y)
-			moveMouse(xx.src.Loc().Min)
 		}
-	}
-	// Returns the bounding box of the invisible sizer you can use
-	// to draw windows and columns around.
-	sizerOf := func(p Plane) image.Rectangle {
-		r := p.Loc()
-		r.Max = r.Min.Add(image.Pt(scrollX, tagHeight))
-		return r
-	}
-	sizerHit := func(p Plane, pt image.Point) bool {
-		in := pt.In(sizerOf(p))
-		return in
-	}
-	markwin := func() {
-		xx.srcCol = actCol
-		xx.src = actTag
-	}
-	detachcol := func() {
-		xx.srcCol = actCol
-		xx.sweepCol = true
-		xx.src = nil
-		g.detach(g.ID(xx.srcCol))
-		g.fill()
-	}
-	detachwin := func() {
-		markwin()
-		xx.srcCol.detach(xx.srcCol.ID(xx.src))
-	}
-	growshrink := func(e mouse.Event) {
-		dy := r.Min.Y
-		id := actCol.ID(actTag)
-		switch e.Button {
-		case 3:
-			actCol.RollUp(id, dy)
-			//actCol.MoveWin(id, dy)
-		case 2:
-			dy -= *ftsize * 2
-			actCol.MoveWin(id, dy)
-		case 1:
-			actCol.Grow(id, actCol.bestGrowth(id, tagHeight))
-		}
-		moveMouse(actTag.Loc().Min)
-	}
-	tophit := func() bool {
-		return pt.Y > g.sp.Y+g.tdy && pt.Y < g.sp.Y+g.tdy*2
-	}
+	}()
 
-	ajump := func(ed text.Editor, cursor bool) {
-		fn := moveMouse
-		if !cursor {
-			fn = nil
+	go func() {
+		for {
+			select {
+			case e := <-D.Key:
+				kbdin(e, actTag, act)
+				repaint()
+			case <-sigterm:
+				logf("kbd: sigterm")
+				return
+			}
 		}
-		if ed, ok := ed.(text.Jumper); ok {
-			ed.Jump(fn)
-		}
-	}
-	alook := func(e event.Look) {
-		g.Look(e)
-	}
-	aerr := g.aerr
-	var (
-		scrollbar = 1
-		sizer     = 2
-		window    = 4
-		cont      = 0
-	)
+	}()
 
-	aerr("ver=%s", Version)
-	aerr("pid=%d", os.Getpid())
-	aerr("args=%q", os.Args)
-
+Loop:
 	for {
-		e := wind.NextEvent()
-		switch e := e.(type) {
-		case mus.Drain:
-		DrainLoop:
-			for {
-				switch wind.NextEvent().(type) {
-				case mus.DrainStop:
-					break DrainLoop
-				}
-			}
-		case tag.GetEvent:
-			t := New(actCol, e.Basedir, e.Name)
-			if e.Addr != "" {
-				actTag = t.(*tag.Tag)
-				act = actTag.Body
-				actTag.Handle(actTag.Body, edit.MustCompile(e.Addr))
-				p0, _ := act.Frame.Dot()
-				moveMouse(act.Loc().Min.Add(act.PointOf(p0)))
-			} else {
-				moveMouse(t.Loc().Min)
-			}
-		case mouse.Event:
-			pt = p(e).Add(act.Loc().Min)
-			if cont == 0 {
-				activate(p(e), g)
-			}
-			e.X -= float32(act.Sp.X)
-			e.Y -= float32(act.Sp.Y)
-			mousein.Sink <- e
-		case mus.MarkEvent:
-
-			cont = 0
-			pt = p(e.Event).Add(act.Loc().Min)
-			if sizerHit(actTag, pt) {
-				if e.Button == 1 {
-					if tophit() {
-						detachcol()
-					} else {
-						detachwin()
-					}
-					cont = sizer
-				} else {
-					growshrink(e.Event)
-				}
-
-			} else if x := int(e.X); x >= 0 && x < 10 {
-				cont = scrollbar
-				act.Clicksb(p(e.Event), int(e.Button))
-			} else {
-				actTag.Handle(act, e)
-				cont = window
-			}
-			ck()
-		case mus.ScrollEvent:
-			doScrollEvent(act, e)
-		case mus.SweepEvent:
-			switch cont {
-			case scrollbar:
-				act.Clicksb(p(e.Event), 0)
-			case sizer:
-			case window:
-				if !e.Motion() && act != nil {
-					r := act.Frame.Bounds()
-					if p(e.Event).In(r) {
-						continue
-					}
-				}
-				actTag.Handle(act, e)
-			}
-			ck()
-		case mus.CommitEvent:
-			cont = 0
-			ck()
-		case mus.SnarfEvent, mus.InsertEvent:
-			actTag.Handle(act, e)
-			ck()
-		case mus.SelectEvent:
-			switch cont {
-			case scrollbar:
-				act.Clicksb(p(e.Event), 0)
-				wind.SendFirst(mus.Drain{})
-				wind.Send(mus.DrainStop{})
-			case sizer:
-				e.X += float32(act.Sp.X)
-				e.Y += float32(act.Sp.Y)
-				pt.X = int(e.X)
-				pt.Y = int(e.Y)
-				activate(p(e.Event), g)
-				sweepend()
-			case window:
-				actTag.Handle(act, e)
-				//q0, q1 := act.Dot()
-				if e.Button == 2 {
-					//	s := string(act.Bytes()[q0:q1])
-					//	actTag.Handle(act, s)
-					//	wind.Send(s)
-				}
-			}
-			cont = 0
-			ck()
-		case key.Event:
-			actTag.Handle(act, e)
-			dirty = true
-			ck()
-		case event.Look:
-			alook(e)
-			ck()
-		case event.Cmd:
-			s := string(e.P)
-			switch s {
-			case "Put", "Get":
-				actTag.Handle(act, s)
-				ck()
-			case "New":
-				moveMouse(New(actCol, "", "").Loc().Min)
-			case "Newcol":
-				moveMouse(NewCol2(g, "").Loc().Min)
-			case "Del":
-				Del(actCol, actCol.ID(actTag))
-			case "Sort":
-				aerr("Sort: TODO")
-			case "Delcol":
-				Delcol(g, g.ID(actCol))
-			case "Exit":
-				aerr("Exit: TODO")
-			default:
-				if len(e.To) == 0 {
-					aerr("cmd has no destination: %q", s)
-				}
-				abs := AbsOf(e.Basedir, e.Name)
-				if strings.HasPrefix(s, "Edit ") {
-					s = s[5:]
-					// The event sink shouldn't be specified during
-					// compile time, but its the easiest way to
-					// see it works correctly with the editor
-					prog, err := edit.Compile(s, &edit.Options{Sender: wind, Origin: abs})
-					if err != nil {
-						aerr(err.Error())
-						continue
-					}
-					prog.Run(e.To[0])
-					w := e.To[0].(*win.Win)
-					w.Resize(w.Size())
-					//e.To[0].(*win.Win).Refresh()
-					ajump(e.To[0], false)
-				} else if strings.HasPrefix(s, "Install ") {
-					s = s[8:]
-					g.Install(actTag, s)
-				} else {
-					x := strings.Fields(s)
-					if len(x) < 1 {
-						aerr("empty command")
-						continue
-					}
-					tagname := fmt.Sprintf("%s%c-%s", path.DirOf(abs), filepath.Separator, x[0])
-					to := g.afinderr(path.DirOf(abs), tagname)
-					cmd(to.Body, path.DirOf(abs), s)
-					dirty = true
-				}
-			}
-			ck()
-		case edit.File:
-			g.acolor(e)
-		case edit.Print:
-			g.aout(string(e))
-		case size.Event:
+		select {
+		case <-sigterm:
+			logf("mainselect: sigterm")
+			break Loop
+		case e := <-D.Size:
 			winSize = image.Pt(e.WidthPx, e.HeightPx)
 			g.Resize(winSize)
-			ck()
-		case paint.Event:
-			if !focused {
-				g.Resize(winSize)
-			}
-			if !lim.Allow() {
+			repaint()
+		case e := <-D.Paint:
+			if throttled() {
 				continue
 			}
-			g.Upload(wind)
+			if e.External {
+				g.Resize(winSize)
+			}
+			g.Upload()
 			wind.Publish()
-		case lifecycle.Event:
-			if e.To == lifecycle.StageDead {
-				return
+		case e := <-D.Lifecycle:
+			procLifeCycle(e)
+			repaint()
+		case e := <-events:
+			switch e := e.(type) {
+			case tag.GetEvent:
+				t := New(actCol, e.Basedir, e.Name)
+				if e.Addr != "" {
+					actTag = t.(*tag.Tag)
+					act = actTag.Body
+					//actTag.Handle(actTag.Body, edit.MustCompile(e.Addr))
+					MoveMouse(act)
+				} else {
+					moveMouse(t.Loc().Min)
+				}
+			case edit.File:
+				g.acolor(e)
+			case edit.Print:
+				g.aout(string(e))
+			case error:
+				logf("unspecified error: %s", e)
+			case interface{}:
+				logf("missing event: %#v\n", e)
+				continue
 			}
-			// NT doesn't repaint the window if another window covers it
-			if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOff {
-				focused = false
-				wind.Send(paint.Event{})
-			} else if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOn {
-				focused = true
-			}
-		case error:
-			aerr(e.Error())
-		case interface{}:
-			log.Printf("missing event: %#v\n", e)
+			repaint()
 		}
 	}
-
 }
 
-func cmd(f text.Editor, dir string, argv string) {
-	x := strings.Fields(argv)
-	if len(x) == 0 {
-		eprint("|: nothing on rhs")
+func teardown() {
+	select {
+	case clean := <-moribound:
+		if clean {
+			setLogFunc(log.Printf)
+			logf("TODO: polite shutdown")
+			close(sigterm)
+			close(moribound)
+		}
+	default:
+	}
+}
+
+func procLifeCycle(e lifecycle.Event) {
+	if e.To == lifecycle.StageDead {
+		teardown()
 		return
 	}
-	n := x[0]
-	var a []string
-	if len(x) > 1 {
-		a = x[1:]
+	if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOff {
+		focused = false
+	} else if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOn {
+		focused = true
 	}
-
-	cmd := exec.Command(n, a...)
-	cmd.Dir = dir
-	q0, q1 := f.Dot()
-	f.Delete(q0, q1)
-	q1 = q0
-	var fd0 io.WriteCloser
-	fd1, err := cmd.StdoutPipe()
-	if err != nil {
-		panic(err)
-	}
-	fd2, err := cmd.StderrPipe()
-	if err != nil {
-		panic(err)
-	}
-	fd0, err = cmd.StdinPipe()
-	if err != nil {
-		panic(err)
-	}
-
-	fd0.Close()
-	var wg sync.WaitGroup
-	donec := make(chan bool)
-	outc := make(chan []byte)
-	errc := make(chan []byte)
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		b := make([]byte, 65536)
-		for {
-			select {
-			case <-donec:
-				return
-			default:
-				n, err := fd1.Read(b)
-				if err != nil {
-					if err == io.EOF {
-						break
-					}
-					eprint(err)
-				}
-				outc <- append([]byte{}, b[:n]...)
-			}
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-		b := make([]byte, 65536)
-		for {
-			select {
-			case <-donec:
-				return
-			default:
-				n, err := fd2.Read(b)
-				if err != nil {
-					if err == io.EOF {
-						break
-					}
-				}
-				errc <- append([]byte{}, b[:n]...)
-			}
-		}
-	}()
-	cmd.Start()
-	go func() {
-		_, err = io.Copy(fd0, bytes.NewReader(append([]byte{}, f.Bytes()[q0:q1]...)))
-		if err != nil {
-			eprint(err)
-			return
-		}
-		cmd.Wait()
-		close(donec)
-	}()
-	go func() {
-	Loop:
-		for {
-			select {
-			case p := <-outc:
-				f.Insert(p, q1)
-				q1 += int64(len(p))
-			case p := <-errc:
-				f.Insert(p, q1)
-				q1 += int64(len(p))
-			case <-donec:
-				break Loop
-			}
-		}
-	}()
-
 }
