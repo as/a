@@ -10,7 +10,7 @@ var (
 	Tag0  = frame.ATag0
 	Tag1  = frame.ATag1
 	Tag2  = frame.ATag1
-	Body2 = frame.A
+	Body2 = frame.Mono
 )
 
 func usedarkcolors() {

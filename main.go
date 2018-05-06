@@ -6,6 +6,7 @@ import (
 	"image"
 	"log"
 	"os"
+	"os/exec"
 	"runtime"
 
 	"github.com/as/shiny/screen"
@@ -15,6 +16,7 @@ import (
 	"github.com/as/edit"
 	"github.com/as/ui/col"
 	"github.com/as/ui/tag"
+	"github.com/as/ui/win"
 )
 
 var (
@@ -88,6 +90,20 @@ func main() {
 	sp, size := image.Pt(0, 0), image.Pt(900, 900)
 	g.Move(sp)
 	g.Resize(size)
+
+	asm := col.New(dev, ColConfig)
+	asm.Tag.InsertString("Build	|", 0)
+	asm.Move(sp)
+	asm.Resize(size)
+	act = New(asm, "", "asm0").(*tag.Tag)
+	{
+		cmd := exec.Command("go", "build", "-a", "-gcflags", "-S -m=2")
+		cmd.Stderr = act.(*tag.Tag).Body.(*win.Win)
+		cmd.Run()
+	}
+
+	col.Attach(g, asm, sp)
+	sp.X += size.X / len(list)
 
 	for _, v := range list {
 		col.Attach(g, NewCol(dev, ft, image.ZP, image.ZP, v), sp)
