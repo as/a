@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/as/event"
+	"github.com/as/srv/fs"
 	"github.com/as/text"
 	"github.com/as/text/action"
 	"github.com/as/text/find"
@@ -31,7 +32,7 @@ func AbsOf(basedir, path string) string {
 	return filepath.Join(basedir, path)
 }
 
-var resolver = &fileresolver{ // from fs.go:/resolver/
+var resolver = &fs.Resolver{ // from fs.go:/resolver/
 	Fs: newfsclient(), // called in :/Grid..Look/
 }
 
@@ -161,11 +162,11 @@ func (g *Grid) Look(e event.Look) {
 	}
 
 	exists := false
-	info, existsRemote := resolver.look(pathinfo{root: g.cwd(), tag: e.Name, pred: name})
+	info, existsRemote := resolver.Look(fs.Path{Root: g.cwd(), Tag: e.Name, Pred: name})
 
-	t, exists = g.Lookup(info.path).(*tag.Tag)
+	t, exists = g.Lookup(info.Path).(*tag.Tag)
 	if !exists && existsRemote {
-		t, _ = New(actCol, info.dir, info.path).(*tag.Tag)
+		t, _ = New(actCol, info.Dir, info.Path).(*tag.Tag)
 	}
 	if t != nil {
 		if g.EditRun(addr, t.Body) {
@@ -192,9 +193,8 @@ func (g *Grid) Look(e event.Look) {
 			lookliteral(p.(*tag.Tag).Body, e, cursorNop)
 		})
 	} else {
-		what := e.P
 		if e.To[0] != e.From {
-			lookliteraltag(e.To[0], e.Q0, e.Q1, what)
+			lookliteraltag(e.To[0], e.Q0, e.Q1, e.P)
 		} else {
 			lookliteral(e.To[0], e, moveMouse)
 		}
