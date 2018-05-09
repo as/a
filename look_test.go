@@ -1,5 +1,6 @@
 package main
 
+/*
 type lookTest struct{
 	q0, q1 int64 // pre-sweep selection
 	s0, s1 int64 // post-sweep selection
@@ -20,3 +21,4 @@ func TestLook(t *testing.T){
 	}
 	
 }
+	*/
