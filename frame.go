@@ -20,7 +20,13 @@ func frameinstall() (ui.Dev, screen.Window, *screen.Device, font.Face) {
 	frame.ForceUTF8 = *utf8
 	frame.ForceElastic = *elastic
 	if *utf8 {
+		GridConfig.Tag.Frame.Flag |= frame.FrUTF8
+		ColConfig.Tag.Frame.Flag |= frame.FrUTF8
+		TagConfig.Tag.Frame.Flag |= frame.FrUTF8
 		TagConfig.Body.Frame.Flag |= frame.FrUTF8
+		TagConfig.Facer = func(n int) font.Face {
+			return font.NewRune(font.NewGoMedium(n))
+		}
 	}
 	if *elastic {
 		TagConfig.Body.Frame.Flag |= frame.FrElastic

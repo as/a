@@ -3,7 +3,6 @@ package main
 import (
 	"image"
 
-	"github.com/as/font"
 	"github.com/as/shiny/screen"
 	"github.com/as/text/find"
 	"github.com/as/text/kbd"
@@ -62,7 +61,7 @@ func kbdin(e key.Event, t *tag.Tag, act Window) {
 			if size < 3 {
 				size = 6
 			}
-			t.SetFont(font.NewFace(size))
+			t.SetFont(t.Config.Facer(size))
 			return
 		}
 	}
