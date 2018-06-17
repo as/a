@@ -90,21 +90,22 @@ func procButton(e mouse.Event) {
 		})
 	case Button(3):
 		q0, q1, _ := sweepFunc(w, e, D.Mouse)
-		if q0 == q1 && text.Region3(q0, s0, s1) != 0 {
-			// Non-zero selection; so we want to look here explicitly
-			q0, q1 = find.ExpandFile(w.Bytes(), q0)
-		}
+		from := act
+		a1 := d2a(q0, q1)
+		//			if a1.Empty() && !hiclick(q0,q1,s0,s1) {
+		//				a1 = expandAddr(a1, from)
+		//			}
 		w.Select(s0, s1) // undo the sweep
 		g.Look(event.Look{
 			Name: t.FileName(),
-			From: act,                         // The source can be the tag or the body
+			From: from,                        // The source can be the tag or the body
 			To:   []event.Editor{actTag.Body}, // But the target is always the tag's body
 			Rec: event.Rec{
-				Q0: q0,
-				Q1: q1,
-				P:  act.Bytes()[q0:q1],
+				Q0: int64(a1.s), Q1: int64(a1.e),
+				P: from.Bytes(),
 			},
 		})
+
 	}
 }
 

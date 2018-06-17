@@ -13,6 +13,7 @@ import (
 	"github.com/as/text"
 	"github.com/as/text/action"
 	"github.com/as/text/find"
+	"github.com/as/ui/col"
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
 )
@@ -107,10 +108,24 @@ func (e *Looker) LookGrid(g *Grid) (error) {
 }
 */
 
+type vis struct {
+}
+
+func (v *vis) Look(e event.Look) {
+}
+
 func (g *Grid) cwd() string {
 	s, _ := os.Getwd()
 	return s
 }
+
+// hiclick returns true if the nil address (q0,q1) intersects
+// the highlighted selection (r0:r1)
+func hiclick(r0, r1, q0, q1 int64) bool {
+	x := r0 == r1 && text.Region3(r0, q0-1, q1) == 0
+	return x
+}
+
 func (g *Grid) Look(e event.Look) {
 	if g.meta(g.Tag) {
 		return
@@ -119,9 +134,27 @@ func (g *Grid) Look(e event.Look) {
 	ed := e.To[0]
 	t, _ := ed.(*tag.Tag)
 
-	e.Q0, e.Q1 = expand3(ed, e.Q0, e.Q1)
+	p0, p1 := e.From.Dot() // pre-sweep
+	// e.Q0 and e.Q1 is post sweep
+
+	if e.Q0 == e.Q1 && !hiclick(e.Q0, e.Q1, p0, p1) {
+		// one click outside old selection
+		// expand the address
+		a1 := expandFile(d2a(e.Q0, e.Q1), e.From)
+		e.Q0, e.Q1 = a1.Dot()
+	} else if e.Q0 == e.Q1 {
+		// click inside old selection
+		// use the old selection
+		e.Q0, e.Q1 = p0, p1
+	} else {
+		// selection overlaps old selection
+		// we don't care about that
+	}
+
+	//fmt.Printf("name and dot %q %d %d\n", e.P, e.Q0, e.Q1)
+	e.P = e.P[e.Q0:e.Q1] //ed.Bytes()
+
 	name, addr := action.SplitPath(string(e.P))
-	//	e.P = ed.Bytes()[e.Q0:e.Q1]
 	if name == "" && addr == "" {
 		return
 	}
@@ -185,7 +218,7 @@ func (g *Grid) Look(e event.Look) {
 	}
 
 	//TODO(as): fix this so it doesn't compare hard coded coordinates
-	if e.To[0].(*win.Win) == nil || e.To[0].(Plane).Loc().Max.Y < 48 {
+	if e.To[0].(*win.Win) == nil {
 		VisitAll(g, func(p Named) {
 			if p == nil {
 				return
@@ -200,7 +233,26 @@ func (g *Grid) Look(e event.Look) {
 		}
 	}
 }
+
+func stub(g *Grid, p Plane) bool {
+	if p == nil {
+		return false
+	}
+	if p == g.Tag {
+		return true
+	}
+	l := g.Kids()
+	for i := range l {
+		c, _ := l[i].(*col.Col)
+		if c != nil && p == c.Tag {
+			return true
+		}
+	}
+	return false
+}
+
 func (g *Grid) afinderr(wd string, name string) *tag.Tag {
+
 	name = strings.TrimSpace(name)
 	if !strings.HasSuffix(name, "+Errors") {
 		name += "+Errors"
@@ -236,16 +288,6 @@ func (g *Grid) aout(fm string, i ...interface{}) {
 	ajump(t.Body, cursorNop)
 }
 
-// expand3 return (r0:r1) if and only if that range is wide and
-// not inside ed's dot, otherwise it returns dot
-func expand3(ed text.Editor, r0, r1 int64) (int64, int64) {
-	q0, q1 := ed.Dot()
-	if r0 == r1 && text.Region3(r0, q0, q1) == 0 {
-		return q0, q1
-	}
-	return r0, r1
-}
-
 func lookliteraltag(ed text.Editor, q0, q1 int64, what []byte) {
 	q0, q1 = ed.Dot()
 	s0, s1 := find.FindNext(ed, q0, q1, what)
@@ -262,16 +304,14 @@ func lookliteral(ed text.Editor, e event.Look, mouseFunc func(image.Point)) {
 	// If the found range is identical to the starting point, no result has been found
 
 	t0, t1 := ed.Dot()
-	//	g.aerr("lookliteral:  dot(%d:%d)", t0, t1)
-	//	g.aerr("lookliteral: find(%d:%d) [%q]", e.Q0, e.Q1, e.P)
-	q0, q1 := find.FindNext(ed, e.Q0, e.Q1, e.P)
-	//	g.aerr("lookliteral: next(%d:%d)", q0, q1)
+
+	q0, q1 := find.FindNext(ed, e.Q1, e.Q1, e.P)
+	//fmt.Printf("after q0,q1: %d,%d\n\n\t%q\n", e.Q0, e.Q1, e.P)
+
 	if q0 == e.Q0 && q1 == e.Q1 {
-		//		g.aerr("lookliteral: not found, same output(%d:%d)", q0, q1)
 		ed.Select(t0, t1)
 		return
 	}
-	//	g.aerr("lookliteral: found, diff output(%d:%d) != input(%d:%d)", q0, q1, e.Q0, e.Q1)
 	ed.Select(q0, q1)
 	ajump(ed, mouseFunc)
 }

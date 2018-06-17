@@ -89,6 +89,7 @@ func acmd(e event.Cmd) {
 		if strings.HasPrefix(s, "Edit ") {
 			s = s[5:]
 			editcmd(e.To[0], abs, s)
+			editRefresh(e.To[0])
 		} else if strings.HasPrefix(s, "Install ") {
 			s = s[8:]
 			g.Install(actTag, s)

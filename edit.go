@@ -5,6 +5,22 @@ import (
 	"github.com/as/text"
 )
 
+func editRefresh(ed text.Editor) {
+	type r interface {
+		Refresh()
+	}
+	type u interface {
+		Upload()
+	}
+
+	if ed, ok := ed.(r); ok {
+		ed.Refresh()
+	}
+	if ed, ok := ed.(u); ok {
+		ed.Upload()
+	}
+}
+
 func (g *Grid) EditRun(prog string, ed text.Editor) (ok bool) {
 	//TODO(as): danger, edit needs a way to ensure it will only jump to an address
 	if prog == "" {
