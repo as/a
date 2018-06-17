@@ -17,10 +17,17 @@ var (
 )
 
 func readmouse(e mouse.Event) mouse.Event {
-	switch e.Direction {
-	case 1:
+	// km := KMod()
+	if e.Button == 1 {
+		if km := e.Modifiers; km&KCtrl != 0 {
+			e.Button = 3
+		} else if km&KAlt != 0 {
+			e.Button = 2
+		}
+	}
+	if dir := e.Direction; dir == 1 {
 		down |= 1 << uint(e.Button)
-	case 2:
+	} else if dir == 2 {
 		down &^= 1 << uint(e.Button)
 	}
 	return e
