@@ -38,9 +38,11 @@ type Window interface {
 }
 
 func kbdin(e key.Event, t *tag.Tag, act Window) {
+	//	SetKMod(KFlag(e.Modifiers))
 	if e.Direction == 2 {
 		return
 	}
+
 	if e.Code == key.CodeI && e.Modifiers == key.ModControl {
 		runGoImports(t, e)
 		return
