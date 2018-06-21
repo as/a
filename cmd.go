@@ -12,6 +12,7 @@ import (
 
 	"github.com/as/edit"
 	"github.com/as/event"
+	"github.com/as/font"
 	"github.com/as/path"
 	"github.com/as/text"
 	"github.com/as/ui/tag"
@@ -59,9 +60,24 @@ func runeditcmd(prog *edit.Command, ed interface{}) {
 	}
 }
 
+var fontmap = make(map[*tag.Tag]int)
+var fontfuncs = [...]func(int) font.Face{
+	font.NewGoMedium,
+	font.NewGoRegular,
+	font.NewGoMono,
+}
+
 func acmd(e event.Cmd) {
 	s := string(e.P)
 	switch s {
+	case "Font":
+		t := actTag
+		fontmap[t]++
+		t.Config.Facer = fontfuncs[fontmap[t]%len(fontfuncs)]
+		w, _ := t.Body.(*win.Win)
+		if w != nil && w.Frame != nil {
+			t.SetFont(t.Config.Facer(w.Frame.Face.Height()))
+		}
 	case "Put":
 		actTag.Put()
 		repaint()
