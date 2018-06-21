@@ -1,24 +1,21 @@
 package main
 
 import (
+	"image"
+
 	"github.com/as/edit"
 	"github.com/as/text"
 )
 
 func editRefresh(ed text.Editor) {
-	type r interface {
-		Refresh()
-	}
-	type u interface {
+	if ref, ok := ed.(interface {
+		Size() image.Point
+		Resize(image.Point)
 		Upload()
+	}); ok {
+		ref.Resize(ref.Size())
 	}
-
-	if ed, ok := ed.(r); ok {
-		ed.Refresh()
-	}
-	if ed, ok := ed.(u); ok {
-		ed.Upload()
-	}
+	repaint()
 }
 
 func (g *Grid) EditRun(prog string, ed text.Editor) (ok bool) {
@@ -39,6 +36,6 @@ func (g *Grid) EditRun(prog string, ed text.Editor) (ok bool) {
 	if err != nil {
 		g.aerr("edit: run: %q: %s", prog, err)
 	}
-
+	editRefresh(ed)
 	return err == nil
 }
