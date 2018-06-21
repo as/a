@@ -128,50 +128,33 @@ func cmdexec(input text.Editor, dir string, argv string) {
 	donec := make(chan bool)
 	outc := make(chan []byte)
 	errc := make(chan []byte)
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		b := make([]byte, 65536)
-		for {
-			select {
-			case <-donec:
-				return
-			default:
-				n, err := fd1.Read(b)
-				if n > 0 {
-					outc <- append([]byte{}, b[:n]...)
-				}
-				if err != nil {
-					if err != io.EOF {
-						eprint(err)
-					}
+	for _, fd := range []io.ReadCloser{fd1, fd2} {
+		fd := fd
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			var b [65536]byte
+			for {
+				select {
+				case <-donec:
 					return
+				default:
+					n, err := fd.Read(b[:])
+					if n > 0 {
+						outc <- append([]byte{}, b[:n]...)
+					}
+					if err != nil {
+						if err != io.EOF {
+							eprint(err)
+						}
+						return
+					}
 				}
 			}
-		}
-	}()
 
-	go func() {
-		defer wg.Done()
-		b := make([]byte, 65536)
-		for {
-			select {
-			case <-donec:
-				return
-			default:
-				n, err := fd2.Read(b)
-				if n > 0 {
-					errc <- append([]byte{}, b[:n]...)
-				}
-				if err != nil {
-					if err != io.EOF {
-						eprint(err)
-					}
-					return
-				}
-			}
-		}
-	}()
+		}()
+	}
+	
 	err := cmd.Start()
 	if err != nil {
 		logf("exec: %s: %s", argv, err)
@@ -196,8 +179,7 @@ func cmdexec(input text.Editor, dir string, argv string) {
 		if input != nil {
 			stdin = bytes.NewReader(append([]byte{}, input.Bytes()[q0:q1]...))
 		}
-		_, err := io.Copy(fd0, stdin)
-		if err != nil {
+		if _, err := io.Copy(fd0, stdin);err != nil {
 			eprint(err)
 			return
 		}
