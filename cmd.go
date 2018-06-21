@@ -154,7 +154,7 @@ func cmdexec(input text.Editor, dir string, argv string) {
 
 		}()
 	}
-	
+
 	err := cmd.Start()
 	if err != nil {
 		logf("exec: %s: %s", argv, err)
@@ -179,7 +179,7 @@ func cmdexec(input text.Editor, dir string, argv string) {
 		if input != nil {
 			stdin = bytes.NewReader(append([]byte{}, input.Bytes()[q0:q1]...))
 		}
-		if _, err := io.Copy(fd0, stdin);err != nil {
+		if _, err := io.Copy(fd0, stdin); err != nil {
 			eprint(err)
 			return
 		}
