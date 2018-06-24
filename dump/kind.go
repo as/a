@@ -36,7 +36,7 @@ func (k Tag) Encode(w io.Writer) (err error) {
 		)
 	case 'f':
 		_, err = fmt.Fprintf(w,
-			"%c%11d %11d %11d %11d %11d %11d \n%11d %11d %11d %11d %11d %s\n",
+			"%c%11d %11d %11d %11d %11d \n%11d %11d %11d %11d %11d %s\n",
 			k.Kind, k.Row, k.Col, k.Q0, k.Q1, k.Percent,
 			k.Wid, len(k.Label), len(k.Body), b2i(k.Dir), b2i(k.Dirty), k.Label,
 		)
