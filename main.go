@@ -66,9 +66,7 @@ func init() {
 }
 
 func banner() {
-	logf("ver=%s", Version)
-	logf("pid=%d", os.Getpid())
-	logf("args=%q", os.Args)
+	logf("ver=%s pid=%d args=%q", Version, os.Getpid(), os.Args)
 	repaint()
 }
 
