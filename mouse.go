@@ -45,7 +45,9 @@ func procButton(e mouse.Event) {
 	q0 := w.IndexOf(p(e)) + w.Origin()
 	q1 := q0
 	act.Select(q0, q1)
-	repaint()
+
+	// repaint()	// fixes the ugly repaint bug when single clicking a selection to completion
+
 	switch down {
 	case Button(1):
 		if double {
