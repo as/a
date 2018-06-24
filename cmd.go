@@ -12,7 +12,7 @@ import (
 
 	"github.com/as/edit"
 	"github.com/as/event"
-	"github.com/as/font"
+	"github.com/as/frame"
 	"github.com/as/path"
 	"github.com/as/text"
 	"github.com/as/ui/tag"
@@ -60,23 +60,31 @@ func runeditcmd(prog *edit.Command, ed interface{}) {
 	}
 }
 
-var fontmap = make(map[*tag.Tag]int)
-var fontfuncs = [...]func(int) font.Face{
-	font.NewGoMedium,
-	font.NewGoRegular,
-	font.NewGoMono,
-}
-
 func acmd(e event.Cmd) {
 	s := string(e.P)
 	switch s {
-	case "Font":
+	case "Elastic":
 		t := actTag
-		fontmap[t]++
-		t.Config.Facer = fontfuncs[fontmap[t]%len(fontfuncs)]
 		w, _ := t.Body.(*win.Win)
 		if w != nil && w.Frame != nil {
-			t.SetFont(t.Config.Facer(w.Frame.Face.Height()))
+			cf := &t.Config.Body.Frame
+			if cf.Flag&frame.FrElastic == 0 {
+				cf.Flag |= frame.FrElastic
+			} else {
+				cf.Flag &^= frame.FrElastic
+			}
+			cf.Flag |= frame.FrElastic
+			w.Frame.SetFlags(cf.Flag)
+			w.Resize(w.Size())
+		}
+		repaint()
+	case "Font":
+		if actTag == g.Tag {
+			nextFace(g)
+		} else if actTag == actCol.Tag {
+			nextFace(actCol)
+		} else {
+			nextFace(actTag)
 		}
 	case "Put":
 		actTag.Put()
