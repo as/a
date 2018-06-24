@@ -10,7 +10,7 @@ type facer interface {
 	SetFont(font.Face)
 }
 
-var fontmap = make(map[font.Facer]int)
+var fontmap = make(map[facer]int)
 
 var fontfuncs = [...]func(int) font.Face{
 	font.NewFace,
