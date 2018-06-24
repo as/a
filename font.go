@@ -5,6 +5,11 @@ import (
 	"github.com/as/ui/tag"
 )
 
+type facer interface {
+	Face() font.Face
+	SetFont(font.Face)
+}
+
 var fontmap = make(map[font.Facer]int)
 
 var fontfuncs = [...]func(int) font.Face{
@@ -14,7 +19,7 @@ var fontfuncs = [...]func(int) font.Face{
 	font.NewGoMono,
 }
 
-func nextFace(f font.Facer) {
+func nextFace(f facer) {
 	fontmap[f]++
 	fn := fontfuncs[fontmap[f]%len(fontfuncs)]
 	if f, ok := f.(*tag.Tag); ok {
