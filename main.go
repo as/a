@@ -43,13 +43,14 @@ func defaultFaceSize() int {
 }
 
 var (
-	utf8       = flag.Bool("u", false, "enable utf8 experiment")
-	elastic    = flag.Bool("elastic", false, "enable elastic tabstops")
-	oled       = flag.Bool("b", false, "OLED display mode (black)")
-	ftsize     = flag.Int("ftsize", defaultFaceSize(), "font size")
-	srvaddr    = flag.String("l", "", "(dangerous) announce and serve file system clients on given endpoint")
-	clientaddr = flag.String("d", "", "dial to a remote file system on endpoint")
-	quiet      = flag.Bool("q", false, "dont interact with the graphical subsystem (use with -l)")
+	utf8     = flag.Bool("u", false, "enable utf8 experiment")
+	elastic  = flag.Bool("elastic", false, "enable elastic tabstops")
+	oled     = flag.Bool("b", false, "OLED display mode (black)")
+	ftsize   = flag.Int("ftsize", defaultFaceSize(), "font size")
+	srvaddr  = flag.String("srv", "", "(dangerous) announce and serve file system clients on given endpoint")
+	load     = flag.String("l", "", "load state from a dump file in acme format")
+	dialaddr = flag.String("dial", "", "dial to a remote file system on endpoint")
+	quiet    = flag.Bool("q", false, "dont interact with the graphical subsystem (use with -l)")
 )
 
 func init() {
@@ -71,8 +72,17 @@ func banner() {
 	repaint()
 }
 
+func trap() {
+	err := recover()
+	if err != nil {
+		teardown(true)
+	}
+}
+
 func main() {
 	defer trypprof()()
+	defer trap()
+
 	list := argparse()
 	if *quiet {
 		banner()
@@ -89,11 +99,15 @@ func main() {
 	g.Move(sp)
 	g.Resize(size)
 
-	for _, v := range list {
-		col.Attach(g, NewCol(dev, ft, image.ZP, image.ZP, v), sp)
-		sp.X += size.X / len(list)
+	if *load != "" {
+		Load(g, *load)
+	} else {
+		for _, v := range list {
+			col.Attach(g, NewCol(dev, ft, image.ZP, image.ZP, v), sp)
+			sp.X += size.X / len(list)
+		}
+		col.Fill(g)
 	}
-	col.Fill(g)
 	g.Refresh()
 
 	setLogFunc(g.aerr)
@@ -102,6 +116,7 @@ func main() {
 	actinit(g)
 	assert("actinit", g)
 	go func() {
+		defer trap()
 		for {
 			select {
 			case e := <-D.Scroll:
@@ -128,6 +143,7 @@ func main() {
 	}()
 
 	go func() {
+		defer trap()
 		for {
 			select {
 			case e := <-D.Key:
@@ -189,12 +205,15 @@ Loop:
 	}
 }
 
-func teardown() {
+func teardown(save bool) {
 	select {
 	case clean := <-moribound:
 		if clean {
 			setLogFunc(log.Printf)
-			logf("TODO: polite shutdown")
+			if save {
+				Dump(g, g.cwd(), "gomono", "goregular")
+				println("crash: saved: use 'a -l a.dump' to restore")
+			}
 			close(sigterm)
 			close(moribound)
 		}
@@ -204,7 +223,7 @@ func teardown() {
 
 func procLifeCycle(e lifecycle.Event) {
 	if e.To == lifecycle.StageDead {
-		teardown()
+		teardown(false)
 		return
 	}
 	if e.Crosses(lifecycle.StageFocused) == lifecycle.CrossOff {

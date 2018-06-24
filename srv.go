@@ -14,8 +14,8 @@ func createnetworks() (fatal error) {
 	if *srvaddr != "" {
 		srv, srverr = fs.Serve("tcp", *srvaddr)
 	}
-	if *clientaddr != "" {
-		client, clienterr = fs.Dial("tcp", *clientaddr)
+	if *dialaddr != "" {
+		client, clienterr = fs.Dial("tcp", *dialaddr)
 		if clienterr != nil {
 			return clienterr
 		}
@@ -34,7 +34,7 @@ func newfsclient() fs.Fs {
 		return &fs.Local{}
 	}
 	if clienterr != nil {
-		client, clienterr = fs.Dial("tcp", *clientaddr)
+		client, clienterr = fs.Dial("tcp", *dialaddr)
 	}
 	if clienterr == nil {
 		return client

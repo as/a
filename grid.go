@@ -17,7 +17,7 @@ type Grid struct {
 }
 
 var (
-	GridLabel = "Newcol Killall Exit    guru^(callees callers callstack definition describe freevars implements peers pointsto referrers what whicherrs)"
+	GridLabel = "Newcol Killall Dump Load Exit  guru^(callees callers callstack definition describe freevars implements peers pointsto referrers what whicherrs)"
 )
 
 func NewGrid(dev ui.Dev, conf *tag.Config, files ...string) *Grid {
