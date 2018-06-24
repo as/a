@@ -63,6 +63,10 @@ func runeditcmd(prog *edit.Command, ed interface{}) {
 func acmd(e event.Cmd) {
 	s := string(e.P)
 	switch s {
+	case "Load":
+		Load(g, "a.dump")
+	case "Dump":
+		Dump(g, g.cwd(), "gomono", "goregular")
 	case "Elastic":
 		t := actTag
 		w, _ := t.Body.(*win.Win)
