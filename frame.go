@@ -19,6 +19,7 @@ func frameinstall() (ui.Dev, screen.Window, *screen.Device, font.Face) {
 	}
 	frame.ForceUTF8 = *utf8
 	frame.ForceElastic = *elastic
+	TagConfig.FaceHeight = *ftsize
 	if *utf8 {
 		GridConfig.Tag.Frame.Flag |= frame.FrUTF8
 		ColConfig.Tag.Frame.Flag |= frame.FrUTF8
