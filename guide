@@ -1,16 +1,30 @@
+# Navigation
+#	select = mouse1
+# 	execute = mouse2 or ALT+Mouse1
+# 	look = mouse3 or CTRL+Mouse1
+
 # Execute any of these commands
-# sweep over them with the middle mouse button  
-go build
+Newcol
 go vet
 go fmt
+go build
 
-# Right click on any of these
+# Jump to address (look)
 README.md:/sam/
 a.exe:/This.program/
-
-# Run this in the tag of a go file and scroll down
-Install ,x,(func|type|import|package|var|switch|select|struct|chan|for|while|case|break|continue|return|else|if),h
-
-# Highlight UTF-16
+guide:3,+3
 a.exe:#3233761,#3233760
-Install ,x,([A-Za-z]\x00)+,h
+
+# Highlight (sweep+execute)
+Install ,x,#\x20.+,h	# Comments
+Install ,x,(func|type),h # Go keywords
+
+# Edit: Change 'n' to 'Navigation' (seep+execute)
+Edit ,x,#\x20navigation,x,na,x,n,c,N,
+
+# Dump/Load editor state (execute)
+Dump	
+a -l a.dump
+
+# View an image
+[TBD]
