@@ -22,10 +22,10 @@ A is a text editor inspired by the Sam and Acme text editors for the Plan 9 oper
 	- Frame implementation stores bytes and works with '\0'
 	- UTF-8 rendering support 
 	- Structure highlighting
+	- Image support (TBD)
 - Files
 	- Optimized for editing huge binary files.
 
-![paint](install.png)
 ![paint](b.png)
 
 # note
