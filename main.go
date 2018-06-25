@@ -45,6 +45,7 @@ func defaultFaceSize() int {
 var (
 	utf8     = flag.Bool("u", false, "enable utf8 experiment")
 	elastic  = flag.Bool("elastic", false, "enable elastic tabstops")
+	images   = flag.Bool("images", false, "render images in editor (experimental/unstable)")
 	oled     = flag.Bool("b", false, "OLED display mode (black)")
 	ftsize   = flag.Int("ftsize", defaultFaceSize(), "font size")
 	srvaddr  = flag.String("srv", "", "(dangerous) announce and serve file system clients on given endpoint")
@@ -74,6 +75,7 @@ func trap() {
 	err := recover()
 	if err != nil {
 		teardown(true)
+		panic(err)
 	}
 }
 
@@ -180,6 +182,7 @@ Loop:
 			switch e := e.(type) {
 			case tag.GetEvent:
 				t := New(actCol, e.Basedir, e.Name)
+				getcmd(t.(*tag.Tag))
 				if e.Addr != "" {
 					actTag = t.(*tag.Tag)
 					act = actTag.Body
@@ -188,6 +191,7 @@ Loop:
 				} else {
 					moveMouse(t.Loc().Min)
 				}
+				repaint()
 			case edit.File:
 				g.acolor(e)
 			case edit.Print:
