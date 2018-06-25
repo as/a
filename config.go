@@ -40,7 +40,6 @@ var (
 			0: Tag2,
 			1: Body2,
 		},
-		Image: true,
-		Ctl:   events,
+		Ctl: events,
 	}
 )
