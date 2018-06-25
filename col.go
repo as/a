@@ -39,7 +39,7 @@ func underText(p Plane) image.Point {
 func New(c *Col, basedir, name string) (w Plane) {
 	t := tag.New(c.Dev(), TagConfig)
 	t.Open(basedir, name)
-	t.Insert([]byte(" [Edit  ,x]"), t.Len())
+	t.Insert([]byte(" [Edit ] "), t.Len())
 	r := c.Area()
 	if c.Len() > 0 {
 		r.Min = underText(c.List[len(c.List)-1])
