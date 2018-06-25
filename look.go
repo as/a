@@ -200,6 +200,7 @@ func (g *Grid) Look(e event.Look) {
 	t, exists = g.Lookup(info.Path).(*tag.Tag)
 	if !exists && existsRemote {
 		t, _ = New(actCol, info.Dir, info.Path).(*tag.Tag)
+		getcmd(t)
 	}
 	if t != nil {
 		if g.EditRun(addr, t.Body) {
