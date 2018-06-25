@@ -5,6 +5,7 @@
 A is a text editor inspired by the Sam and Acme text editors for the Plan 9 operating system.
 
 ![paint](a.png)
+![paint](b.png)
 
 - Written in Go (no dependencies)
 	- Native
@@ -26,7 +27,6 @@ A is a text editor inspired by the Sam and Acme text editors for the Plan 9 oper
 - Files
 	- Optimized for editing huge binary files.
 
-![paint](b.png)
 
 # note
 
