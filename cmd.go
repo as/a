@@ -60,9 +60,21 @@ func runeditcmd(prog *edit.Command, ed interface{}) {
 	}
 }
 
+func getcmd(t *tag.Tag) {
+	// Add rendering here if image?
+	if *images && tryImage(t.FileName()) {
+		render(t)
+	} else {
+		t.Get(t.FileName())
+	}
+}
+
 func acmd(e event.Cmd) {
 	s := string(e.P)
 	switch s {
+	case "Img":
+		renderimage(actTag)
+		repaint()
 	case "Load":
 		Load(g, "a.dump")
 	case "Dump":
@@ -94,7 +106,8 @@ func acmd(e event.Cmd) {
 		actTag.Put()
 		repaint()
 	case "Get":
-		actTag.Get(actTag.FileName())
+		getcmd(actTag)
+
 		repaint()
 	case "New":
 		newtag := New(actCol, "", "")
