@@ -1,6 +1,10 @@
 package main
 
 import (
+	"os"
+	"runtime"
+	"strconv"
+
 	"github.com/as/font"
 	"github.com/as/ui/tag"
 )
@@ -26,4 +30,25 @@ func nextFace(f facer) {
 		f.Config.Facer = fn
 	}
 	f.SetFont(fn(f.Face().Height()))
+}
+
+func defaultFaceSize() int {
+	if s := os.Getenv("fontsize"); s != "" {
+		// user specified a font size, so let's
+		// just go with it
+		v, err := strconv.Atoi(s)
+		if err == nil {
+			return v
+		}
+	}
+	switch runtime.GOOS {
+	case "darwin":
+		// darwin begets a larger font; might not be enough;
+		// TODO(as): proper DPI-aware scaling
+		return 13
+	default:
+		// de-facto standard for best looking font size
+		// based on references I don't have anymore
+		return 11
+	}
 }

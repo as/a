@@ -6,7 +6,6 @@ import (
 	"image"
 	"log"
 	"os"
-	"runtime"
 
 	"github.com/as/shiny/screen"
 	mus "github.com/as/text/mouse"
@@ -33,19 +32,10 @@ var (
 	focused   = false
 )
 
-func defaultFaceSize() int {
-	switch runtime.GOOS {
-	case "darwin":
-		return 13
-	default:
-		return 11
-	}
-}
-
 var (
 	utf8     = flag.Bool("u", false, "enable utf8 experiment")
 	elastic  = flag.Bool("elastic", false, "enable elastic tabstops")
-	images   = flag.Bool("images", false, "render images in editor (experimental/unstable)")
+	images   = flag.Bool("img", os.Getenv("img") == "auto", "render images in editor (experimental/unstable)")
 	oled     = flag.Bool("b", false, "OLED display mode (black)")
 	ftsize   = flag.Int("ftsize", defaultFaceSize(), "font size")
 	srvaddr  = flag.String("srv", "", "(dangerous) announce and serve file system clients on given endpoint")
