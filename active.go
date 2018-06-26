@@ -24,7 +24,7 @@ func active2(pt image.Point, list ...Plane) (x Plane) {
 		if w == nil {
 			continue
 		}
-		r := w.Loc()
+		r := w.Bounds()
 		if pt.In(r) {
 			return list[i]
 		}
@@ -36,7 +36,7 @@ func activelabel(pt image.Point, t *tag.Tag) bool {
 	if t.Win == nil {
 		panic("FLAG: label is nil")
 	}
-	if pt.In(t.Win.Loc()) {
+	if pt.In(t.Win.Bounds()) {
 		actTag = t
 		act = t.Win
 		return true

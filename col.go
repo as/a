@@ -20,7 +20,7 @@ func phi(r image.Rectangle) image.Point {
 }
 
 func underText(p Plane) image.Point {
-	pt := phi(p.Loc())
+	pt := phi(p.Bounds())
 	t, _ := p.(*tag.Tag)
 	if t == nil {
 		return pt
@@ -64,7 +64,7 @@ func NewCol(dev ui.Dev, ft font.Face, sp, size image.Point, files ...string) *Co
 func NewColParams(g *Grid, filenames ...string) *Col {
 	r := g.Area()
 	if len(g.List) != 0 {
-		r = g.List[len(g.List)-1].Loc()
+		r = g.List[len(g.List)-1].Bounds()
 	}
 	c := NewCol(g.Dev(), g.Face(), r.Min, r.Size(), filenames...)
 	col.Attach(g, c, phi(r))
@@ -73,10 +73,10 @@ func NewColParams(g *Grid, filenames ...string) *Col {
 
 func Delcol(g *Grid, id int) {
 	co := col.Detach(g, id)
-	x := co.Loc().Min.X
-	y := co.Loc().Min.Y
+	x := co.Bounds().Min.X
+	y := co.Bounds().Min.Y
 	for ; id < len(g.List); id++ {
-		x2 := g.List[id].Loc().Min.X
+		x2 := g.List[id].Bounds().Min.X
 		g.List[id].Move(image.Pt(x, y))
 		x = x2
 	}
@@ -85,11 +85,11 @@ func Delcol(g *Grid, id int) {
 
 func Del(co *Col, id int) {
 	w := co.Detach(id)
-	y := w.Loc().Min.Y
-	x := co.Loc().Min.X
+	y := w.Bounds().Min.Y
+	x := co.Bounds().Min.X
 	w.(io.Closer).Close()
 	for ; id < len(co.List); id++ {
-		y2 := co.List[id].Loc().Min.Y
+		y2 := co.List[id].Bounds().Min.Y
 		co.List[id].Move(image.Pt(x, y))
 		y = y2
 	}

@@ -111,9 +111,9 @@ func acmd(e event.Cmd) {
 		repaint()
 	case "New":
 		newtag := New(actCol, "", "")
-		moveMouse(newtag.Loc().Min)
+		moveMouse(newtag.Bounds().Min)
 	case "Newcol":
-		moveMouse(NewColParams(g, "").Loc().Min)
+		moveMouse(NewColParams(g, "").Bounds().Min)
 	case "Del":
 		Del(actCol, actCol.ID(actTag))
 	case "Sort":

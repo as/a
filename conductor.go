@@ -54,10 +54,10 @@ func place(e evp) error {
 		dDY := c.Area().Dy()
 		if c.Len() > 0 {
 			last := c.List[len(c.List)-1]
-			if c.Area().Dy() > last.Loc().Dy()*3 {
+			if c.Area().Dy() > last.Bounds().Dy()*3 {
 				logf("should roll up windows--area too small")
 			}
-			dDY = last.Loc().Dy() / 2
+			dDY = last.Bounds().Dy() / 2
 		}
 		col.Attach(c, t, image.Pt(dDY, dDY))
 		return nil

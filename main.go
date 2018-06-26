@@ -179,7 +179,7 @@ Loop:
 					//actTag.Handle(actTag.Body, edit.MustCompile(e.Addr))
 					MoveMouse(act)
 				} else {
-					moveMouse(t.Loc().Min)
+					moveMouse(t.Bounds().Min)
 				}
 				repaint()
 			case edit.File:

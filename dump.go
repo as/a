@@ -52,8 +52,8 @@ func Load(g *Grid, file string) (e error) {
 	g.Tag.Win.Select(0, 0)
 
 	var cols []*col.Col
-	x := g.Loc().Min.X
-	dx := g.Loc().Dx()
+	x := g.Bounds().Min.X
+	dx := g.Bounds().Dx()
 	for i, cent := range colcents {
 		var (
 			j      int
@@ -111,7 +111,7 @@ Loop:
 
 		t.Body.Select(int64(q0), int64(q1))
 		c := cols[i]
-		col.Attach(c, t, image.Pt(0, c.Loc().Min.Y+cent*c.Loc().Dy()/100))
+		col.Attach(c, t, image.Pt(0, c.Bounds().Min.Y+cent*c.Bounds().Dy()/100))
 	}
 
 	return nil
@@ -177,8 +177,8 @@ func Dump(g *Grid, wdir string, font0, font1 string) {
 }
 
 func flattenY(w, c Plane) int {
-	return 100 * (w.Loc().Min.Y - c.Loc().Min.Y) / c.Loc().Dy()
+	return 100 * (w.Bounds().Min.Y - c.Bounds().Min.Y) / c.Bounds().Dy()
 }
 func flattenX(c, g Plane) int {
-	return 100 * (c.Loc().Min.X - g.Loc().Min.X) / g.Loc().Dx()
+	return 100 * (c.Bounds().Min.X - g.Bounds().Min.X) / g.Bounds().Dx()
 }

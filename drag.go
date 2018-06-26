@@ -50,7 +50,7 @@ func dragCol(g *Grid, c *Col, e mouse.Event, mousein <-chan mouse.Event) {
 	col.Fill(g)
 	col.Attach(g, c0, p(e))
 	g.Upload()
-	moveMouse(c0.Loc().Min)
+	moveMouse(c0.Bounds().Min)
 }
 
 func dragTag(c *Col, t *tag.Tag, e mouse.Event, mousein <-chan mouse.Event) {
@@ -75,5 +75,5 @@ func dragTag(c *Col, t *tag.Tag, e mouse.Event, mousein <-chan mouse.Event) {
 		}
 		col.Attach(actCol, t, pt)
 	}
-	moveMouse(t.Loc().Min)
+	moveMouse(t.Bounds().Min)
 }

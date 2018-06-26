@@ -116,7 +116,7 @@ func MoveMouse(address interface{}) {
 	switch a := address.(type) {
 	case *win.Win:
 		p0, _ := a.Frame.Dot()
-		moveMouse(a.Loc().Min.Add(a.PointOf(p0)))
+		moveMouse(a.Bounds().Min.Add(a.PointOf(p0)))
 	case image.Point:
 		moveMouse(a)
 		return
@@ -170,7 +170,7 @@ func ajump(p interface{}, cursor func(image.Point)) {
 		return //TODO(as): error message without a recursive call
 	case *tag.Tag:
 		if p != nil {
-			cursor(p.Loc().Min)
+			cursor(p.Bounds().Min)
 		}
 	case text.Jumper:
 		p.Jump(cursor)
@@ -178,6 +178,6 @@ func ajump(p interface{}, cursor func(image.Point)) {
 		if cursor == nil {
 			cursor = shouldCursor(p)
 		}
-		cursor(p.Loc().Min)
+		cursor(p.Bounds().Min)
 	}
 }

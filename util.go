@@ -19,15 +19,15 @@ var (
 )
 
 func rel(e mouse.Event, p Plane) mouse.Event {
-	pt := p.Loc().Min
+	pt := p.Bounds().Min
 	e.X -= float32(pt.X)
 	e.Y -= float32(pt.Y)
 	return e
 }
 
 func canopy(pt image.Point) bool {
-	r := g.Loc()
-	r.Max.Y = r.Min.Y + g.Tag.Loc().Dy()*2
+	r := g.Bounds()
+	r.Max.Y = r.Min.Y + g.Tag.Bounds().Dy()*2
 	return pt.In(r)
 }
 

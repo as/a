@@ -38,9 +38,9 @@ func procBorderHit(e mouse.Event) {
 		case Button(2):
 		case Button(3):
 			//			actCol.PrintList()
-			actCol.RollUp(actCol.ID(actTag), act.Loc().Min.Y)
+			actCol.RollUp(actCol.ID(actTag), act.Bounds().Min.Y)
 			//			actCol.PrintList()
-			moveMouse(act.Loc().Min)
+			moveMouse(act.Bounds().Min)
 		}
 		for down != 0 {
 			readmouse(<-D.Mouse)
