@@ -32,7 +32,7 @@ func frameinstall() (ui.Dev, screen.Window, *screen.Device, font.Face) {
 	if *elastic {
 		TagConfig.Body.Frame.Flag |= frame.FrElastic
 	}
-	dev, err := ui.Init(&screen.NewWindowOptions{
+	dev, err := ui.Init(&ui.Config{
 		Width: winSize.X, Height: winSize.Y,
 		Title: "A",
 	})

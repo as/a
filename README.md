@@ -4,9 +4,12 @@
 
 A is a text editor inspired by the Sam and Acme text editors for the Plan 9 operating system.
 
+# binary 
 ![paint](a.png)
 ![paint](b.png)
 
+- Latest Binaries
+	- https://github.com/as/a/releases/tag/v0.7.3
 - Written in Go (no dependencies)
 	- Native
 	- Multi-Platform
