@@ -8,7 +8,13 @@ import (
 	"github.com/as/ui/img"
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
+	
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/gif"
+	_ "golang.org/x/image/bmp"
 )
+
 
 var imageExt = map[string]bool{
 	".png":  true,
