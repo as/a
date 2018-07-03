@@ -3,7 +3,7 @@ module github.com/as/a
 require (
 	github.com/as/clip v0.6.7
 	github.com/as/cursor v0.6.7
-	github.com/as/edit v0.6.10
+	github.com/as/edit v0.6.11
 	github.com/as/etch v0.6.7
 	github.com/as/event v0.6.7
 	github.com/as/font v0.6.7
@@ -13,7 +13,7 @@ require (
 	github.com/as/path v0.6.7
 	github.com/as/shiny v0.6.14
 	github.com/as/srv v0.6.8
-	github.com/as/text v0.6.13
+	github.com/as/text v0.6.14
 	github.com/as/ui v0.6.15
 	github.com/as/worm v0.6.7
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
