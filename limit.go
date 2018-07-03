@@ -7,12 +7,12 @@ import (
 )
 
 const (
-	disableRateLimiter = true
+	disableRateLimiter = false
 )
 
 var (
 	Limit   = rate.Limit(time.Second / 120)
-	Request = 2
+	Request = 3
 )
 
 var lim = rate.NewLimiter(Limit, Request)
