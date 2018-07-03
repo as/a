@@ -6,6 +6,10 @@ import (
 	"golang.org/x/time/rate"
 )
 
+const (
+	disableRateLimiter = true
+)
+
 var (
 	Limit   = rate.Limit(time.Second / 120)
 	Request = 2
@@ -18,5 +22,8 @@ var lim = rate.NewLimiter(Limit, Request)
 // to repaint a section of the grid
 
 func throttled() bool {
+	if disableRateLimiter {
+		return false
+	}
 	return !lim.Allow()
 }
