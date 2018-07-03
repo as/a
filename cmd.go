@@ -108,7 +108,7 @@ func acmd(e event.Cmd) {
 	case "Get":
 		getcmd(actTag)
 
-		repaint()
+		//repaint()
 	case "New":
 		newtag := New(actCol, "", "")
 		moveMouse(newtag.Bounds().Min)
