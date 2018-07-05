@@ -28,7 +28,7 @@ var (
 func procButton(e mouse.Event) {
 	double := false
 	if last == down {
-		if time.Since(t0) < time.Second/2 && lastpt.In(image.Rect(-3, -3, 3, 3).Add(p(e))) {
+		if time.Since(t0) < time.Second/3 && lastpt.In(image.Rect(-3, -3, 3, 3).Add(p(e))) {
 			double = true
 		}
 	}
