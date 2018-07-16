@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	Version = "0.7.5"
+	Version = "0.7.6"
 	eprint  = fmt.Println
 	timefmt = "15.04.05"
 )

@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	disableRateLimiter = true
+	disableRateLimiter = false
 )
 
 var (

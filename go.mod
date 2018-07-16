@@ -7,14 +7,15 @@ require (
 	github.com/as/etch v0.6.7
 	github.com/as/event v0.6.7
 	github.com/as/font v0.6.7
-	github.com/as/frame v0.6.11
+	github.com/as/frame v0.6.12
 	github.com/as/io v0.0.0-20170912233418-6e653d50e75b
 	github.com/as/ms v0.0.0-20180411144820-24d8984d31f7
 	github.com/as/path v0.6.7
-	github.com/as/shiny v0.6.14
+	github.com/as/rgba v0.0.1
+	github.com/as/shiny v0.6.15
 	github.com/as/srv v0.6.8
 	github.com/as/text v0.6.14
-	github.com/as/ui v0.6.15
+	github.com/as/ui v0.6.17
 	github.com/as/worm v0.6.7
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	golang.org/x/image v0.0.0-20180403161127-f315e4403028
