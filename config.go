@@ -15,7 +15,7 @@ var (
 		Facer:      font.NewFace,
 		FaceHeight: *ftsize,
 		Color: [3]frame.Color{
-			0: Tag0,
+			Palette["grid"],
 		},
 		Ctl: events,
 	}
@@ -26,7 +26,7 @@ var (
 		Facer:      font.NewFace,
 		FaceHeight: *ftsize,
 		Color: [3]frame.Color{
-			0: Tag1,
+			Palette["col"],
 		},
 		Ctl: events,
 	}
@@ -37,8 +37,8 @@ var (
 		Facer:      font.NewFace,
 		FaceHeight: *ftsize,
 		Color: [3]frame.Color{
-			0: Tag2,
-			1: Body2,
+			Palette["tag"],
+			Palette["win"],
 		},
 		Ctl: events,
 	}
