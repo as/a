@@ -3,7 +3,7 @@ module github.com/as/a
 require (
 	github.com/as/clip v0.6.7
 	github.com/as/cursor v0.6.7
-	github.com/as/edit v0.6.11
+	github.com/as/edit v0.6.12
 	github.com/as/etch v0.6.7
 	github.com/as/event v0.6.7
 	github.com/as/font v0.6.7
