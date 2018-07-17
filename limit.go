@@ -12,7 +12,7 @@ const (
 
 var (
 	Limit   = rate.Limit(time.Second / 120)
-	Request = 1
+	Request = 4
 )
 
 var lim = rate.NewLimiter(Limit, Request)
