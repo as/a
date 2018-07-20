@@ -1,7 +1,6 @@
 package main
 
 import (
-
 	"github.com/as/edit"
 	"github.com/as/frame"
 	. "github.com/as/rgba"
