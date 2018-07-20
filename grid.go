@@ -5,6 +5,7 @@ import (
 
 	"github.com/as/edit"
 	"github.com/as/frame"
+	"github.com/as/rgba"
 	"github.com/as/text"
 	"github.com/as/ui"
 	"github.com/as/ui/col"
@@ -36,6 +37,11 @@ func (g *Grid) Resize(size image.Point) {
 	col.Fill(g)
 }
 
+var InstallPalette = frame.Palette{
+	Back: rgba.Seagreen,
+	Text: frame.A.Text,
+}
+
 // Install places the given edit script in between
 // calls to the target windows SetOrigin method. This
 // is an experiment to test out highlighting with
@@ -54,10 +60,6 @@ func (g *Grid) Install(t *tag.Tag, srcprog string) {
 	if w == nil {
 		return
 	}
-	var green = frame.Palette{
-		Back: frame.Green,
-		Text: frame.A.Text,
-	}
 
 	prog, err := edit.Compile(srcprog)
 	if err != nil {
@@ -71,7 +73,7 @@ func (g *Grid) Install(t *tag.Tag, srcprog string) {
 		ed, _ := text.Open(buf)
 		prog.Run(ed)
 		for _, dot := range prog.Emit.Dot {
-			w.Frame.Recolor(fr.PointOf(dot.Q0), dot.Q0, dot.Q1, green)
+			w.Frame.Recolor(fr.PointOf(dot.Q0), dot.Q0, dot.Q1, InstallPalette)
 		}
 		//prog.Emit = &edit.Emitted{}
 	})
