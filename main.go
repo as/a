@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	Version = "0.7.8"
+	Version = "0.7.9"
 	eprint  = fmt.Println
 	timefmt = "15.04.05"
 )
@@ -111,7 +111,7 @@ func main() {
 			select {
 			case e := <-D.Scroll:
 				activate(p(e), g)
-				scroll(act, mus.ScrollEvent{Dy: 5, Event: e})
+				scroll(act, mus.ScrollEvent{Dy: 7, Event: e})
 			case e := <-D.Mouse:
 				activate(p(e), g)
 				e = readmouse(e)
