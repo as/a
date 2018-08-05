@@ -145,7 +145,6 @@ func acmd(e event.Cmd) {
 	}
 }
 
-
 func cmdexec(input text.Editor, dir string, argv string) {
 	x := strings.Fields(argv)
 	if len(x) == 0 {
