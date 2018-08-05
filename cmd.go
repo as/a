@@ -145,6 +145,7 @@ func acmd(e event.Cmd) {
 	}
 }
 
+
 func cmdexec(input text.Editor, dir string, argv string) {
 	x := strings.Fields(argv)
 	if len(x) == 0 {
@@ -231,12 +232,10 @@ func cmdexec(input text.Editor, dir string, argv string) {
 		select {
 		case p := <-outc:
 			lazyinit()
-			f.Insert(p, q1)
-			q1 += int64(len(p))
+			f.Write(p)
 		case p := <-errc:
 			lazyinit()
-			f.Insert(p, q1)
-			q1 += int64(len(p))
+			f.Write(p)
 		case <-donec:
 			return
 		}
@@ -244,11 +243,9 @@ func cmdexec(input text.Editor, dir string, argv string) {
 		for {
 			select {
 			case p := <-outc:
-				f.Insert(p, q1)
-				q1 += int64(len(p))
+				f.Write(p)
 			case p := <-errc:
-				f.Insert(p, q1)
-				q1 += int64(len(p))
+				f.Write(p)
 			case <-donec:
 				return
 			}
