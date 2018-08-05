@@ -42,7 +42,7 @@ func renderimage(t *tag.Tag) {
 	case *win.Win:
 		var oldb = t.Body
 		t.Config.Image = true
-		t.Body = img.New(t.Dev, nil)
+		t.Body = img.New(t.Win.Dev, nil) // TODO(as): how to get rid of Dev here
 		t.Body.Insert(oldb.Bytes(), 0)
 		t.Body.Move(oldb.Bounds().Min)
 		t.Body.Resize(oldb.Bounds().Size())
@@ -61,7 +61,7 @@ func render(t *tag.Tag) {
 	var oldb = t.Body
 	if tryImage(t.FileName()) {
 		t.Config.Image = true
-		t.Body = img.New(t.Dev, nil)
+		t.Body = img.New(t.Win.Dev, nil)
 		t.Get(t.FileName())
 		t.Body.Move(oldb.Bounds().Min)
 		t.Body.Resize(oldb.Bounds().Size())
@@ -79,7 +79,7 @@ func render(t *tag.Tag) {
 func unrender(t *tag.Tag) {
 	var oldb = t.Body
 	t.Config.Image = false
-	t.Body = win.New(t.Dev, &t.Config.Body)
+	t.Body = win.New(t.Win.Dev, &t.Config.Body)
 	t.Get(t.FileName())
 	t.Body.Move(oldb.Bounds().Min)
 	t.Body.Resize(oldb.Bounds().Size())
