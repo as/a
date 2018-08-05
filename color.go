@@ -45,10 +45,10 @@ var (
 
 func (g *Grid) acolor(e edit.File) {
 	if t := g.FindName(e.Name); t != nil {
-		if t.Body == nil {
+		if t.Window == nil {
 			return
 		}
-		win := t.Body.(*win.Win)
+		win := t.Window.(*win.Win)
 		if win == nil {
 			return
 		}
