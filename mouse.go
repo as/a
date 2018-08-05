@@ -101,7 +101,7 @@ func procButton(e mouse.Event) {
 		w.Select(s0, s1) // undo the sweep
 		g.Look(event.Look{
 			Name: t.FileName(),
-			From: from,                        // The source can be the tag or the body
+			From: from,                          // The source can be the tag or the body
 			To:   []event.Editor{actTag.Window}, // But the target is always the tag's body
 			Rec: event.Rec{
 				Q0: int64(a1.s), Q1: int64(a1.e),
