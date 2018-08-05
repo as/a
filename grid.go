@@ -56,7 +56,7 @@ var InstallPalette = frame.Palette{
 //	,x,string,h
 // Any other use is undefined and untested for now
 func (g *Grid) Install(t *tag.Tag, srcprog string) {
-	w, _ := t.Body.(*win.Win)
+	w, _ := t.Window.(*win.Win)
 	if w == nil {
 		return
 	}
