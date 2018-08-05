@@ -61,5 +61,5 @@ func runGoImports(t *tag.Tag, e key.Event) {
 	t.Body.Delete(0, t.Body.Len())
 	t.Body.Insert(b.Bytes(), 0)
 	t.Mark()
-	t.Select(q0, q1)
+	t.Win.Select(q0, q1) // TODO(as): BUG. Win should be body. Actually it shouldn't modify selection at all
 }
