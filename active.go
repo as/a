@@ -16,7 +16,7 @@ func actinit(g *Grid) {
 	// This in particular needs to go
 	actCol = g.List[0].(*Col)
 	actTag = actCol.List[0].(*tag.Tag)
-	act = actTag.Body
+	act = actTag.Window
 }
 
 func active2(pt image.Point, list ...Plane) (x Plane) {
@@ -68,8 +68,8 @@ func activate(pt image.Point, w Plane) {
 		activate(pt, x)
 	case *tag.Tag:
 		actTag = w
-		if w.Body != nil {
-			activate(pt, active2(pt, w.Body, w.Win))
+		if w.Window != nil {
+			activate(pt, active2(pt, w.Window, w.Win))
 		}
 	case tag.Window:
 		act = w

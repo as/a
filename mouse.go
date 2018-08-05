@@ -102,7 +102,7 @@ func procButton(e mouse.Event) {
 		g.Look(event.Look{
 			Name: t.FileName(),
 			From: from,                        // The source can be the tag or the body
-			To:   []event.Editor{actTag.Body}, // But the target is always the tag's body
+			To:   []event.Editor{actTag.Window}, // But the target is always the tag's body
 			Rec: event.Rec{
 				Q0: int64(a1.s), Q1: int64(a1.e),
 				P: from.Bytes(),

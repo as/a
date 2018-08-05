@@ -9,6 +9,6 @@ func scroll(act tag.Window, e mus.ScrollEvent) {
 	if e.Button == -1 {
 		e.Dy = -e.Dy
 	}
-	actTag.Body.Scroll(e.Dy)
+	actTag.Scroll(e.Dy)
 	repaint()
 }
