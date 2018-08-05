@@ -43,7 +43,7 @@ func (g *Grid) aguru(fm string, i ...interface{}) {
 }
 
 func (g *Grid) Selection() string {
-	return string(g.Tag.Rdsel())
+	return string(g.Tag.Win.Rdsel())
 }
 
 func (g *Grid) guru(label string, q0, q1 int64) (advance bool, err error) {
