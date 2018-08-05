@@ -106,10 +106,10 @@ Loop:
 			logf("tag label delim: %v", err)
 		}
 
-		n, err = io.Copy(t.Body.(io.Writer), io.LimitReader(r, int64(nbody)))
+		n, err = io.Copy(t, io.LimitReader(r, int64(nbody)))
 		dump.Printf("tag: copy body: %d bytes: err (%v)", n, err)
 
-		t.Body.Select(int64(q0), int64(q1))
+		t.Select(int64(q0), int64(q1))
 		c := cols[i]
 		col.Attach(c, t, image.Pt(0, c.Bounds().Min.Y+cent*c.Bounds().Dy()/100))
 	}
@@ -162,15 +162,15 @@ func Dump(g *Grid, wdir string, font0, font1 string) {
 			}
 			// x, e, f, F
 
-			q0, q1 := t.Body.Dot()
+			q0, q1 := t.Dot()
 			cent := flattenY(t, c)
 			ntag := t.Win.Len()
-			nbody := t.Body.Len()
+			nbody := t.Len()
 			dir := 0
 			dirty := 1
 
 			fmt.Fprintf(d, "F%11d %11d %11d %11d %11d %11d \n", i, j, q0, q1, cent, nbody)
-			fmt.Fprintf(d, "%11d %11d %11d %11d %11d %s\n%s", wid, ntag, nbody, dir, dirty, t.Win.Bytes(), t.Body.Bytes())
+			fmt.Fprintf(d, "%11d %11d %11d %11d %11d %s\n%s", wid, ntag, nbody, dir, dirty, t.Win.Bytes(), t.Bytes())
 			wid++
 		}
 	}
