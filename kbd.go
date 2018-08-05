@@ -35,6 +35,7 @@ type Window interface {
 	Close() error
 	Upload()
 	Window() screen.Window
+	Write(p []byte) (n int, err error)
 }
 
 func kbdin(e key.Event, t *tag.Tag, act Window) {
