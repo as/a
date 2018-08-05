@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/as/shiny/event/mouse"
 	"github.com/as/ui/col"
 	"github.com/as/ui/win"
-	"github.com/as/shiny/event/mouse"
 )
 
 func borderHit(e mouse.Event) bool {

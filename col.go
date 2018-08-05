@@ -14,9 +14,9 @@ import (
 type Col = col.Col
 
 func phi(r image.Rectangle) image.Point {
-	size := r.Size()
-	size = size.Sub(size.Div(3))
-	return r.Min.Add(size)
+	//	size := r.Size()
+	//	size = size.Sub(size.Div(3))
+	return r.Min //.Add(size)
 }
 
 func underText(p Plane) image.Point {
@@ -29,10 +29,16 @@ func underText(p Plane) image.Point {
 	if w == nil || !w.Graphical() {
 		return pt
 	}
-	if w.Frame.Full() {
-		return pt
+
+	ar := w.Area()
+	qt := ar.Min.Add(w.PointOf(w.Frame.Len()))
+
+	if w.Frame.Full() || qt.Y >= ar.Max.Y {
+		qt.Y = ar.Min.Y + ar.Dy()/2
+		return qt
 	}
-	return w.Area().Min.Add(w.PointOf(w.Frame.Len()))
+
+	return qt
 }
 
 // New creates opens a names resource as a tagged window in column c

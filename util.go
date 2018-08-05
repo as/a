@@ -3,9 +3,9 @@ package main
 import (
 	"image"
 
+	"github.com/as/shiny/event/mouse"
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
-	"github.com/as/shiny/event/mouse"
 )
 
 const (

@@ -6,8 +6,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/as/ui/tag"
 	"github.com/as/shiny/event/key"
+	"github.com/as/ui/tag"
 )
 
 type ErrGoImports struct {

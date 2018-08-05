@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/as/ui/tag"
 	"github.com/as/shiny/event/mouse"
+	"github.com/as/ui/tag"
 )
 
 type ScrollEvent struct {

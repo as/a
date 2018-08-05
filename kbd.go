@@ -3,12 +3,12 @@ package main
 import (
 	"image"
 
+	"github.com/as/shiny/event/key"
 	"github.com/as/shiny/screen"
 	"github.com/as/text/find"
 	"github.com/as/ui/kbd"
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
-	"github.com/as/shiny/event/key"
 )
 
 type Window interface {

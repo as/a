@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/as/event"
+	"github.com/as/shiny/event/mouse"
 	"github.com/as/text"
 	"github.com/as/text/find"
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
-	"github.com/as/shiny/event/mouse"
 )
 
 func Button(n uint) uint {
