@@ -5,7 +5,7 @@ import (
 
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
-	"golang.org/x/mobile/event/mouse"
+	"github.com/as/shiny/event/mouse"
 )
 
 const (

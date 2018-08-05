@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/as/ui/col"
 	"github.com/as/ui/win"
-	"golang.org/x/mobile/event/mouse"
+	"github.com/as/shiny/event/mouse"
 )
 
 func borderHit(e mouse.Event) bool {

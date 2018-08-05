@@ -7,7 +7,7 @@ import (
 	"github.com/as/ui/col"
 	"github.com/as/ui/tag"
 
-	"golang.org/x/mobile/event/mouse"
+	"github.com/as/shiny/event/mouse"
 )
 
 var (

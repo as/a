@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/as/ui/tag"
-	"golang.org/x/mobile/event/key"
+	"github.com/as/shiny/event/key"
 )
 
 type ErrGoImports struct {

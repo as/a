@@ -9,7 +9,7 @@ import (
 	"github.com/as/text/find"
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
-	"golang.org/x/mobile/event/mouse"
+	"github.com/as/shiny/event/mouse"
 )
 
 func Button(n uint) uint {

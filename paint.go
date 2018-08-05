@@ -1,7 +1,7 @@
 package main
 
 import (
-	"golang.org/x/mobile/event/paint"
+	"github.com/as/shiny/event/paint"
 )
 
 func repaint() {

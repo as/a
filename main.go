@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/as/shiny/screen"
-	"golang.org/x/mobile/event/lifecycle"
+	"github.com/as/shiny/event/lifecycle"
 
 	"github.com/as/edit"
 	"github.com/as/ui/col"

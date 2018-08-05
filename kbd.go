@@ -5,10 +5,10 @@ import (
 
 	"github.com/as/shiny/screen"
 	"github.com/as/text/find"
-	"github.com/as/text/kbd"
+	"github.com/as/ui/kbd"
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
-	"golang.org/x/mobile/event/key"
+	"github.com/as/shiny/event/key"
 )
 
 type Window interface {

@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/as/ui/tag"
-	"golang.org/x/mobile/event/mouse"
+	"github.com/as/shiny/event/mouse"
 )
 
 type ScrollEvent struct {
