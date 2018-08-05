@@ -36,7 +36,7 @@ func runGoImports(t *tag.Tag, e key.Event) {
 		GoExt: !strings.HasSuffix(t.FileName(), ".go"),
 	}
 	cmd := exec.Command("goimports")
-	cmd.Stdin = bytes.NewReader(t.Body.Bytes())
+	cmd.Stdin = bytes.NewReader(t.Bytes())
 	b := new(bytes.Buffer)
 	berr := new(bytes.Buffer)
 	cmd.Stdout = b
@@ -57,9 +57,9 @@ func runGoImports(t *tag.Tag, e key.Event) {
 		}
 		return
 	}
-	q0, q1 := t.Body.Dot()
-	t.Body.Delete(0, t.Body.Len())
-	t.Body.Insert(b.Bytes(), 0)
+	q0, q1 := t.Dot()
+	t.Delete(0, t.Len())
+	t.Insert(b.Bytes(), 0)
 	t.Mark()
-	t.Win.Select(q0, q1) // TODO(as): BUG. Win should be body. Actually it shouldn't modify selection at all
+	t.Select(q0, q1) // TODO(as): BUG. shouldn't modify selection at all
 }

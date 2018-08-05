@@ -51,7 +51,7 @@ func kbdin(e key.Event, t *tag.Tag, act Window) {
 	switch e.Code {
 	case key.CodeEqualSign, key.CodeHyphenMinus:
 		if e.Modifiers == key.ModControl {
-			win, _ := t.Body.(*win.Win)
+			win, _ := t.Window.(*win.Win)
 			if win == nil {
 				return
 			}
@@ -69,7 +69,7 @@ func kbdin(e key.Event, t *tag.Tag, act Window) {
 		}
 	}
 	ntab := int64(-1)
-	if (e.Rune == '\n' || e.Rune == '\r') && act == t.Body {
+	if (e.Rune == '\n' || e.Rune == '\r') && act == t.Window {
 		q0, q1 := act.Dot()
 		if q0 == q1 {
 			p := act.Bytes()

@@ -175,8 +175,8 @@ Loop:
 				getcmd(t.(*tag.Tag))
 				if e.Addr != "" {
 					actTag = t.(*tag.Tag)
-					act = actTag.Body
-					//actTag.Handle(actTag.Body, edit.MustCompile(e.Addr))
+					act = actTag.Window
+					//actTag.Handle(actTag.Window, edit.MustCompile(e.Addr))
 					MoveMouse(act)
 				} else {
 					moveMouse(t.Bounds().Min)
