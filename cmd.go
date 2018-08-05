@@ -40,11 +40,11 @@ func runeditcmd(prog *edit.Command, ed interface{}) {
 	switch ed := ed.(type) {
 	case *win.Win:
 		if ed == actTag.Win {
-			ed = actTag.Body.(*win.Win)
+			ed = actTag.Window.(*win.Win)
 		}
 		prog.Run(ed)
 	case *tag.Tag:
-		prog.Run(ed.Body)
+		prog.Run(ed.Window)
 	case *Grid:
 		for _, ed := range ed.List {
 			runeditcmd(prog, ed)
@@ -81,7 +81,7 @@ func acmd(e event.Cmd) {
 		Dump(g, g.cwd(), "gomono", "goregular")
 	case "Elastic":
 		t := actTag
-		w, _ := t.Body.(*win.Win)
+		w, _ := t.Window.(*win.Win)
 		if w != nil && w.Frame != nil {
 			cf := &t.Config.Body.Frame
 			if cf.Flag&frame.FrElastic == 0 {
@@ -209,9 +209,8 @@ func cmdexec(input text.Editor, dir string, argv string) {
 	)
 	lazyinit := func() {
 		to := g.afinderr(dir, cmdlabel(n, dir))
-		f = to.Body
-		q0, q1 := f.Dot()
-		f.Delete(q0, q1)
+		q0, q1 := to.Dot()
+		to.Delete(q0, q1)
 		q1 = q0
 	}
 
