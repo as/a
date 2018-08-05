@@ -1,12 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"os"
 	"path/filepath"
-	"strings"
-	"time"
 
 	"github.com/as/event"
 	"github.com/as/srv/fs"
@@ -15,7 +12,6 @@ import (
 	"github.com/as/text/find"
 	"github.com/as/ui/col"
 	"github.com/as/ui/tag"
-	"github.com/as/ui/win"
 )
 
 type Named interface {
@@ -80,8 +76,8 @@ func (e *Looker) LookGrid(g *Grid) (error) {
 	}
 
 	if name == "" {
-		if g.EditRun(addr, e.Tag.Body) {
-			ajump(e.Tag.Body, cursorNop)
+		if g.EditRun(addr, e.Tag.Window) {
+			ajump(e.Tag.Window, cursorNop)
 		}
 		return nil
 	}
@@ -93,8 +89,8 @@ func (e *Looker) LookGrid(g *Grid) (error) {
 			logf("look d: tag is nil")
 			return
 		}
-		if g.EditRun(addr, t.Body) {
-			ajump(t.Body, moveMouse)
+		if g.EditRun(addr, t.Window) {
+			ajump(t.Window, moveMouse)
 		}
 		return
 	}
@@ -166,10 +162,10 @@ func (g *Grid) Look(e event.Look) {
 		if t == nil {
 			return
 		}
-		if t.Body == nil {
+		if t.Window == nil {
 			return
 		}
-		if g.EditRun(addr, t.Body) {
+		if g.EditRun(addr, t.Window) {
 			ajump(ed, cursorNop)
 		}
 		return
@@ -183,11 +179,11 @@ func (g *Grid) Look(e event.Look) {
 			logf("nil tag")
 			return
 		}
-		if t.Body == nil || !g.EditRun(addr, t.Body) {
+		if t.Window == nil || !g.EditRun(addr, t.Window) {
 			ajump(t, cursorNop)
 			return
-		} else if t.Body != nil {
-			ajump(t.Body, moveMouse)
+		} else if t.Window != nil {
+			ajump(t.Window, moveMouse)
 			return
 		}
 		ajump(t, moveMouse)
@@ -203,8 +199,8 @@ func (g *Grid) Look(e event.Look) {
 		getcmd(t)
 	}
 	if t != nil {
-		if g.EditRun(addr, t.Body) {
-			ajump(t.Body, moveMouse)
+		if g.EditRun(addr, t.Window) {
+			ajump(t.Window, moveMouse)
 		} else {
 			ajump(t, moveMouse)
 		}
@@ -219,14 +215,15 @@ func (g *Grid) Look(e event.Look) {
 	}
 
 	//TODO(as): fix this so it doesn't compare hard coded coordinates
-	if e.To[0].(*win.Win) == nil {
+	if e.To[0] == nil {
 		VisitAll(g, func(p Named) {
 			if p == nil {
 				return
 			}
-			lookliteral(p.(*tag.Tag).Body, e, cursorNop)
+			lookliteral(p.(*tag.Tag).Window, e, cursorNop)
 		})
 	} else {
+
 		if e.To[0] != e.From {
 			lookliteraltag(e.To[0], e.Q0, e.Q1, e.P)
 		} else {
@@ -252,45 +249,11 @@ func stub(g *Grid, p Plane) bool {
 	return false
 }
 
-func (g *Grid) afinderr(wd string, name string) *tag.Tag {
-
-	name = strings.TrimSpace(name)
-	if !strings.HasSuffix(name, "+Errors") {
-		name += "+Errors"
-	}
-	t := g.FindName(name)
-	if t == nil {
-		c := g.List[len(g.List)-1].(*Col)
-		t = New(c, "", name).(*tag.Tag)
-		//moveMouse(t.Bounds().Min)
-	}
-	return t
-}
-func (g *Grid) aerr(fm string, i ...interface{}) {
-	t := g.afinderr(".", "")
-	if t == nil || t.Body == nil {
-		return
-	}
-	q1 := t.Body.Len()
-	t.Body.Select(q1, q1)
-	n := int64(t.Body.Insert([]byte(time.Now().Format(timefmt)+": "+fmt.Sprintf(fm, i...)+"\n"), q1))
-	t.Body.Select(q1+n, q1+n)
-	ajump(t.Body, cursorNop)
-}
-func (g *Grid) aout(fm string, i ...interface{}) {
-	t := g.afinderr(".", "")
-	q1 := t.Body.Len()
-	t.Body.Select(q1, q1)
-	n := int64(t.Body.Insert([]byte(fmt.Sprintf(fm, i...)+"\n"), q1))
-	t.Body.Select(q1, q1+n)
-	ajump(t.Body, cursorNop)
-}
-
 func lookliteraltag(ed text.Editor, q0, q1 int64, what []byte) {
 	q0, q1 = ed.Dot()
 	s0, s1 := find.FindNext(ed, q0, q1, what)
 	ed.Select(s0, s1)
-	ajump(ed, nil)
+	ajump(ed, cursorNop)
 }
 
 func lookliteral(ed text.Editor, e event.Look, mouseFunc func(image.Point)) {
