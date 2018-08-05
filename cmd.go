@@ -208,9 +208,9 @@ func cmdexec(input text.Editor, dir string, argv string) {
 		f      text.Editor
 	)
 	lazyinit := func() {
-		to := g.afinderr(dir, cmdlabel(n, dir))
-		q0, q1 := to.Dot()
-		to.Delete(q0, q1)
+		f = g.afinderr(dir, cmdlabel(n, dir))
+		q0, q1 := f.Dot()
+		f.Delete(q0, q1)
 		q1 = q0
 	}
 
