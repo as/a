@@ -92,7 +92,7 @@ func TestLook(t *testing.T) {
 			tag := tag.New(etch, nil)
 			tag.Win.Insert([]byte(tc.label.data), 0)
 
-			w := tag.Body
+			w := tag.Window
 			w.Insert([]byte(tc.data), 0)
 			w.Select(int64(tc.pre.s), int64(tc.pre.e))
 
@@ -143,7 +143,7 @@ func TestExpand(t *testing.T) {
 	g := NewGrid(etch, GridConfig)
 	c := col.New(etch, ColConfig)
 	tag := tag.New(etch, nil)
-	w := tag.Body
+	w := tag.Window
 	w.Insert([]byte(sentence), 0)
 	w.Select(int64(0), int64(0))
 	col.Attach(g, c, image.ZP)
