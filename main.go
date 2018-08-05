@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/as/shiny/screen"
-	mus "github.com/as/text/mouse"
 	"golang.org/x/mobile/event/lifecycle"
 
 	"github.com/as/edit"
@@ -111,7 +110,7 @@ func main() {
 			select {
 			case e := <-D.Scroll:
 				activate(p(e), g)
-				scroll(act, mus.ScrollEvent{Dy: 7, Event: e})
+				scroll(act, ScrollEvent{Dy: 7, Event: e})
 			case e := <-D.Mouse:
 				activate(p(e), g)
 				e = readmouse(e)

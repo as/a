@@ -1,11 +1,16 @@
 package main
 
 import (
-	mus "github.com/as/text/mouse"
 	"github.com/as/ui/tag"
+	"golang.org/x/mobile/event/mouse"
 )
 
-func scroll(act tag.Window, e mus.ScrollEvent) {
+type ScrollEvent struct {
+	Dy int
+	mouse.Event
+}
+
+func scroll(act tag.Window, e ScrollEvent) {
 	if e.Button == -1 {
 		e.Dy = -e.Dy
 	}

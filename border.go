@@ -1,7 +1,6 @@
 package main
 
 import (
-	mus "github.com/as/text/mouse"
 	"github.com/as/ui/col"
 	"github.com/as/ui/win"
 	"golang.org/x/mobile/event/mouse"
@@ -48,7 +47,7 @@ func procBorderHit(e mouse.Event) {
 	case inScroll(pt):
 		switch down {
 		case Button(1):
-			scroll(act, mus.ScrollEvent{Dy: 10, Event: e})
+			scroll(act, ScrollEvent{Dy: 10, Event: e})
 		case Button(2):
 			w, _ := act.(*win.Win)
 			if w == nil {
@@ -61,7 +60,7 @@ func procBorderHit(e mouse.Event) {
 				repaint()
 			}
 		case Button(3):
-			scroll(act, mus.ScrollEvent{Dy: -10, Event: e})
+			scroll(act, ScrollEvent{Dy: -10, Event: e})
 		}
 	default:
 		logf("unknown border action at pt: %s", pt)
