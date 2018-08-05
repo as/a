@@ -54,8 +54,8 @@ func (g *Grid) acolor(e edit.File) {
 		}
 		fr := win.Frame
 		p0, p1 := e.Q0, e.Q1
-		p0 -= clamp(p0-t.Body.Origin(), 0, fr.Len())
-		p1 -= clamp(p1-t.Body.Origin(), 0, fr.Len())
+		p0 -= clamp(p0-t.Window.Origin(), 0, fr.Len())
+		p1 -= clamp(p1-t.Window.Origin(), 0, fr.Len())
 		fr.Recolor(fr.PointOf(p0), p0, p1, frame.Mono.Palette)
 		fr.Mark()
 	}
