@@ -9,9 +9,10 @@ import (
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
 
-	_ "golang.org/x/image/bmp"
 	_ "image/gif"
 	_ "image/jpeg"
+
+	_ "golang.org/x/image/bmp"
 )
 
 var imageExt = map[string]bool{
@@ -27,7 +28,7 @@ func tryImage(name string) bool {
 }
 
 func rendercmd(t *tag.Tag) {
-	switch t.Body.(type) {
+	switch t.Window.(type) {
 	case *win.Win:
 		// Currently text; convert to image
 		render(t)
@@ -38,17 +39,17 @@ func rendercmd(t *tag.Tag) {
 }
 
 func renderimage(t *tag.Tag) {
-	switch t.Body.(type) {
+	switch t.Window.(type) {
 	case *win.Win:
-		var oldb = t.Body
+		var oldb = t.Window
 		t.Config.Image = true
-		t.Body = img.New(t.Win.Dev, nil) // TODO(as): how to get rid of Dev here
-		t.Body.Insert(oldb.Bytes(), 0)
-		t.Body.Move(oldb.Bounds().Min)
-		t.Body.Resize(oldb.Bounds().Size())
+		t.Window = img.New(t.Win.Dev, nil) // TODO(as): how to get rid of Dev here
+		t.Insert(oldb.Bytes(), 0)
+		t.Window.Move(oldb.Bounds().Min)
+		t.Window.Resize(oldb.Bounds().Size())
 
-		if !t.Body.Graphical() && t.Body != oldb {
-			t.Body = oldb
+		if !t.Window.Graphical() && t.Window != oldb {
+			t.Window = oldb
 			t.Config.Image = false
 		}
 		return
@@ -58,29 +59,29 @@ func renderimage(t *tag.Tag) {
 }
 
 func render(t *tag.Tag) {
-	var oldb = t.Body
+	var oldb = t.Window
 	if tryImage(t.FileName()) {
 		t.Config.Image = true
-		t.Body = img.New(t.Win.Dev, nil)
+		t.Window = img.New(t.Win.Dev, nil)
 		t.Get(t.FileName())
-		t.Body.Move(oldb.Bounds().Min)
-		t.Body.Resize(oldb.Bounds().Size())
+		t.Window.Move(oldb.Bounds().Min)
+		t.Window.Resize(oldb.Bounds().Size())
 	}
 
 	// If it didn't render correctly; restore
 	// the text buffer
-	if !t.Body.Graphical() && t.Body != oldb {
-		t.Body = oldb
+	if !t.Window.Graphical() && t.Window != oldb {
+		t.Window = oldb
 		t.Config.Image = false
 		t.Get(t.FileName())
 	}
 }
 
 func unrender(t *tag.Tag) {
-	var oldb = t.Body
+	var oldb = t.Window
 	t.Config.Image = false
-	t.Body = win.New(t.Win.Dev, &t.Config.Body)
+	t.Window = win.New(t.Win.Dev, &t.Config.Body)
 	t.Get(t.FileName())
-	t.Body.Move(oldb.Bounds().Min)
-	t.Body.Resize(oldb.Bounds().Size())
+	t.Window.Move(oldb.Bounds().Min)
+	t.Window.Resize(oldb.Bounds().Size())
 }
