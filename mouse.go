@@ -87,8 +87,9 @@ func procButton(e mouse.Event) {
 		w.Select(s0, s1)
 		acmd(event.Cmd{
 			Name: t.FileName(),
-			From: t, To: []event.Editor{act},
-			Rec: event.Rec{Q0: q0, Q1: q0, P: w.Bytes()[q0:q1]},
+			From: t.Win, // TODO(as): BUG, why is it always from the tag?
+			To:   []event.Editor{act},
+			Rec:  event.Rec{Q0: q0, Q1: q0, P: w.Bytes()[q0:q1]},
 		})
 	case Button(3):
 		q0, q1, _ := sweepFunc(w, e, D.Mouse)
