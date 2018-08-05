@@ -67,8 +67,8 @@ func Load(g *Grid, file string) (e error) {
 		}
 		dump.Printf("load: col: %d: tlabel: %q", i, tlabel)
 		c := col.New(g.Dev(), nil)
-		c.Tag.InsertString(tlabel, 0)
-		c.Tag.Select(0, 0)
+		c.Tag.Win.InsertString(tlabel, 0)
+		c.Tag.Win.Select(0, 0)
 		col.Attach(g, c, image.Pt(x+cent*dx/100, 0))
 		cols = append(cols, c)
 	}
