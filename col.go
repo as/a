@@ -25,7 +25,7 @@ func underText(p Plane) image.Point {
 	if t == nil {
 		return pt
 	}
-	w, _ := t.Body.(*win.Win)
+	w, _ := t.Window.(*win.Win)
 	if w == nil || !w.Graphical() {
 		return pt
 	}
