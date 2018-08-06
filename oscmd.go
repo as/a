@@ -1,24 +1,27 @@
 package main
 
 import (
-	"errors"
 	"io"
 	"os/exec"
+	"strings"
 )
 
-var (
-	ErrBadFD = errors.New("bad file descriptor")
-	ErrNoFD  = errors.New("no fd")
-)
-
-type Cmd interface {
-	Arg() []string
-	Fd(int) (io.ReadWriter, error)
-	Env() []string
-
-	Start() error
-	Wait() error
-	Redir(fd int, src io.ReadWriter) error
+func newOSCmd(dir, argv string) (name string, c Cmd) {
+	x := strings.Fields(argv)
+	if len(x) == 0 {
+		logf("|: nothing on rhs")
+		return "", nil
+	}
+	n := x[0]
+	var a []string
+	if len(x) > 1 {
+		a = x[1:]
+	}
+	oc := &OSCmd{
+		Cmd: exec.Command(n, a...),
+	}
+	oc.Dir = dir
+	return n, oc
 }
 
 type OSCmd struct {

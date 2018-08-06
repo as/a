@@ -2,13 +2,11 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
-	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"github.com/as/edit"
 	"github.com/as/event"
@@ -19,7 +17,20 @@ import (
 	"github.com/as/ui/win"
 )
 
-var null, _ = os.Open(os.DevNull)
+var (
+	ErrBadFD = errors.New("bad file descriptor")
+	ErrNoFD  = errors.New("no fd")
+)
+
+type Cmd interface {
+	Arg() []string
+	Fd(int) (io.ReadWriter, error)
+	Env() []string
+
+	Start() error
+	Wait() error
+	Redir(fd int, src io.ReadWriter) error
+}
 
 func editcmd(ed interface{}, origin, cmd string) {
 	prog, err := edit.Compile(cmd, &edit.Options{Sender: nil, Origin: origin})
@@ -145,42 +156,6 @@ func acmd(e event.Cmd) {
 	}
 }
 
-type Funnel struct {
-	sync.Mutex
-	io.Writer
-}
-
-func (f *Funnel) Read(p []byte) (n int, err error) {
-	return
-}
-func (f *Funnel) Write(p []byte) (n int, err error) {
-	f.Lock()
-	defer f.Unlock()
-	return f.Writer.Write(p)
-}
-func (f *Funnel) Unlock() {
-	f.Mutex.Unlock()
-	repaint()
-}
-
-func oscmd(dir, argv string) (name string, c Cmd) {
-	x := strings.Fields(argv)
-	if len(x) == 0 {
-		logf("|: nothing on rhs")
-		return "", nil
-	}
-	n := x[0]
-	var a []string
-	if len(x) > 1 {
-		a = x[1:]
-	}
-	oc := &OSCmd{
-		Cmd: exec.Command(n, a...),
-	}
-	oc.Dir = dir
-	return n, oc
-}
-
 func cmdexec(src text.Editor, dir string, argv string) {
 	input := []byte{}
 	if src != nil {
@@ -188,7 +163,7 @@ func cmdexec(src text.Editor, dir string, argv string) {
 		input = append([]byte{}, src.Bytes()[q0:q1]...)
 	}
 
-	n, cmd := oscmd(dir, argv)
+	n, cmd := newOSCmd(dir, argv)
 
 	dst := g.afinderr(dir, cmdlabel(n, dir))
 	dst.Delete(dst.Dot())
