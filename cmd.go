@@ -145,114 +145,70 @@ func acmd(e event.Cmd) {
 	}
 }
 
-func cmdexec(input text.Editor, dir string, argv string) {
+type Funnel struct {
+	sync.Mutex
+	io.Writer
+}
+
+func (f *Funnel) Read(p []byte) (n int, err error) {
+	return
+}
+func (f *Funnel) Write(p []byte) (n int, err error) {
+	f.Lock()
+	defer f.Unlock()
+	return f.Writer.Write(p)
+}
+func (f *Funnel) Unlock() {
+	f.Mutex.Unlock()
+	repaint()
+}
+
+func oscmd(dir, argv string) (name string, c Cmd) {
 	x := strings.Fields(argv)
 	if len(x) == 0 {
 		logf("|: nothing on rhs")
-		return
+		return "", nil
 	}
 	n := x[0]
 	var a []string
 	if len(x) > 1 {
 		a = x[1:]
 	}
-
-	cmd := exec.Command(n, a...)
-	cmd.Dir = dir
-	var fd0 io.WriteCloser
-	fd1, _ := cmd.StdoutPipe()
-	fd2, _ := cmd.StderrPipe()
-	fd0, _ = cmd.StdinPipe()
-
-	fd0.Close()
-	var wg sync.WaitGroup
-	donec := make(chan bool)
-	outc := make(chan []byte)
-	errc := make(chan []byte)
-	for _, fd := range []io.ReadCloser{fd1, fd2} {
-		fd := fd
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			var b [65536]byte
-			for {
-				select {
-				case <-donec:
-					return
-				default:
-					n, err := fd.Read(b[:])
-					if n > 0 {
-						outc <- append([]byte{}, b[:n]...)
-					}
-					if err != nil {
-						if err != io.EOF {
-							eprint(err)
-						}
-						return
-					}
-				}
-			}
-
-		}()
+	oc := &OSCmd{
+		Cmd: exec.Command(n, a...),
 	}
+	oc.Dir = dir
+	return n, oc
+}
+
+func cmdexec(src text.Editor, dir string, argv string) {
+	input := []byte{}
+	if src != nil {
+		q0, q1 := src.Dot()
+		input = append([]byte{}, src.Bytes()[q0:q1]...)
+	}
+
+	n, cmd := oscmd(dir, argv)
+
+	dst := g.afinderr(dir, cmdlabel(n, dir))
+	dst.Delete(dst.Dot())
+
+	fun := &Funnel{Writer: dst}
+	cmd.Redir(0, bytes.NewBuffer(input))
+	cmd.Redir(1, fun)
+	cmd.Redir(2, fun)
 
 	err := cmd.Start()
 	if err != nil {
 		logf("exec: %s: %s", argv, err)
-		close(donec)
 		return
 	}
 
-	var (
-		q0, q1 int64
-		f      text.Editor
-	)
-	lazyinit := func() {
-		f = g.afinderr(dir, cmdlabel(n, dir))
-		q0, q1 := f.Dot()
-		f.Delete(q0, q1)
-		q1 = q0
-	}
-
 	go func() {
-		stdin := io.Reader(null)
-		if input != nil {
-			stdin = bytes.NewReader(append([]byte{}, input.Bytes()[q0:q1]...))
-		}
-		if _, err := io.Copy(fd0, stdin); err != nil {
-			eprint(err)
-			return
-		}
-		cmd.Wait()
-		close(donec)
-	}()
-	go func() {
-		select {
-		case p := <-outc:
-			lazyinit()
-			f.Write(p)
-		case p := <-errc:
-			lazyinit()
-			f.Write(p)
-		case <-donec:
-			return
-		}
-		repaint()
-		for {
-			select {
-			case p := <-outc:
-				f.Write(p)
-			case p := <-errc:
-				f.Write(p)
-			case <-donec:
-				return
-			}
-			repaint()
-		}
+		println("done", cmd.Wait())
 	}()
 }
 
 func cmdlabel(name, dir string) (label string) {
 	return fmt.Sprintf("%s%c-%s", dir, filepath.Separator, name)
-
 }
