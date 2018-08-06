@@ -14,13 +14,13 @@ import (
 type Col = col.Col
 
 func phi(r image.Rectangle) image.Point {
-	//	size := r.Size()
-	//	size = size.Sub(size.Div(3))
-	return r.Min //.Add(size)
+	size := r.Size()
+	size = size.Sub(size.Div(3))
+	return r.Min.Add(size)
 }
 
 func underText(p Plane) image.Point {
-	pt := phi(p.Bounds())
+	pt := p.Bounds().Min
 	t, _ := p.(*tag.Tag)
 	if t == nil {
 		return pt
