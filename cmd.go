@@ -203,10 +203,6 @@ func cmdexec(src text.Editor, dir string, argv string) {
 		logf("exec: %s: %s", argv, err)
 		return
 	}
-
-	go func() {
-		println("done", cmd.Wait())
-	}()
 }
 
 func cmdlabel(name, dir string) (label string) {
