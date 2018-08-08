@@ -168,15 +168,14 @@ func cmdexec(src text.Editor, dir string, argv string) {
 	dst := g.afinderr(dir, cmdlabel(n, dir))
 	dst.Delete(dst.Dot())
 
-	fun := &Funnel{Writer: dst}
 	cmd.Redir(0, bytes.NewBuffer(input))
+	fun := &Funnel{Writer: dst}
 	cmd.Redir(1, fun)
 	cmd.Redir(2, fun)
 
 	err := cmd.Start()
 	if err != nil {
 		logf("exec: %s: %s", argv, err)
-		return
 	}
 }
 
