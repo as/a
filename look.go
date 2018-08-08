@@ -33,77 +33,6 @@ var resolver = &fs.Resolver{ // from fs.go:/resolver/
 	Fs: newfsclient(), // called in :/Grid..Look/
 }
 
-/*
-
-type Looker struct {
-	*tag.Tag // owning tag
-	*win.Win // source of the address below
-	Q0, Q1   int64
-	P        []byte
-	err      error
-}
-
-func (e *Looker) Err() error {
-	if e.err == nil {
-		if e.Win == nil {
-			e.err = ErrNoWin
-		}
-		if e.Tag == nil {
-			e.err = ErrNoTag
-		}
-	}
-	return e.err
-}
-
-func (l *Looker) FromTag() bool {
-	return l.Tag.Win == l.Win
-}
-
-func (e *Looker) SplitAddr() (name, addr string) {
-	e.Q0, e.Q1 = expand3(e.Win, e.Q0, e.Q1)
-	return action.SplitPath(string(e.Win.Bytes()[e.Q0:e.Q1]))
-}
-
-func (e *Looker) LookGrid(g *Grid) (error) {
-	panic("unfinished")
-	if e.Err() != nil {
-		return e.Err()
-	}
-
-	name, addr := e.SplitAddr()
-	if name == "" && addr == "" {
-		return nil
-	}
-
-	if name == "" {
-		if g.EditRun(addr, e.Tag.Window) {
-			ajump(e.Tag.Window, cursorNop)
-		}
-		return nil
-	}
-
-	// Existing window label?
-	if label := g.Lookup(name); label != nil  {
-		t, _ := label.(*tag.Tag)
-		if t == nil{
-			logf("look d: tag is nil")
-			return
-		}
-		if g.EditRun(addr, t.Window) {
-			ajump(t.Window, moveMouse)
-		}
-		return
-	}
-
-	// A file on the filesystem
-	info, exists := resolver.look(pathinfo{tag: e.Name, name: name})
-	t, exists = g.Lookup(info.abspath).(*tag.Tag)
-
-
-	panic("unfinished")
-}
-*/
-
 type vis struct {
 }
 
@@ -324,3 +253,74 @@ func (g *Grid) Lookup(pid interface{}) Plane {
 	}
 	return nil
 }
+
+/*
+
+type Looker struct {
+	*tag.Tag // owning tag
+	*win.Win // source of the address below
+	Q0, Q1   int64
+	P        []byte
+	err      error
+}
+
+func (e *Looker) Err() error {
+	if e.err == nil {
+		if e.Win == nil {
+			e.err = ErrNoWin
+		}
+		if e.Tag == nil {
+			e.err = ErrNoTag
+		}
+	}
+	return e.err
+}
+
+func (l *Looker) FromTag() bool {
+	return l.Tag.Win == l.Win
+}
+
+func (e *Looker) SplitAddr() (name, addr string) {
+	e.Q0, e.Q1 = expand3(e.Win, e.Q0, e.Q1)
+	return action.SplitPath(string(e.Win.Bytes()[e.Q0:e.Q1]))
+}
+
+func (e *Looker) LookGrid(g *Grid) (error) {
+	panic("unfinished")
+	if e.Err() != nil {
+		return e.Err()
+	}
+
+	name, addr := e.SplitAddr()
+	if name == "" && addr == "" {
+		return nil
+	}
+
+	if name == "" {
+		if g.EditRun(addr, e.Tag.Window) {
+			ajump(e.Tag.Window, cursorNop)
+		}
+		return nil
+	}
+
+	// Existing window label?
+	if label := g.Lookup(name); label != nil  {
+		t, _ := label.(*tag.Tag)
+		if t == nil{
+			logf("look d: tag is nil")
+			return
+		}
+		if g.EditRun(addr, t.Window) {
+			ajump(t.Window, moveMouse)
+		}
+		return
+	}
+
+	// A file on the filesystem
+	info, exists := resolver.look(pathinfo{tag: e.Name, name: name})
+	t, exists = g.Lookup(info.abspath).(*tag.Tag)
+
+
+	panic("unfinished")
+}
+*/
