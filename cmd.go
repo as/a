@@ -137,15 +137,44 @@ func acmd(e event.Cmd) {
 			logf("cmd has no destination: %q", s)
 		}
 		abs := AbsOf(e.Basedir, e.Name)
-		if strings.HasPrefix(s, "Edit ") {
-			editcmd(e.To[0], abs, s[5:])
+		p := prefixer{string: strings.TrimSpace(s)}
+		switch {
+		case p.Prefix("|"):
+			editcmd(e.To[0], abs, s)
 			editRefresh(e.To[0])
-		} else if strings.HasPrefix(s, "Install ") {
-			g.Install(actTag, s[8:])
-		} else {
-			cmdexec(context.Background(), nil, path.DirOf(abs), strings.Fields(s)...)
+		case p.Prefix("<"):
+			cmdexec(context.Background(), actTag, actTag, path.DirOf(abs), strings.Fields(p.Chop())...)
+		case p.Prefix(">"):
+			cmdexec(context.Background(), nil, actTag, path.DirOf(abs), strings.Fields(p.Chop())...)
+		case p.Prefix("Edit"):
+			editcmd(e.To[0], abs, p.Chop())
+			editRefresh(e.To[0])
+		case p.Prefix("Install"):
+			g.Install(actTag, p.Chop())
+		default:
+			cmdexec(context.Background(), nil, nil, path.DirOf(abs), strings.Fields(s)...)
 		}
 	}
+}
+
+type prefixer struct {
+	string
+	n int
+}
+
+func (p *prefixer) Prefix(pre string) bool {
+	p.n = 0
+	if !strings.HasPrefix(p.string, pre) {
+		return false
+	}
+	p.n = len(pre)
+	return true
+}
+func (p *prefixer) Chop() string {
+	if p.n != 0 {
+		return p.string[p.n:]
+	}
+	return p.string
 }
 
 func cmdlabel(name, dir string) (label string) {
