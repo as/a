@@ -29,8 +29,8 @@ func AbsOf(basedir, path string) string {
 	return filepath.Join(basedir, path)
 }
 
-var resolver = &fs.Resolver{ // from fs.go:/resolver/
-	Fs: newfsclient(), // called in :/Grid..Look/
+var resolver = &fs.Resolver{ 
+	Fs: newfsclient(),
 }
 
 type vis struct {
