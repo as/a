@@ -67,7 +67,7 @@ func parsecmd(s string) (name string, args []string) {
 }
 
 func cmdexec(ctx context.Context, input text.Editor, dir string, args ...string) {
-	if len(args) == 0{
+	if len(args) == 0 {
 		return
 	}
 	name := args[0]

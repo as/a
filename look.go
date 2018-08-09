@@ -29,7 +29,7 @@ func AbsOf(basedir, path string) string {
 	return filepath.Join(basedir, path)
 }
 
-var resolver = &fs.Resolver{ 
+var resolver = &fs.Resolver{
 	Fs: newfsclient(),
 }
 
