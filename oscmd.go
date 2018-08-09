@@ -13,12 +13,12 @@ import (
 func chansend(ctx context.Context, dst chan []byte, src ...io.ReadCloser) {
 	done := ctx.Done()
 	var wg sync.WaitGroup
-	defer wg.Wait()
 
 	for _, fd := range src {
 		wg.Add(1)
 		go func(fd io.ReadCloser) {
 			defer wg.Done()
+			defer fd.Close()
 			var b [65536]byte
 			for {
 				select {
@@ -40,7 +40,6 @@ func chansend(ctx context.Context, dst chan []byte, src ...io.ReadCloser) {
 		}(fd)
 	}
 
-	wg.Wait()
 }
 
 func chanrecv(ctx context.Context, src chan []byte, dst ...io.Writer) {
@@ -50,7 +49,10 @@ func chanrecv(ctx context.Context, src chan []byte, dst ...io.Writer) {
 		select {
 		case <-done:
 			return
-		case b := <-src:
+		case b, ok := <-src:
+			if !ok {
+				return
+			}
 			if _, err := fd.Write(b); err != nil {
 				return
 			}
@@ -66,9 +68,11 @@ func parsecmd(s string) (name string, args []string) {
 	return a[0], a[len(a):]
 }
 
-func cmdexec(ctx context.Context, input text.Editor, dir string, args ...string) {
+func cmdexec(ctx context.Context, dst, src text.Editor, dir string, args ...string) (fin chan error) {
+	fin = make(chan error, 1)
 	if len(args) == 0 {
-		return
+		close(fin)
+		return fin
 	}
 	name := args[0]
 	args = args[1:]
@@ -80,43 +84,45 @@ func cmdexec(ctx context.Context, input text.Editor, dir string, args ...string)
 	fd2, _ := cmd.StderrPipe()
 	fd0, _ := cmd.StdinPipe()
 
-	dst := make(chan []byte)
-	src := make(chan []byte)
-	go chansend(ctx, dst, fd1, fd2)
-	go chanrecv(ctx, src, fd0)
+	cdst := make(chan []byte)
+	csrc := make(chan []byte)
+	go chansend(ctx, cdst, fd1, fd2)
+	go chanrecv(ctx, csrc, fd0)
 
 	err := cmd.Start()
 	if err != nil {
 		logf("exec: %s: %s", args, err)
-		return
+		fin <- err
+		close(fin)
+		return fin
 	}
 
-	var f text.Editor
-	lazyinit := func() {
-		f = g.afinderr(dir, cmdlabel(name, dir))
+	if dst == nil {
+		dst = g.afinderr(dir, cmdlabel(name, dir))
 	}
 
 	go func() {
-		if input != nil {
-			q0, q1 := input.Dot()
-			src <- append([]byte{}, input.Bytes()[q0:q1]...)
+		if src != nil {
+			q0, q1 := src.Dot()
+			csrc <- append([]byte{}, src.Bytes()[q0:q1]...)
 		}
-		close(src)
-		cmd.Wait()
+		close(csrc)
+		fin <- cmd.Wait()
+		close(fin)
 	}()
 
 	go func() {
 		for {
 			select {
-			case p := <-dst:
-				lazyinit()
-				f.Write(p)
+			case p := <-cdst:
+				dst.Write(p)
 				repaint()
 			case <-done:
 				return
 			}
 		}
 	}()
+	return fin
 }
 
 func newOSCmd(dir, argv string) (name string, c Cmd) {
@@ -125,16 +131,12 @@ func newOSCmd(dir, argv string) (name string, c Cmd) {
 		logf("|: nothing on rhs")
 		return "", nil
 	}
-	n := x[0]
-	var a []string
-	if len(x) > 1 {
-		a = x[1:]
+
+	cmd := exec.Command(x[0], x[1:]...)
+	cmd.Dir = dir
+	return x[0], &OSCmd{
+		Cmd: cmd,
 	}
-	oc := &OSCmd{
-		Cmd: exec.Command(n, a...),
-	}
-	oc.Dir = dir
-	return n, oc
 }
 
 type OSCmd struct {
