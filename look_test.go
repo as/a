@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"testing"
 
@@ -145,7 +146,7 @@ func TestExpand(t *testing.T) {
 	tag := tag.New(etch, nil)
 	w := tag.Window
 	w.Insert([]byte(sentence), 0)
-	w.Select(int64(0), int64(0))
+	w.Select(0, 0)
 	col.Attach(g, c, image.ZP)
 	col.Attach(c, tag, image.ZP)
 
@@ -171,5 +172,44 @@ func TestExpand(t *testing.T) {
 		if have := string(w.Bytes()[q0:q1]); have != "stall" {
 			t.Fatalf("have %v, want %v", have, "stall")
 		}
+	}
+}
+
+func TestLookAddrFileLine(t0 *testing.T) {
+	t0.Skip("fix this bug")
+	etch := ui.NewEtch()
+
+	label := "TestLookAddrFileLine"
+
+	g := NewGrid(etch, GridConfig)
+	c := col.New(etch, ColConfig)
+	t := tag.New(etch, nil)
+	w := t.Window
+
+	fmt.Fprint(t.Win, label+"\t:2")
+	fmt.Fprint(w, label+":2\ntwo\nthree")
+
+	if t := g.FindName(label); t != nil {
+		t0.Fatal("FindName: cant find window")
+	}
+
+	col.Attach(g, c, image.ZP)
+	col.Attach(c, t, image.ZP)
+
+	ev := event.Look{
+		Name: "w", From: w,
+		To: []event.Editor{w},
+		Rec: event.Rec{
+			Q0: 0, Q1: int64(len(label)),
+			P: w.Bytes(),
+		},
+	}
+	g.Look(ev)
+	q0, q1 := w.Dot()
+
+	have := string(w.Bytes()[q0:q1])
+	want := "two\n"
+	if have != want {
+		t0.Fatalf("have %q, want %q", have, want)
 	}
 }
