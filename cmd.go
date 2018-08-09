@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -118,7 +118,6 @@ func acmd(e event.Cmd) {
 		repaint()
 	case "Get":
 		getcmd(actTag)
-
 		//repaint()
 	case "New":
 		newtag := New(actCol, "", "")
@@ -139,43 +138,13 @@ func acmd(e event.Cmd) {
 		}
 		abs := AbsOf(e.Basedir, e.Name)
 		if strings.HasPrefix(s, "Edit ") {
-			s = s[5:]
-			editcmd(e.To[0], abs, s)
+			editcmd(e.To[0], abs, s[5:])
 			editRefresh(e.To[0])
 		} else if strings.HasPrefix(s, "Install ") {
-			s = s[8:]
-			g.Install(actTag, s)
+			g.Install(actTag, s[8:])
 		} else {
-			x := strings.Fields(s)
-			if len(x) < 1 {
-				logf("empty command")
-				return
-			}
-			cmdexec(nil, path.DirOf(abs), s)
+			cmdexec(context.Background(), nil, path.DirOf(abs), strings.Fields(s)...)
 		}
-	}
-}
-
-func cmdexec(src text.Editor, dir string, argv string) {
-	input := []byte{}
-	if src != nil {
-		q0, q1 := src.Dot()
-		input = append([]byte{}, src.Bytes()[q0:q1]...)
-	}
-
-	n, cmd := newOSCmd(dir, argv)
-
-	dst := g.afinderr(dir, cmdlabel(n, dir))
-	dst.Delete(dst.Dot())
-
-	cmd.Redir(0, bytes.NewBuffer(input))
-	fun := &Funnel{Writer: dst}
-	cmd.Redir(1, fun)
-	cmd.Redir(2, fun)
-
-	err := cmd.Start()
-	if err != nil {
-		logf("exec: %s: %s", argv, err)
 	}
 }
 
