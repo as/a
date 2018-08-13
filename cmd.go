@@ -132,6 +132,8 @@ func acmd(e event.Cmd) {
 		Delcol(g, g.ID(actCol))
 	case "Exit":
 		logf("Exit: TODO")
+	case "Diff":
+		Diff(actTag)
 	default:
 		if len(e.To) == 0 {
 			logf("cmd has no destination: %q", s)
