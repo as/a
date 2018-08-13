@@ -1,5 +1,5 @@
 package main
 
-var(
+var (
 	Version = "0.7.13"
 )
