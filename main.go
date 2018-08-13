@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"image"
+	"io"
 	"log"
 	"os"
 
@@ -72,6 +73,7 @@ func main() {
 	defer trap()
 
 	list := argparse()
+
 	if *quiet {
 		banner()
 		createnetworks()
@@ -83,23 +85,31 @@ func main() {
 	D = d
 
 	g = NewGrid(dev, GridConfig)
-	sp, size := image.Pt(0, 0), image.Pt(900, 900)
-	g.Move(sp)
-	g.Resize(size)
+	{
+		sp, size := image.Pt(0, 0), image.Pt(900, 900)
+		g.Move(sp)
+		g.Resize(size)
 
-	if *load != "" {
-		Load(g, *load)
-	} else {
-		for _, v := range list {
-			col.Attach(g, NewCol(dev, ft, image.ZP, image.ZP, v), sp)
-			sp.X += size.X / len(list)
+		if *load != "" {
+			Load(g, *load)
+		} else {
+			for _, v := range list {
+				c := NewCol(dev, ft, image.ZP, image.ZP, v)
+				if v == "-" {
+					c = NewCol(dev, ft, image.ZP, image.ZP)
+					io.Copy(New(c, "", "").(*tag.Tag), os.Stdin)
+				}
+				col.Attach(g, c, sp)
+				sp.X += size.X / len(list)
+			}
+			col.Fill(g)
 		}
-		col.Fill(g)
+		g.Refresh()
 	}
-	g.Refresh()
 
 	setLogFunc(g.aerr)
 	banner()
+
 	createnetworks()
 	actinit(g)
 	assert("actinit", g)
