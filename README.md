@@ -71,7 +71,6 @@ https://github.com/as/a/wiki/Alterations
 
 https://github.com/as/a/issues
 
-
 # hints
 To reshape the windows and columns, click on the invisible 10x10px sizer that I haven't rendered yet with the left mouse button. 
 Hold the button down and move the window to the location. 

@@ -58,6 +58,8 @@ func (g *Grid) afinderr(wd string, name string) *tag.Tag {
 	if t == nil {
 		c := g.List[len(g.List)-1].(*Col)
 		t = New(c, "", name).(*tag.Tag)
+		//		r := t.Bounds()
+		//		r1 := underText(t)
 		//moveMouse(t.Bounds().Min)
 	}
 	return t
