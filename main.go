@@ -54,7 +54,15 @@ func init() {
 	flag.Parse()
 }
 
+// showbanner is set to true only if the user ran the program without
+// arguments. In any other case, it's just annoying to have this on
+// see args.go:/showbanner/
+var showbanner = false
+
 func banner() {
+	if !showbanner{
+		return
+	}
 	logf("ver=%s pid=%d args=%q", Version, os.Getpid(), os.Args)
 	repaint()
 }
