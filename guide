@@ -19,7 +19,7 @@ a.exe:#3233761,#3233760
 Install ,x,#\x20.+,h	# Comments
 Install ,x,(func|type),h # Go keywords
 
-# Edit: Change 'n' to 'Navigation' (seep+execute)
+# Edit: Change 'n' to 'Navigation' (sweep+execute)
 Edit ,x,#\x20navigation,x,na,x,n,c,N,
 
 # Dump/Load editor state (execute)
@@ -27,6 +27,10 @@ Dump
 a -l a.dump
 
 # View an image
-[TBD]
+Needs environment variable: `export img=auto`
+Right click or "Get" any valid image format
 
-walk
+# Diff highlight
+Type `Diff` and execute it as a command
++ Added line
+- Removed line
