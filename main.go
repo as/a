@@ -8,10 +8,9 @@ import (
 	"log"
 	"os"
 
+	"github.com/as/edit"
 	"github.com/as/shiny/event/lifecycle"
 	"github.com/as/shiny/screen"
-
-	"github.com/as/edit"
 	"github.com/as/ui/col"
 	"github.com/as/ui/tag"
 )
