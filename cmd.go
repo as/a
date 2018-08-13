@@ -50,7 +50,7 @@ func editcmd(ed interface{}, origin, cmd string) {
 func runeditcmd(prog *edit.Command, ed interface{}) {
 	switch ed := ed.(type) {
 	case *win.Win:
-		if ed == actTag.Win {
+		if ed == actTag.Label {
 			ed = actTag.Window.(*win.Win)
 		}
 		prog.Run(ed)

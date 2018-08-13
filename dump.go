@@ -47,9 +47,9 @@ func Load(g *Grid, file string) (e error) {
 	}
 	dump.Printf("grid: label: %q\n", glabel)
 
-	g.Tag.Win.Delete(0, g.Tag.Win.Len())
-	g.Tag.Win.InsertString(glabel, 0)
-	g.Tag.Win.Select(0, 0)
+	g.Tag.Label.Delete(0, g.Tag.Label.Len())
+	g.Tag.Label.InsertString(glabel, 0)
+	g.Tag.Label.Select(0, 0)
 
 	var cols []*col.Col
 	x := g.Bounds().Min.X
@@ -67,8 +67,8 @@ func Load(g *Grid, file string) (e error) {
 		}
 		dump.Printf("load: col: %d: tlabel: %q", i, tlabel)
 		c := col.New(g.Dev(), nil)
-		c.Tag.Win.InsertString(tlabel, 0)
-		c.Tag.Win.Select(0, 0)
+		c.Tag.Label.InsertString(tlabel, 0)
+		c.Tag.Label.Select(0, 0)
 		col.Attach(g, c, image.Pt(x+cent*dx/100, 0))
 		cols = append(cols, c)
 	}
@@ -98,9 +98,9 @@ Loop:
 		}
 
 		t := tag.New(g.Dev(), nil)
-		n, err := io.Copy(t.Win, io.LimitReader(r, int64(ntag)))
+		n, err := io.Copy(t.Label, io.LimitReader(r, int64(ntag)))
 		dump.Printf("tag: copy label: %d bytes: err (%v)", n, err)
-		t.Win.Select(0, 0)
+		t.Label.Select(0, 0)
 
 		if !r.Scan('\n') {
 			logf("tag label delim: %v", err)
@@ -135,7 +135,7 @@ func Dump(g *Grid, wdir string, font0, font1 string) {
 	}
 
 	// The label for the grid itself
-	fmt.Fprintf(d, "w %s\n", g.Tag.Win.Bytes())
+	fmt.Fprintf(d, "w %s\n", g.Tag.Label.Bytes())
 
 	// The label for each column along with the column's number
 	for i, c := range g.List {
@@ -143,7 +143,7 @@ func Dump(g *Grid, wdir string, font0, font1 string) {
 		if c == nil {
 			continue
 		}
-		fmt.Fprintf(d, "c%11d %s\n", i, c.Tag.Win.Bytes())
+		fmt.Fprintf(d, "c%11d %s\n", i, c.Tag.Label.Bytes())
 	}
 
 	wid := 1
@@ -164,13 +164,13 @@ func Dump(g *Grid, wdir string, font0, font1 string) {
 
 			q0, q1 := t.Dot()
 			cent := flattenY(t, c)
-			ntag := t.Win.Len()
+			ntag := t.Label.Len()
 			nbody := t.Len()
 			dir := 0
 			dirty := 1
 
 			fmt.Fprintf(d, "F%11d %11d %11d %11d %11d %11d \n", i, j, q0, q1, cent, nbody)
-			fmt.Fprintf(d, "%11d %11d %11d %11d %11d %s\n%s", wid, ntag, nbody, dir, dirty, t.Win.Bytes(), t.Bytes())
+			fmt.Fprintf(d, "%11d %11d %11d %11d %11d %s\n%s", wid, ntag, nbody, dir, dirty, t.Label.Bytes(), t.Bytes())
 			wid++
 		}
 	}

@@ -207,7 +207,7 @@ func lookliteral(ed text.Editor, e event.Look, mouseFunc func(image.Point)) {
 }
 
 func (g *Grid) meta(p interface{}) bool {
-	return p == g.Tag.Win
+	return p == g.Tag.Label
 }
 
 func VisitAll(root Plane, fn func(p Named)) {

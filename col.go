@@ -45,7 +45,7 @@ func underText(p Plane) image.Point {
 func New(c *Col, basedir, name string) (w Plane) {
 	t := tag.New(c.Dev(), TagConfig)
 	t.Open(basedir, name)
-	t.Win.Write([]byte(" [Edit ] "))
+	t.Label.Write([]byte(" [Edit ] "))
 	r := c.Area()
 	if c.Len() > 0 {
 		r.Min = underText(c.List[len(c.List)-1])
@@ -58,7 +58,7 @@ func New(c *Col, basedir, name string) (w Plane) {
 
 func NewCol(dev ui.Dev, ft font.Face, sp, size image.Point, files ...string) *Col {
 	c := col.New(dev, ColConfig)
-	c.Tag.Win.InsertString("New Delcol Sort	|", 0)
+	c.Tag.Label.InsertString("New Delcol Sort	|", 0)
 	c.Move(sp)
 	c.Resize(size)
 	for _, name := range files {

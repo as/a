@@ -91,7 +91,7 @@ func TestLook(t *testing.T) {
 			}
 
 			tag := tag.New(etch, nil)
-			tag.Win.Insert([]byte(tc.label.data), 0)
+			tag.Label.Insert([]byte(tc.label.data), 0)
 
 			w := tag.Window
 			w.Insert([]byte(tc.data), 0)
@@ -102,7 +102,7 @@ func TestLook(t *testing.T) {
 
 			from := w
 			if tc.flags.On(LLabel) {
-				from = tag.Win
+				from = tag.Label
 			} else if name == "dog" {
 				t.Fatal("bad test")
 			}
@@ -186,7 +186,7 @@ func TestLookAddrFileLine(t0 *testing.T) {
 	t := tag.New(etch, nil)
 	w := t.Window
 
-	fmt.Fprint(t.Win, label+"\t:2")
+	fmt.Fprint(t.Label, label+"\t:2")
 	fmt.Fprint(w, label+":2\ntwo\nthree")
 
 	if t := g.FindName(label); t != nil {

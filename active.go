@@ -33,12 +33,12 @@ func active2(pt image.Point, list ...Plane) (x Plane) {
 }
 
 func activelabel(pt image.Point, t *tag.Tag) bool {
-	if t.Win == nil {
+	if t.Label == nil {
 		panic("FLAG: label is nil")
 	}
-	if pt.In(t.Win.Bounds()) {
+	if pt.In(t.Label.Bounds()) {
 		actTag = t
-		act = t.Win
+		act = t.Label
 		return true
 	}
 	return false
@@ -69,7 +69,7 @@ func activate(pt image.Point, w Plane) {
 	case *tag.Tag:
 		actTag = w
 		if w.Window != nil {
-			activate(pt, active2(pt, w.Window, w.Win))
+			activate(pt, active2(pt, w.Window, w.Label))
 		}
 	case tag.Window:
 		act = w

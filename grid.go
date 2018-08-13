@@ -23,7 +23,7 @@ var (
 
 func NewGrid(dev ui.Dev, conf *tag.Config, files ...string) *Grid {
 	g := &Grid{col.NewTable2(dev, conf)}
-	g.Tag.Win.InsertString(GridLabel, 0)
+	g.Tag.Label.InsertString(GridLabel, 0)
 	return g
 }
 

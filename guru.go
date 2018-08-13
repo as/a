@@ -8,7 +8,7 @@ import (
 var guruModes = "callees callers callstack definition describe freevars implements peers pointsto referrers what whicherrs"
 
 func (g *Grid) Selection() string {
-	return string(g.Tag.Win.Rdsel())
+	return string(g.Tag.Label.Rdsel())
 }
 
 func (g *Grid) guru(label string, q0, q1 int64) (advance bool, err error) {
