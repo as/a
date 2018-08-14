@@ -75,6 +75,7 @@ func procButton(e mouse.Event) {
 		}
 		t0 = time.Now()
 		w.Select(q0, q1)
+		track.set(true)
 	case Button(2):
 		q0, q1, _ := sweepFunc(w, e, D.Mouse)
 		if q0 == q1 {
