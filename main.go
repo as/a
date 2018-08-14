@@ -60,7 +60,7 @@ func init() {
 var showbanner = false
 
 func banner() {
-	if !showbanner{
+	if !showbanner {
 		return
 	}
 	logf("ver=%s pid=%d args=%q", Version, os.Getpid(), os.Args)
