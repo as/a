@@ -7,10 +7,8 @@ import (
 	"io"
 	"log"
 	"os"
-	"time"
 
 	"github.com/as/edit"
-	"github.com/as/shiny/event/key"
 	"github.com/as/shiny/event/lifecycle"
 	"github.com/as/shiny/screen"
 	"github.com/as/ui/col"

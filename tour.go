@@ -1,5 +1,11 @@
 package main
 
+import (
+	"time"
+
+	"github.com/as/shiny/event/key"
+)
+
 var saydelay = time.Second / 32
 
 func say(text string) {
