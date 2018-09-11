@@ -11,7 +11,6 @@ func editRefresh(ed text.Editor) {
 	if ref, ok := ed.(interface {
 		Size() image.Point
 		Resize(image.Point)
-		Upload()
 	}); ok {
 		ref.Resize(ref.Size())
 	}
