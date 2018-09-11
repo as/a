@@ -44,14 +44,16 @@ func kbdin(e key.Event, t *tag.Tag, act Window) {
 		return
 	}
 
-	if e.Code == key.CodeI && e.Modifiers == key.ModControl {
-		runGoImports(t, e)
-		return
-	}
 	switch e.Code {
 	case key.CodeEscape:
 		track.esc()
 		return
+	case key.CodeI:
+		if e.Modifiers == key.ModControl{
+			runGoImports(t, e)
+			reload(t)
+			return
+		}
 	case key.CodeEqualSign, key.CodeHyphenMinus:
 		if e.Modifiers == key.ModControl {
 			win, _ := t.Window.(*win.Win)
