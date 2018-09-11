@@ -7,7 +7,7 @@ import (
 	"github.com/as/text"
 )
 
-func editRefresh(ed text.Editor) {
+func reload(ed text.Editor) {
 	if ref, ok := ed.(interface {
 		Size() image.Point
 		Resize(image.Point)
