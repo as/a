@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os/exec"
 	"strings"
 
@@ -59,7 +60,6 @@ func runGoImports(t *tag.Tag, e key.Event) {
 	}
 	q0, q1 := t.Dot()
 	t.Delete(0, t.Len())
-	t.Insert(b.Bytes(), 0)
-	t.Mark()
+	io.Copy(t, b)
 	t.Select(q0, q1) // TODO(as): BUG. shouldn't modify selection at all
 }
