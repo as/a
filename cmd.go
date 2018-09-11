@@ -143,19 +143,18 @@ func acmd(e event.Cmd) {
 		switch {
 		case p.Prefix("|"):
 			editcmd(e.To[0], abs, s)
-			editRefresh(e.To[0])
 		case p.Prefix("<"):
 			cmdexec(context.Background(), actTag, actTag, path.DirOf(abs), strings.Fields(p.Chop())...)
 		case p.Prefix(">"):
 			cmdexec(context.Background(), nil, actTag, path.DirOf(abs), strings.Fields(p.Chop())...)
 		case p.Prefix("Edit"):
 			editcmd(e.To[0], abs, p.Chop())
-			editRefresh(e.To[0])
 		case p.Prefix("Install"):
 			g.Install(actTag, p.Chop())
 		default:
 			cmdexec(context.Background(), nil, nil, path.DirOf(abs), strings.Fields(s)...)
 		}
+		reload(e.To[0])
 	}
 }
 
