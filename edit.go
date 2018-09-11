@@ -35,6 +35,7 @@ func (g *Grid) EditRun(prog string, ed text.Editor) (ok bool) {
 	if err != nil {
 		g.aerr("edit: run: %q: %s", prog, err)
 	}
-	editRefresh(ed)
+	// TODO(as): should this be in the function? Probably not
+	reload(ed)
 	return err == nil
 }
