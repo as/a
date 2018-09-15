@@ -49,7 +49,7 @@ func kbdin(e key.Event, t *tag.Tag, act Window) {
 		track.esc()
 		return
 	case key.CodeI:
-		if e.Modifiers == key.ModControl{
+		if e.Modifiers == key.ModControl {
 			runGoImports(t, e)
 			reload(t)
 			return
