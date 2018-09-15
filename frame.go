@@ -34,7 +34,8 @@ func frameinstall() (ui.Dev, screen.Window, *screen.Device, font.Face) {
 	}
 	dev, err := ui.Init(&ui.Config{
 		Width: winSize.X, Height: winSize.Y,
-		Title: "A",
+		Title:   "A",
+		Overlay: true,
 	})
 	ckfault(err)
 	if dev == nil {
