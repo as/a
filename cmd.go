@@ -150,6 +150,15 @@ func acmd(e event.Cmd) {
 		case p.Prefix("Edit"):
 			editcmd(e.To[0], abs, p.Chop())
 		case p.Prefix("Look"):
+			// Determine where this command is executed. If it's at the grid or column
+			// labels, we run Look on all the text.Editors below that point. A column
+			// runs Look on all planes under the column. A Grid does the same for
+			// all columns.
+			//
+			// Use the track data structure to determine what Editor was last selected
+			// and use that as the search parameter. Seperate the two cases so the
+			// new feature is less likely to blow up the process if it has bugs--it's
+			// less likely to be used anyway
 			if k, from := KindOf(e.From); k.List() {
 				data := track.win.Rdsel()
 				VisitAll(from, func(p Named) {
