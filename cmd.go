@@ -149,6 +149,25 @@ func acmd(e event.Cmd) {
 			cmdexec(context.Background(), nil, actTag, path.DirOf(abs), strings.Fields(p.Chop())...)
 		case p.Prefix("Edit"):
 			editcmd(e.To[0], abs, p.Chop())
+		case p.Prefix("Look"):
+			if k, from := KindOf(e.From); k.List() {
+				data := track.win.Rdsel()
+				VisitAll(from, func(p Named) {
+					switch ed := p.(type) {
+					case nil:
+						return
+					case text.Editor:
+						q0, q1 := ed.Dot()
+						lookliteraltag(ed, q0, q1, data)
+					}
+				})
+			} else {
+				switch ed := actTag.Window.(type) {
+				case *win.Win:
+					q0, q1 := ed.Dot()
+					lookliteraltag(ed, q0, q1, ed.Rdsel())
+				}
+			}
 		case p.Prefix("Install"):
 			g.Install(actTag, p.Chop())
 		default:
