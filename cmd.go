@@ -12,6 +12,7 @@ import (
 	"github.com/as/event"
 	"github.com/as/frame"
 	"github.com/as/path"
+	"github.com/as/shiny/event/lifecycle"
 	"github.com/as/text"
 	"github.com/as/ui/tag"
 	"github.com/as/ui/win"
@@ -131,7 +132,8 @@ func acmd(e event.Cmd) {
 	case "Delcol":
 		Delcol(g, g.ID(actCol))
 	case "Exit":
-		logf("Exit: TODO")
+		D.Lifecycle <- lifecycle.Event{To: lifecycle.StageDead}
+		return
 	case "Diff":
 		Diff(actTag)
 	default:
