@@ -12,7 +12,7 @@ require (
 	github.com/as/ms v0.1.0
 	github.com/as/path v0.6.7
 	github.com/as/rgba v0.0.2
-	github.com/as/shiny v0.7.2
+	github.com/as/shiny v0.7.4
 	github.com/as/srv v0.6.8
 	github.com/as/text v0.7.0
 	github.com/as/ui v0.7.2
