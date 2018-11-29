@@ -12,12 +12,11 @@ import (
 	"github.com/as/ui/win"
 )
 
-func Button(n uint) uint {
-	return 1 << n
-}
-func HasButton(n, mask uint) bool {
-	return Button(n)&mask != 0
-}
+const (
+	doubleclicktime = time.Second / 3
+)
+
+var doubleclickr = image.Rect(-3, -3, 3, 3)
 
 var (
 	last   uint
@@ -25,35 +24,42 @@ var (
 	t0     = time.Now()
 )
 
+func Button(n uint) uint {
+	return 1 << n
+}
+func HasButton(n, mask uint) bool {
+	return Button(n)&mask != 0
+}
 func procButton(e mouse.Event) {
-	double := false
-	if last == down {
-		if time.Since(t0) < time.Second/3 && lastpt.In(image.Rect(-3, -3, 3, 3).Add(p(e))) {
-			double = true
-		}
-	}
-	t0 = time.Now()
-	last = down
-	lastpt = p(e)
-	t := actTag
-	w, _ := act.(*win.Win)
-	if w == nil {
+	w, ok := act.(*win.Win)
+	if !ok {
 		return
 	}
 
-	s0, s1 := w.Dot()
-	q0 := w.IndexOf(p(e)) + w.Origin()
-	q1 := q0
-	act.Select(q0, q1)
+	pt := p(e)
 
-	// repaint()	// fixes the ugly repaint bug when single clicking a selection to completion
+	double := false
+	if last == down {
+		if time.Since(t0) < doubleclicktime && lastpt.In(doubleclickr.Add(pt)) {
+			double = true
+		}
+	}
+	last = down
+	lastpt = pt
+	t0 = time.Now()
+
+	t := actTag
+
+	q0 := w.IndexOf(pt) + w.Origin()
+	q1 := q0
 
 	switch down {
 	case Button(1):
+		w.Select(q0, q1)
 		if double {
 			q0, q1 = find.FreeExpand(w, q0)
-			double = false
 			w.Select(q0, q1)
+			double = false
 		} else {
 			// In Acme and Sam, the double click action doesn't maintain
 			// a hold on the selection if the mouse is moved out of a rectangular
@@ -62,6 +68,7 @@ func procButton(e mouse.Event) {
 			// operation.
 			q0, q1, e = sweepFunc(w, e, D.Mouse)
 		}
+
 		for down != 0 {
 			w.Select(q0, q1)
 			if HasButton(2, down) {
@@ -73,10 +80,13 @@ func procButton(e mouse.Event) {
 			repaint()
 			e = rel(readmouse(<-D.Mouse), t)
 		}
+
 		t0 = time.Now()
 		w.Select(q0, q1)
 		track.set(true)
 	case Button(2):
+		s0, s1 := w.Dot()
+		w.Select(q0, q1)
 		q0, q1, _ := sweepFunc(w, e, D.Mouse)
 		if q0 == q1 {
 			if text.Region3(q0, s0, s1) == 0 {
@@ -89,24 +99,41 @@ func procButton(e mouse.Event) {
 		acmd(event.Cmd{
 			Name: t.FileName(),
 			From: t.Label, // TODO(as): BUG, why is it always from the tag?
-			To:   []event.Editor{act},
+			To:   []event.Editor{w},
 			Rec:  event.Rec{Q0: q0, Q1: q0, P: w.Bytes()[q0:q1]},
 		})
 	case Button(3):
-		q0, q1, _ := sweepFunc(w, e, D.Mouse)
-		from := act
-		a1 := d2a(q0, q1)
-		//			if a1.Empty() && !hiclick(q0,q1,s0,s1) {
-		//				a1 = expandAddr(a1, from)
-		//			}
-		w.Select(s0, s1) // undo the sweep
+		// If the user clicked inside the previous, non-empty selection, the
+		// action depends on whether the new selection is empty. If it is empty
+		// we search the old selection again. Otherwise, we create a new look
+		// request based on the newer selection data.
+		//
+		// In either case, the next result depends on whether or not anything
+		// is "found". If not, we restore the selection to the ORIGINAL selection,
+		// be it either the old highlight that the user clicked in or something
+		// entirely offscreen.
+		//
+		// The origin should only shift if a positive result is found. Restoring the
+		// selection does not count.
+
+		s0, s1 := w.Dot() // old selection
+
+		w.Select(q0, q1) // click origin
+
+		q0, q1, _ := sweepFunc(w, e, D.Mouse) // sweep mouse
+		// determine whether the result was an empty selection
+
+		a1 := d2a(q0, q1) // same as the logic for button2
+		w.Select(s0, s1)  // undo the sweep to where it was before the click
+
+		// this async crap is really dumb
 		g.Look(event.Look{
 			Name: t.FileName(),
-			From: from,                          // The source can be the tag or the body
-			To:   []event.Editor{actTag.Window}, // But the target is always the tag's body
+			From: w,                        // The source can be the tag or the body
+			To:   []event.Editor{t.Window}, // But the target is always the tag's body
 			Rec: event.Rec{
 				Q0: int64(a1.s), Q1: int64(a1.e),
-				P: from.Bytes(),
+				P: w.Bytes(),
 			},
 		})
 
