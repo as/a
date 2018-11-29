@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/as/font"
+	"github.com/as/rgba"
 	"github.com/as/ui"
 	"github.com/as/ui/col"
 	"github.com/as/ui/tag"
@@ -43,6 +44,10 @@ func underText(p Plane) image.Point {
 
 // New creates opens a names resource as a tagged window in column c
 func New(c *Col, basedir, name string) (w Plane) {
+	bg := rgba.Rand()
+	
+	TagConfig.Color[1].Back = bg
+	TagConfig.Color[1].Text = image.NewUniform(pickfg(bg.C))
 	t := tag.New(c.Dev(), TagConfig)
 	t.Open(basedir, name)
 	t.Label.Write([]byte(" [Edit ] "))

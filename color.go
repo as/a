@@ -1,6 +1,8 @@
 package main
 
 import (
+	"image/color"
+
 	"github.com/as/edit"
 	"github.com/as/frame"
 	. "github.com/as/rgba"
@@ -11,6 +13,12 @@ import (
 func uselightcolors() {
 	Palette = Lightpalette
 	updatecolors()
+}
+
+var anticolor = color.Palette([]color.Color{color.Black, color.White})
+
+func pickfg(bg color.Color) color.Color {
+	return anticolor[(anticolor.Index(bg)+1)%len(anticolor)]
 }
 
 func usedarkcolors() {
@@ -39,7 +47,7 @@ var (
 		"grid": frame.Theme(LightGray, Darkbluegray, White, Darkbluegray),
 		"col":  frame.Theme(LightGray, Gray, White, Darkbluegray),
 		"tag":  frame.Theme(LightGray, Gray, White, Darkbluegray),
-		"win":  frame.Theme(LightGray, Bluegray, White, Darkbluegray),
+		"win":  frame.Theme(Black, Bluegray, White, Darkbluegray),
 	}
 )
 

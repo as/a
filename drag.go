@@ -41,10 +41,10 @@ func dragCol(g *Grid, c *Col, e mouse.Event, mousein <-chan mouse.Event) {
 			break
 		}
 		// uncomment for really stupid stuff
-		//col.Detach(g, g.ID(c0))
-		//col.Fill(g)
-		//col.Attach(g, c0, p(e))
-		//g.Upload()
+			col.Detach(g, g.ID(c0))
+			col.Fill(g)
+			col.Attach(g, c0, p(e))
+			g.Upload()
 	}
 	col.Detach(g, g.ID(c0))
 	col.Fill(g)

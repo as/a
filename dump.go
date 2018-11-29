@@ -5,12 +5,18 @@ import (
 	"fmt"
 	"image"
 	"io"
+	"math/rand"
 	"os"
+	"time"
 
 	"github.com/as/a/dump"
 	"github.com/as/ui/col"
 	"github.com/as/ui/tag"
 )
+
+func init() {
+	rand.Seed(time.Now().Unix())
+}
 
 var ErrBadDump = errors.New("bad dump file")
 
