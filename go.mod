@@ -11,7 +11,7 @@ require (
 	github.com/as/io v0.1.0
 	github.com/as/ms v0.1.0
 	github.com/as/path v0.6.7
-	github.com/as/rgba v0.0.2
+	github.com/as/rgba v0.0.3
 	github.com/as/shiny v0.7.5
 	github.com/as/srv v0.6.8
 	github.com/as/text v0.7.0
