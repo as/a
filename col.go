@@ -89,15 +89,15 @@ func Delcol(g *Grid, id int) {
 	col.Fill(g)
 }
 
-func Del(co *Col, id int) {
+func Del(co *Col, id int) io.Closer {
 	w := co.Detach(id)
 	y := w.Bounds().Min.Y
 	x := co.Bounds().Min.X
-	w.(io.Closer).Close()
 	for ; id < len(co.List); id++ {
 		y2 := co.List[id].Bounds().Min.Y
 		co.List[id].Move(image.Pt(x, y))
 		y = y2
 	}
 	col.Fill(co)
+	return w.(io.Closer)
 }

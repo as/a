@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/as/text"
 )
@@ -97,10 +98,6 @@ func cmdexec(ctx context.Context, dst, src text.Editor, dir string, args ...stri
 		return fin
 	}
 
-	if dst == nil {
-		dst = g.afinderr(dir, cmdlabel(name, dir))
-	}
-
 	go func() {
 		if src != nil {
 			q0, q1 := src.Dot()
@@ -111,10 +108,22 @@ func cmdexec(ctx context.Context, dst, src text.Editor, dir string, args ...stri
 		close(fin)
 	}()
 
+	// paces with ndel, the global delete counter
+	delctr := atomic.LoadUint32(&ndel)
+
 	go func() {
 		for {
 			select {
 			case p := <-cdst:
+				// Check the state of delctr before each write, if we're out of phase
+				// we reload the error window to avoid a nil pointer dereference
+				//
+				// TODO(as): Do this for all writes
+				// TODO(as): Do this for all reads
+				if ctr := atomic.LoadUint32(&ndel); dst == nil || ctr != delctr {
+					dst = g.afinderr(dir, cmdlabel(name, dir))
+					delctr = ctr
+				}
 				dst.Write(p)
 				repaint()
 			case <-done:

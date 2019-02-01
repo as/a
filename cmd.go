@@ -7,6 +7,7 @@ import (
 	"io"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 
 	"github.com/as/edit"
 	"github.com/as/event"
@@ -81,6 +82,12 @@ func getcmd(t *tag.Tag) {
 	}
 }
 
+var (
+	// ndel is a delete counter. writers monitor its status to avoid
+	// writing to deleted windows
+	ndel uint32
+)
+
 func acmd(e event.Cmd) {
 	s := string(e.P)
 	switch s {
@@ -126,11 +133,14 @@ func acmd(e event.Cmd) {
 	case "Newcol":
 		moveMouse(NewColParams(g, "").Bounds().Min)
 	case "Del":
-		Del(actCol, actCol.ID(actTag))
+		w := Del(actCol, actCol.ID(actTag))
+		atomic.AddUint32(&ndel, +1)
+		w.Close()
 	case "Sort":
 		logf("Sort: TODO")
 	case "Delcol":
 		Delcol(g, g.ID(actCol))
+		atomic.AddUint32(&ndel, 1)
 	case "Exit":
 		D.Lifecycle <- lifecycle.Event{To: lifecycle.StageDead}
 		return
