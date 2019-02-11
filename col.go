@@ -77,7 +77,7 @@ func NewColParams(g *Grid, filenames ...string) *Col {
 	return c
 }
 
-func Delcol(g *Grid, id int) {
+func Delcol(g *Grid, id int) []Plane {
 	co := col.Detach(g, id)
 	x := co.Bounds().Min.X
 	y := co.Bounds().Min.Y
@@ -87,6 +87,11 @@ func Delcol(g *Grid, id int) {
 		x = x2
 	}
 	col.Fill(g)
+
+	if co, _ := co.(interface{ Kids() []Plane }); co != nil {
+		return co.Kids()
+	}
+	return nil
 }
 
 func Del(co *Col, id int) io.Closer {
