@@ -139,8 +139,13 @@ func acmd(e event.Cmd) {
 	case "Sort":
 		logf("Sort: TODO")
 	case "Delcol":
-		Delcol(g, g.ID(actCol))
+		ws := Delcol(g, g.ID(actCol))
 		atomic.AddUint32(&ndel, 1)
+		for _, w := range ws{
+			if w, _ := w.(io.Closer); w != nil{
+				w.Close()
+			}
+		}
 	case "Exit":
 		D.Lifecycle <- lifecycle.Event{To: lifecycle.StageDead}
 		return
