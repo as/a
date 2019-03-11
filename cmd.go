@@ -132,6 +132,8 @@ func acmd(e event.Cmd) {
 		moveMouse(newtag.Bounds().Min)
 	case "Newcol":
 		moveMouse(NewColParams(g, "").Bounds().Min)
+	case "Undo", "Redo":
+		do(s == "Undo")
 	case "Del":
 		w := Del(actCol, actCol.ID(actTag))
 		atomic.AddUint32(&ndel, +1)
@@ -141,8 +143,8 @@ func acmd(e event.Cmd) {
 	case "Delcol":
 		ws := Delcol(g, g.ID(actCol))
 		atomic.AddUint32(&ndel, 1)
-		for _, w := range ws{
-			if w, _ := w.(io.Closer); w != nil{
+		for _, w := range ws {
+			if w, _ := w.(io.Closer); w != nil {
 				w.Close()
 			}
 		}
