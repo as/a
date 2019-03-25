@@ -11,6 +11,8 @@ import (
 	"github.com/as/ui/win"
 )
 
+// TODO(as): This interface is too big and ugly
+// get rid of it
 type Window interface {
 	Bytes() []byte
 
