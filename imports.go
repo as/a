@@ -42,6 +42,7 @@ func runGoImports(t *tag.Tag, e key.Event) {
 	berr := new(bytes.Buffer)
 	cmd.Stdout = b
 	cmd.Stderr = berr
+
 	err := cmd.Run()
 	if err != nil || b.Len() < len("package") {
 		if err == nil {
@@ -58,8 +59,19 @@ func runGoImports(t *tag.Tag, e key.Event) {
 		}
 		return
 	}
-	q0, q1 := t.Dot()
+
+	// NOTE(as): The goimports command can result in either a net
+	// gain or net loss of data. It is not trivial to preserve an existing
+	// selection when running the command because we don't know
+	// which of the 6 regions goimports altered. In order to fix this,
+	// we need to fork goimports and tell it to somehow return this
+	// information so we can update the selection properly.
+
+	origin := int64(float64(t.Origin()) / float64(t.Len()) * float64(b.Len()))
 	t.Delete(0, t.Len())
 	io.Copy(t, b)
-	t.Select(q0, q1) // TODO(as): BUG. shouldn't modify selection at all
+	t.SetOrigin(origin, true)
+	t.Select(origin, origin)
+	t.Resize(t.Bounds().Size())
+
 }
