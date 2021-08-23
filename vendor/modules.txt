@@ -1,0 +1,107 @@
+# github.com/BurntSushi/xgb v0.0.0-20210121224620-deaf085860bc
+## explicit
+github.com/BurntSushi/xgb
+github.com/BurntSushi/xgb/render
+github.com/BurntSushi/xgb/shm
+github.com/BurntSushi/xgb/xproto
+# github.com/as/clip v0.6.8
+## explicit
+github.com/as/clip
+# github.com/as/cursor v0.6.7
+## explicit
+github.com/as/cursor
+# github.com/as/edit v0.6.14
+## explicit
+github.com/as/edit
+# github.com/as/etch v0.6.7
+## explicit
+github.com/as/etch
+# github.com/as/event v0.6.8
+## explicit
+github.com/as/event
+# github.com/as/font v0.6.7
+## explicit
+github.com/as/font
+github.com/as/font/gomedium
+github.com/as/font/gomono
+github.com/as/font/goregular
+# github.com/as/frame v0.8.0
+## explicit
+github.com/as/frame
+github.com/as/frame/box
+# github.com/as/io v0.1.0
+## explicit
+github.com/as/io/rev
+# github.com/as/ms v0.1.0
+## explicit
+github.com/as/ms/win
+# github.com/as/path v0.6.7
+## explicit
+github.com/as/path
+# github.com/as/rgba v0.0.3
+## explicit
+github.com/as/rgba
+# github.com/as/shiny v0.8.2
+## explicit
+github.com/as/shiny/driver
+github.com/as/shiny/driver/gldriver
+github.com/as/shiny/driver/internal/drawer
+github.com/as/shiny/driver/internal/errscreen
+github.com/as/shiny/driver/internal/lifecycler
+github.com/as/shiny/driver/internal/swizzle
+github.com/as/shiny/driver/internal/x11key
+github.com/as/shiny/driver/win32
+github.com/as/shiny/driver/windriver
+github.com/as/shiny/driver/x11driver
+github.com/as/shiny/event/key
+github.com/as/shiny/event/lifecycle
+github.com/as/shiny/event/mouse
+github.com/as/shiny/event/paint
+github.com/as/shiny/event/size
+github.com/as/shiny/geom
+github.com/as/shiny/gl
+github.com/as/shiny/math/f64
+github.com/as/shiny/screen
+github.com/as/shiny/sys/windows
+# github.com/as/srv v0.6.8
+## explicit
+github.com/as/srv/fs
+# github.com/as/text v0.7.0
+## explicit
+github.com/as/text
+github.com/as/text/action
+github.com/as/text/find
+# github.com/as/ui v0.8.2
+## explicit
+github.com/as/ui
+github.com/as/ui/col
+github.com/as/ui/img
+github.com/as/ui/kbd
+github.com/as/ui/reg
+github.com/as/ui/scroll
+github.com/as/ui/tag
+github.com/as/ui/win
+# github.com/as/worm v0.6.7
+## explicit
+github.com/as/worm
+# github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
+## explicit
+github.com/golang/freetype/raster
+github.com/golang/freetype/truetype
+# golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
+## explicit
+golang.org/x/image/bmp
+golang.org/x/image/font
+golang.org/x/image/font/gofont/gomedium
+golang.org/x/image/font/gofont/gomono
+golang.org/x/image/font/gofont/goregular
+golang.org/x/image/math/fixed
+# golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d
+## explicit
+# golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf
+## explicit
+golang.org/x/sys/internal/unsafeheader
+golang.org/x/sys/windows
+# golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac
+## explicit
+golang.org/x/time/rate

@@ -51,7 +51,6 @@ func init() {
 	log.SetFlags(log.Llongfile)
 	log.SetPrefix("a: ")
 
-	flag.Parse()
 }
 
 // showbanner is set to true only if the user ran the program without
@@ -76,6 +75,7 @@ func trap() {
 }
 
 func main() {
+	flag.Parse()
 	defer trypprof()()
 	defer trap()
 
