@@ -83,11 +83,13 @@ func (f *cachedFace) Dx(p []byte) (dx int) {
 }
 
 func (f *cachedFace) genChar(r rune) (*image.Alpha, image.Rectangle) {
-	dr, mask, maskp, adv, _ := f.Face.Glyph(fixed.P(0, f.Height()), r)
+	dr, mask, maskp, adv, ok := f.Face.Glyph(fixed.P(0, f.Height()), r)
 	r0 := image.Rect(0, 0, Fix(adv), f.Dy())
 	m := image.NewAlpha(r0)
 	r0 = r0.Add(image.Pt(dr.Min.X, dr.Min.Y))
-	draw.Draw(m, r0, mask, maskp, draw.Src)
+	if ok {
+		draw.Draw(m, r0, mask, maskp, draw.Src)
+	}
 	return m, m.Bounds()
 }
 

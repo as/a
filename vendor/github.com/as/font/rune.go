@@ -91,7 +91,7 @@ func (f *cachedRuneFace) LoadGlyph(r rune, fg, bg color.Color) image.Image {
 	draw.Draw(img, img.Bounds(), image.NewUniform(bg), image.ZP, draw.Src)
 	draw.DrawMask(img, img.Bounds(), image.NewUniform(fg), image.ZP, mask, r0.Min, draw.Over)
 	f.cache[sig] = img
-	if int(r) < len(f.cache) {
+	if int(r) < len(f.cachewidth) {
 		f.cachewidth[r] = f.Dx([]byte(string(r)))
 	}
 	return img

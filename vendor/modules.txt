@@ -19,7 +19,7 @@ github.com/as/etch
 # github.com/as/event v0.6.8
 ## explicit
 github.com/as/event
-# github.com/as/font v0.6.7
+# github.com/as/font v0.6.8
 ## explicit
 github.com/as/font
 github.com/as/font/gomedium
@@ -96,8 +96,6 @@ golang.org/x/image/font/gofont/gomedium
 golang.org/x/image/font/gofont/gomono
 golang.org/x/image/font/gofont/goregular
 golang.org/x/image/math/fixed
-# golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d
-## explicit
 # golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf
 ## explicit
 golang.org/x/sys/internal/unsafeheader

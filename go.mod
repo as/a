@@ -9,7 +9,7 @@ require (
 	github.com/as/edit v0.6.14
 	github.com/as/etch v0.6.7 // indirect
 	github.com/as/event v0.6.8
-	github.com/as/font v0.6.7
+	github.com/as/font v0.6.8
 	github.com/as/frame v0.8.0
 	github.com/as/io v0.1.0 // indirect
 	github.com/as/ms v0.1.0
