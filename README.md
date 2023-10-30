@@ -15,7 +15,7 @@ A is a text editor inspired by the Sam and Acme text editors for the Plan 9 oper
 	- Multi-Platform
 	- Graphical (http://github.com/as/frame)
 	- Not CGo
-	- Not a port/transpilation 
+	- Not a port/transpiration 
 - Resembles Acme and Sam text editors.
 	- Mouse chording
 	- Text is executable
